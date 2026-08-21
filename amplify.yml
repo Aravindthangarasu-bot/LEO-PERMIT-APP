@@ -1,29 +1,23 @@
 version: 1
+backend:
+  phases:
+    build:
+      commands:
+        - npm ci --cache .npm --prefer-offline
+        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
 frontend:
   phases:
     preBuild:
       commands:
-        - npm ci
+        - npm ci --cache .npm --prefer-offline
     build:
       commands:
-        # AWS Amplify provides the AWS_BRANCH environment variable automatically (e.g., 'main', 'staging', 'develop')
-        # We map these to our Vite .env modes
-        - |
-          if [ "${AWS_BRANCH}" = "main" ]; then
-            npm run build -- --mode production
-          elif [ "${AWS_BRANCH}" = "staging" ]; then
-            npm run build -- --mode staging
-          elif [ "${AWS_BRANCH}" = "develop" ]; then
-            npm run build -- --mode qa
-          else
-            npm run build
-          fi
+        - npm run build
   artifacts:
-    # Vite outputs the production build to the 'dist' directory by default
     baseDirectory: dist
     files:
       - '**/*'
   cache:
     paths:
-      # Cache node_modules to significantly speed up future CI/CD deployments
+      - .npm/**/*
       - node_modules/**/*
