@@ -25,19 +25,6 @@ const branchEnvMap: Record<string, string> = {
 const envName = branchEnvMap[process.env.AWS_BRANCH || ''] || 'SANDBOX';
 
 // ---------------------------------------------------------
-// CDK ESCAPE HATCH: Enforce Strict Table Naming
-// ---------------------------------------------------------
-const { cfnResources } = backend.data.resources;
-const { amplifyDynamoDbTables } = cfnResources;
-
-if (amplifyDynamoDbTables) {
-  for (const [logicalId, table] of Object.entries(amplifyDynamoDbTables)) {
-    // Force name: e.g., Leo-User-PROD, Leo-PermitApplication-QA
-    table.tableName = `Leo-${logicalId}-${envName}`;
-  }
-}
-
-// ---------------------------------------------------------
 // CDK ESCAPE HATCH: Enforce Strict Bucket Naming
 // ---------------------------------------------------------
 const { bucket } = backend.storage.resources;
