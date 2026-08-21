@@ -27,7 +27,7 @@ export default function StaffManagement() {
       const schema = StaffManagementSchema.shape[field as keyof typeof StaffManagementSchema.shape];
       if (schema) {
         const res = schema.safeParse(value);
-        if (!res.success) return res.error.errors[0].message;
+        if (!res.success) return res.error.issues[0].message;
       }
       return null;
     };

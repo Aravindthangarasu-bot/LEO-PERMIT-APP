@@ -120,7 +120,6 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
     const byCoords = activeProviders.filter(p => p.latitude && p.longitude);
     if (byCoords.length > 0) {
       // Build a quick lookup from known pincodes via provider data
-      const knownProviderByPincode = activeProviders.find(p => p.pincode);
       const label = `Pincode ${pincode}`;
       setLocationName(label);
       setResult({ serviceable: false, providerCount: 0, label });

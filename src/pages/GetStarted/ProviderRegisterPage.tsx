@@ -22,7 +22,7 @@ const validateField = (k: keyof Form, value: string): string => {
   if (schema) {
     const result = schema.safeParse(value);
     if (!result.success) {
-      return result.error.errors[0].message;
+      return result.error.issues[0].message;
     }
   }
   return '';
