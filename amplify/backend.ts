@@ -42,7 +42,9 @@ if (amplifyDynamoDbTables) {
 // ---------------------------------------------------------
 const { bucket } = backend.storage.resources;
 if (bucket) {
-  // S3 bucket names must be lowercase and globally unique.
-  // e.g. leo-permits-storage-prod
-  bucket.bucketName = `leo-permits-storage-${envName.toLowerCase()}`;
+  // We must target the underlying L1 CloudFormation resource because the L2 bucketName is read-only
+  const cfnBucket = bucket.node.defaultChild as any;
+  if (cfnBucket) {
+    cfnBucket.bucketName = `leo-permits-storage-${envName.toLowerCase()}`;
+  }
 }
