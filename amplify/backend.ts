@@ -13,20 +13,3 @@ const backend = defineBackend({
   data,
   storage,
 });
-
-// ---------------------------------------------------------
-// CDK ESCAPE HATCH: Enforce Strict Bucket Naming
-// ---------------------------------------------------------
-const { bucket } = backend.storage.resources;
-if (bucket) {
-  const cfnBucket = bucket.node.defaultChild as any;
-  if (cfnBucket) {
-    const branchEnvMap: Record<string, string> = {
-      main: 'prod',
-      develop: 'qa',
-      staging: 'stage'
-    };
-    const envName = branchEnvMap[process.env.AWS_BRANCH || ''] || 'sandbox';
-    cfnBucket.bucketName = `leo-permits-storage-${envName}`;
-  }
-}
