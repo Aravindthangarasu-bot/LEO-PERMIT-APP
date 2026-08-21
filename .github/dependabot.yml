@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: "npm" # Check for npm dependencies
+    directory: "/"           # Location of package.json
+    schedule:
+      interval: "weekly"     # Run check once a week
+    open-pull-requests-limit: 10
+    labels:
+      - "security"
+      - "dependencies"
+
+  - package-ecosystem: "docker" # Check for Dockerfile updates
+    directory: "/"              # Location of Dockerfile
+    schedule:
+      interval: "weekly"
+    labels:
+      - "security"
+      - "docker"

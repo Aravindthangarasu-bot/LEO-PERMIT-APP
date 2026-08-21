@@ -1,0 +1,78 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Search, FileText, ChevronRight } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useAppStore } from '../../context/AppStoreContext';
+import { PERMIT_TYPES } from '../../data/mockData';
+import { STATUS_CONFIG } from './statusConfig';
+import styles from './Customer.module.css';
+
+export default function MyApplications() {
+  const { user } = useAuth();
+  const { getAppsForUser } = useAppStore();
+  const apps = user ? getAppsForUser(user) : [];
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all');
+
+  const filtered = apps.filter(a => {
+    const matchS = a.id.toLowerCase().includes(search.toLowerCase()) || a.address.toLowerCase().includes(search.toLowerCase());
+    const matchF = filter === 'all' || a.status === filter;
+    return matchS && matchF;
+  });
+
+  return (
+    <div className={`page-enter ${styles.page}`}>
+      <div className={styles.pageHeader}>
+        <div>
+          <h1 className={styles.pageTitle}>My Applications</h1>
+          <p className={styles.pageSub}>{apps.length} total applications</p>
+        </div>
+        <Link to="/customer/new" className="btn btn-primary">+ New Application</Link>
+      </div>
+
+      <div className={styles.filterRow}>
+        <div className={styles.searchBox}>
+          <Search size={16} />
+          <input type="text" placeholder="Search by ID or address…" value={search} onChange={e => setSearch(e.target.value)} className={styles.searchInput} />
+        </div>
+        <div className={styles.filterBtns}>
+          {['all', 'pending', 'under_review', 'documents_required', 'site_visit_scheduled',
+            'client_review', 'panchayat_review', 'panchayat_approved', 'terminated'].map(f => (
+            <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => setFilter(f)}>
+              {f === 'all' ? 'All' : STATUS_CONFIG[f as keyof typeof STATUS_CONFIG]?.label ?? f}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className={`card ${styles.appListCard}`}>
+        {filtered.length === 0 ? (
+          <div className={styles.emptyState}><FileText size={40} /><p>No applications found</p></div>
+        ) : (
+          filtered.map(app => {
+            const sc = STATUS_CONFIG[app.status];
+            const needsAction = ['documents_required','client_review','plan_revision_requested'].includes(app.status);
+            return (
+              <Link key={app.id} to={`/customer/application/${app.id}`} className={styles.appRow}>
+                <div className={styles.appRowLeft}>
+                  <div className={styles.appId}>{app.id}</div>
+                  <div className={styles.appType}>{PERMIT_TYPES.find(p => p.value === app.type)?.label}</div>
+                  <div className={styles.appAddr}>{app.address}</div>
+                  <div className={styles.appDate}>{new Date(app.submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                </div>
+                <div className={styles.appRowRight}>
+                  <span className={styles.appBadge} style={{ background: sc.bg, color: sc.color }}>
+                    <span className={`status-dot ${sc.dot}`} /> {sc.label}
+                  </span>
+                  {needsAction && <span className={styles.actionTag}>Action Required</span>}
+                  <ChevronRight size={16} style={{ color: 'var(--text-muted)', marginTop: 4 }} />
+                </div>
+              </Link>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+

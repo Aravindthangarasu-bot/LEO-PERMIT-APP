@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LEO Application — Flow & Use Case Diagrams</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary: #c0522a; --dark: #1a1a1a; --surface: #f9fafb; --border: #e5e7eb;
+    --green: #15803d; --blue: #1d4ed8; --purple: #7c3aed; --amber: #92400e;
+  }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f3f4f6; color: #1a1a1a; }
+
+  /* NAV */
+  nav {
+    background: #1a1a1a; padding: 14px 32px; display: flex; align-items: center;
+    gap: 16px; position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 16px rgba(0,0,0,.4);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-box { width: 36px; height: 36px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 16px; }
+  .logo-text { font-size: 16px; font-weight: 800; color: white; }
+  .logo-sub  { font-size: 10px; color: rgba(255,255,255,.45); }
+  .tabs { display: flex; gap: 4px; margin-left: auto; }
+  .tab { padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; color: rgba(255,255,255,.55); border: none; transition: all .2s; }
+  .tab:hover   { background: rgba(255,255,255,.08); color: white; }
+  .tab.active  { background: var(--primary); color: white; }
+
+  /* Hide non-active sections — controlled by JS after Mermaid loads */
+  section { padding: 36px 40px; display: none; }
+  section.visible { display: block; }
+  section.preload { display: block; position: fixed; left: -9999px; top: 0; width: 1200px; pointer-events: none; }
+
+  .section-title {
+    font-size: 26px; font-weight: 900; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-sub { font-size: 14px; color: #6b7280; margin-bottom: 32px; }
+
+  /* DIAGRAM BOX */
+  .diagram-box {
+    background: white; border-radius: 16px; padding: 32px;
+    border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    margin-bottom: 28px; overflow-x: auto;
+  }
+  .diagram-title { font-size: 14px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 20px; }
+
+  /* LEGEND */
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 28px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
+  .legend-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+
+  /* USE CASE SVG */
+  .uc-container { overflow-x: auto; }
+
+  /* STATUS FLOW */
+  .status-flow { display: flex; align-items: center; flex-wrap: wrap; gap: 0; }
+  .status-node {
+    padding: 10px 18px; border-radius: 8px; font-size: 12px; font-weight: 700;
+    text-align: center; min-width: 110px; position: relative;
+  }
+  .status-arrow {
+    font-size: 18px; color: #9ca3af; padding: 0 4px; flex-shrink: 0;
+  }
+
+  /* KPBR TABLE */
+  .kpbr-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .kpbr-table th { background: #1a1a1a; color: white; padding: 12px 16px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+  .kpbr-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); }
+  .kpbr-table tr:hover td { background: #f9fafb; }
+  .unlimited-tag { background: #dcfce7; color: #15803d; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+  .limited-tag   { background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+
+  /* ACTOR CARDS */
+  .actor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 28px; }
+  .actor-card { background: white; border-radius: 14px; padding: 24px; border: 1px solid var(--border); }
+  .actor-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .actor-icon { width: 44px; height: 44px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .actor-name { font-size: 15px; font-weight: 800; }
+  .actor-desc { font-size: 12px; color: #6b7280; margin-top: 2px; }
+  .use-case-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .use-case-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
+  .use-case-list li:last-child { border-bottom: none; }
+  .uc-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+
+  .mermaid { min-width: 600px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <div class="logo-box">L</div>
+    <div>
+      <div class="logo-text">LEO Platform</div>
+      <div class="logo-sub">System Documentation</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="show('flow')">📊 Flow Diagram</button>
+    <button class="tab" onclick="show('usecase')">🎭 Use Case Diagram</button>
+    <button class="tab" onclick="show('status')">🔄 Status Lifecycle</button>
+    <button class="tab" onclick="show('kpbr')">🏛️ KPBR Licence Table</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════ FLOW DIAGRAM -->
+<section id="flow" class="visible">
+  <div class="section-title">📊 Complete Application Flow Diagram</div>
+  <div class="section-sub">End-to-end workflow across all 4 portals — Customer, Service Provider, Office Staff, Super Admin</div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#c0522a"></div>Customer Actions</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#15803d"></div>Provider Actions</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7c3aed"></div>Staff Actions</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#1d4ed8"></div>Admin Actions</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>System / Notifications</div>
+  </div>
+
+  <div class="diagram-box">
+    <div class="diagram-title">Customer Onboarding & Application Flow</div>
+    <pre class="mermaid">
+flowchart TD
+  A([🌐 Landing Page]) --> B{First Visit?}
+  B -- New User --> C[Get Started]
+  B -- Returning --> D[Log In]
+  C --> E{Account Type}
+  E -- Customer --> F[Customer Signup\nName · Mobile · Email\nPincode · Address]
+  E -- Provider --> G[Provider Registration\nBusiness Details · Licence · KPBR Category]
+  F --> H[OTP Verification]
+  G --> H2[OTP Verification]
+  H --> I[Customer Dashboard\n13 Service Tiles]
+  H2 --> J[Pending Admin Approval]
+  D --> K{Role}
+  K -- Customer --> I
+  K -- Provider --> L[Provider Dashboard]
+  K -- Staff --> M[Staff Portal]
+  K -- Admin --> N[Admin Dashboard]
+
+  I --> O[New Application\n4-Step Wizard]
+  O --> O1[Step 1: Select Service\n5 KPBR Services]
+  O1 --> O2[Step 2: Property Details\nAddress · Landmark · Building Specs]
+  O2 --> O3[Step 3: Upload Documents\n4 Common Documents]
+  O3 --> O4[Step 4: Choose Provider\nFiltered by Landmark & Licence Limits]
+  O4 --> P[Application Submitted ✅\nStatus: PENDING]
+
+  P -- Provider Notified --> L
+  L --> Q[Acknowledge Request\n📱 Customer Notified with Contact]
+  Q --> R[Verify Documents]
+  R -- Issue Found --> S[Document Required\n📱 Customer Notified]
+  S --> T[Customer Re-uploads Docs]
+  T --> R
+  R -- Docs OK --> U[Customer Proposes\n3 Site Visit Dates]
+  U --> V[Provider Selects Date\n📱 Customer Notified]
+  V --> W[Site Visit & Measurement]
+  W --> X[Provider Prepares Plan]
+
+  X --> Y{Assign to Staff?}
+  Y -- Yes --> Z[Assign to Office Staff\n📱 Customer Notified with Staff Contact]
+  Z --> M
+  M --> AA[Staff Reviews & Updates\n📱 Status Notifications Sent]
+  AA --> AB[Upload Plan PDF]
+  Y -- No --> AB
+
+  AB --> AC[Plan Sent to Customer\nStatus: CLIENT REVIEW]
+  AC --> AD{Customer Decision}
+  AD -- Approve --> AE[Status: Authority Review]
+  AD -- Request Changes --> AF[Revision Requested\n📱 Provider Notified]
+  AF --> AB
+
+  AE --> AG[Provider Submits to Authority]
+  AG --> AH{Authority Decision}
+  AH -- Approved --> AI[Approval Number Generated ✅\nProvider Uploads Approved Docs]
+  AH -- Rejected --> AJ[Back to Revision Loop]
+  AI --> AK([Project Complete 🎉\nCustomer Downloads Approval])
+
+  style A fill:#1a1a1a,color:white
+  style AK fill:#15803d,color:white
+  style P fill:#f59e0b,color:white
+  style I fill:#c0522a,color:white
+  style L fill:#15803d,color:white
+  style M fill:#7c3aed,color:white
+  style N fill:#1d4ed8,color:white
+  style AI fill:#15803d,color:white
+    </pre>
+  </div>
+
+  <div class="diagram-box">
+    <div class="diagram-title">Super Admin Flow</div>
+    <pre class="mermaid">
+flowchart LR
+  A([Admin Login]) --> B[Admin Dashboard\nSystem Overview]
+  B --> C{Pending\nProvider Requests?}
+  C -- Yes --> D[Review Provider\nLicence · Documents · Category]
+  D --> E{Decision}
+  E -- Approve --> F[Provider Activated ✅\nVisible to Customers]
+  E -- Reject --> G[Request More Docs]
+  C -- No --> H[All Applications View]
+  H --> I[Assign Provider to\nUnassigned Applications]
+  H --> J[Filter / Search\nApplications]
+  B --> K[Manage Providers]
+  K --> L[View Licence Details\nKPBR Category · Expiry · ML Status]
+  K --> M{Licence Expired?}
+  M -- Yes --> N[Alert: Hidden from Customers\nCannot Re-activate Until Renewed]
+  M -- No --> O[Active & Visible]
+  K --> P[Suspend / Reactivate\nProvider]
+  B --> Q[Add Provider Manually\n4-Step Form]
+  Q --> R[Business Details]
+  R --> S[KPBR Licence + ML Verification]
+  S --> T[Optional: Photo / About Us]
+  T --> U[Review & Confirm]
+  U --> V[Provider Registered\nPending Activation]
+
+  style A fill:#1d4ed8,color:white
+  style F fill:#15803d,color:white
+  style N fill:#dc2626,color:white
+  style V fill:#f59e0b,color:white
+    </pre>
+  </div>
+
+  <div class="diagram-box">
+    <div class="diagram-title">Licence Expiry Notification Flow</div>
+    <pre class="mermaid">
+flowchart LR
+  A([System Checks\nLicence Expiry Daily]) --> B{Days Until Expiry}
+  B -->|&gt; 90 days| C[No Notification]
+  B -->|90 days| D[🔵 Info Reminder\nSent to Provider]
+  B -->|60 days| E[🟡 Warning Alert\nSent to Provider]
+  B -->|30 days| F[🔴 Critical Alert\nSent to Provider + Admin]
+  B -->|≤ 10 days| G[🚨 Daily Reminder\nEvery Day Until Renewal]
+  B -->|0 or past| H[⛔ Licence Expired\nProvider Hidden from Customers\nAdmin Alerted]
+  D --> I[Provider Dashboard\nBanner Shown]
+  E --> I
+  F --> I
+  G --> I
+  H --> J[Admin Dashboard\nExpiry Count Shown\nCannot Re-activate Until Renewed]
+
+  style H fill:#dc2626,color:white
+  style G fill:#ea580c,color:white
+  style F fill:#f59e0b,color:#1a1a1a
+    </pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ USE CASE -->
+<section id="usecase">
+  <div class="section-title">🎭 Use Case Diagram</div>
+  <div class="section-sub">All actors and their interactions with the LEO system</div>
+
+  <div class="actor-grid">
+    <!-- Customer -->
+    <div class="actor-card">
+      <div class="actor-header">
+        <div class="actor-icon" style="background:#fff7ed;color:#c0522a">🏠</div>
+        <div>
+          <div class="actor-name">Customer</div>
+          <div class="actor-desc">Property owner applying for permits</div>
+        </div>
+      </div>
+      <ul class="use-case-list">
+        <li><div class="uc-dot" style="background:#c0522a"></div>Sign Up with Mobile OTP</li>
+        <li><div class="uc-dot" style="background:#c0522a"></div>Log In (existing account)</li>
+        <li><div class="uc-dot" style="background:#c0522a"></div>View Dashboard (13 service tiles)</li>
+        <li><div class="uc-dot" style="background:#c0522a"></div>Submit New Permit Application (5 KPBR services)</li>
+        <li><div class="uc-dot" style="background:#c0522a"></div>Upload Required Documents (4 common docs)</li>
+        <li><div class="uc-dot" style="background:#c0522a"></div>Select Service Provider (KPBR-filtered)</li>
+        <li><div class="uc-dot" style="background:#c0522a"></div>Propose 3 Site Visit Dates</li>
+        <li><div class="uc-dot" style="background:#c0522a"></div>Review & Approve/Reject Plan</li>
+        <li><div class="uc-dot" style="background:#c0522a"></div>Request Plan Revision with Comments</li>
+        <li><div class="uc-dot" style="background:#c0522a"></div>Track Application Timeline</li>
+        <li><div class="uc-dot" style="background:#c0522a"></div>Receive Notifications (with contact info)</li>
+        <li><div class="uc-dot" style="background:#c0522a"></div>Download Approval Letter</li>
+        <li><div class="uc-dot" style="background:#c0522a"></div>Terminate Project</li>
+        <li><div class="uc-dot" style="background:#c0522a"></div>View Historical Applications</li>
+      </ul>
+    </div>
+
+    <!-- Service Provider -->
+    <div class="actor-card">
+      <div class="actor-header">
+        <div class="actor-icon" style="background:#f0fdf4;color:#15803d">🏗️</div>
+        <div>
+          <div class="actor-name">Service Provider</div>
+          <div class="actor-desc">KPBR-licensed permit approver</div>
+        </div>
+      </div>
+      <ul class="use-case-list">
+        <li><div class="uc-dot" style="background:#15803d"></div>Self-Register (2-step form)</li>
+        <li><div class="uc-dot" style="background:#15803d"></div>Log In with Mobile OTP</li>
+        <li><div class="uc-dot" style="background:#15803d"></div>View Assigned Applications</li>
+        <li><div class="uc-dot" style="background:#15803d"></div>Acknowledge Request (notify customer)</li>
+        <li><div class="uc-dot" style="background:#15803d"></div>Verify Customer Documents</li>
+        <li><div class="uc-dot" style="background:#15803d"></div>Report Document Issues</li>
+        <li><div class="uc-dot" style="background:#15803d"></div>Select Site Visit Date (from 3 options)</li>
+        <li><div class="uc-dot" style="background:#15803d"></div>Conduct Site Measurement</li>
+        <li><div class="uc-dot" style="background:#15803d"></div>Upload Building Plan PDF</li>
+        <li><div class="uc-dot" style="background:#15803d"></div>Submit to Local Authority</li>
+        <li><div class="uc-dot" style="background:#15803d"></div>Upload Authority Approved Documents</li>
+        <li><div class="uc-dot" style="background:#15803d"></div>Add Office Staff Members</li>
+        <li><div class="uc-dot" style="background:#15803d"></div>Assign Work to Staff</li>
+        <li><div class="uc-dot" style="background:#15803d"></div>Manage Staff (activate/deactivate)</li>
+        <li><div class="uc-dot" style="background:#15803d"></div>View Licence Expiry Reminders</li>
+        <li><div class="uc-dot" style="background:#15803d"></div>Decline / Terminate Project</li>
+      </ul>
+    </div>
+
+    <!-- Office Staff -->
+    <div class="actor-card">
+      <div class="actor-header">
+        <div class="actor-icon" style="background:#f5f3ff;color:#7c3aed">👨‍💼</div>
+        <div>
+          <div class="actor-name">Office Staff</div>
+          <div class="actor-desc">Provider's associate handling assigned work</div>
+        </div>
+      </div>
+      <ul class="use-case-list">
+        <li><div class="uc-dot" style="background:#7c3aed"></div>Log In via "Office Staff" portal</li>
+        <li><div class="uc-dot" style="background:#7c3aed"></div>View Only Assigned Applications (isolated)</li>
+        <li><div class="uc-dot" style="background:#7c3aed"></div>Review Customer Details & Documents</li>
+        <li><div class="uc-dot" style="background:#7c3aed"></div>Update Application Status</li>
+        <li><div class="uc-dot" style="background:#7c3aed"></div>Add Notes / Remarks</li>
+        <li><div class="uc-dot" style="background:#7c3aed"></div>Request Additional Documents</li>
+        <li><div class="uc-dot" style="background:#7c3aed"></div>Trigger Customer Notifications</li>
+        <li style="color:#dc2626"><div class="uc-dot" style="background:#dc2626"></div>Cannot access other provider's data</li>
+        <li style="color:#dc2626"><div class="uc-dot" style="background:#dc2626"></div>Cannot access unassigned applications</li>
+        <li style="color:#dc2626"><div class="uc-dot" style="background:#dc2626"></div>Blocked if account deactivated</li>
+      </ul>
+    </div>
+
+    <!-- Super Admin -->
+    <div class="actor-card">
+      <div class="actor-header">
+        <div class="actor-icon" style="background:#eff6ff;color:#1d4ed8">🔐</div>
+        <div>
+          <div class="actor-name">Super Admin</div>
+          <div class="actor-desc">Platform administrator with full access</div>
+        </div>
+      </div>
+      <ul class="use-case-list">
+        <li><div class="uc-dot" style="background:#1d4ed8"></div>Log In (secure OTP)</li>
+        <li><div class="uc-dot" style="background:#1d4ed8"></div>View System Dashboard (all stats)</li>
+        <li><div class="uc-dot" style="background:#1d4ed8"></div>Review Provider Registration Requests</li>
+        <li><div class="uc-dot" style="background:#1d4ed8"></div>Approve / Reject Provider Applications</li>
+        <li><div class="uc-dot" style="background:#1d4ed8"></div>View KPBR Licence Details & Limits</li>
+        <li><div class="uc-dot" style="background:#1d4ed8"></div>Monitor Licence Expiry Alerts</li>
+        <li><div class="uc-dot" style="background:#1d4ed8"></div>Suspend / Reactivate Providers</li>
+        <li><div class="uc-dot" style="background:#1d4ed8"></div>Add Providers Manually (4-step)</li>
+        <li><div class="uc-dot" style="background:#1d4ed8"></div>View All Applications (all customers)</li>
+        <li><div class="uc-dot" style="background:#1d4ed8"></div>Filter & Search Applications</li>
+        <li><div class="uc-dot" style="background:#1d4ed8"></div>Assign Providers to Applications</li>
+        <li><div class="uc-dot" style="background:#1d4ed8"></div>View Provider Performance & Ratings</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="diagram-box">
+    <div class="diagram-title">Use Case Relationships</div>
+    <pre class="mermaid">
+flowchart LR
+  subgraph CUSTOMER ["👤 Customer"]
+    C1[Sign Up / Login OTP]
+    C2[Submit Application\n5 KPBR Services]
+    C3[Upload Documents\n4 Common Docs]
+    C4[Choose Provider\nKPBR Filtered]
+    C5[Propose Site\nVisit Dates]
+    C6[Review Plan\nApprove / Revise]
+    C7[Track Status &\nNotifications]
+    C8[Download\nApproval]
+  end
+
+  subgraph PROVIDER ["🏗️ Service Provider"]
+    P1[Login OTP]
+    P2[Acknowledge\nRequest]
+    P3[Verify Documents]
+    P4[Select Visit Date]
+    P5[Upload Plan PDF]
+    P6[Submit to Authority]
+    P7[Manage Staff]
+  end
+
+  subgraph STAFF ["👨‍💼 Office Staff"]
+    S1[Login OTP]
+    S2[View Assigned Work\nOnly]
+    S3[Update Status]
+  end
+
+  subgraph ADMIN ["🔐 Super Admin"]
+    A1[Login OTP]
+    A2[Approve Providers]
+    A3[Manage All\nApplications]
+    A4[Add Providers]
+    A5[Monitor Licences]
+  end
+
+  subgraph SYSTEM ["⚙️ System"]
+    SYS1[OTP Service]
+    SYS2[Notification Engine\nSMS · In-App]
+    SYS3[ML Licence\nVerification]
+    SYS4[Expiry\nReminder Engine]
+    SYS5[KPBR Licence\nFilter Engine]
+  end
+
+  C1 --> SYS1
+  P1 --> SYS1
+  S1 --> SYS1
+  A1 --> SYS1
+
+  C2 --> SYS5
+  C4 --> SYS5
+  C2 --> C3
+  C3 --> C4
+  C4 --> C5
+
+  P2 --> SYS2
+  P3 --> SYS2
+  P4 --> SYS2
+  P5 --> SYS2
+  P6 --> SYS2
+  P7 --> S2
+
+  S3 --> SYS2
+  C6 --> SYS2
+
+  A2 --> SYS3
+  A4 --> SYS3
+  A5 --> SYS4
+
+  C7 --> SYS2
+    </pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ STATUS -->
+<section id="status">
+  <div class="section-title">🔄 Application Status Lifecycle</div>
+  <div class="section-sub">Complete state machine for every permit application from submission to completion</div>
+
+  <div class="diagram-box">
+    <div class="diagram-title">Status State Machine</div>
+    <pre class="mermaid">
+flowchart TD
+  START([Customer Submits Application]) --> P
+
+  P["🟣 PENDING\n Submitted, awaiting provider"]
+  P --> UR["🔵 UNDER REVIEW\n Provider acknowledged\n Customer notified with contact"]
+
+  UR --> DR["🟡 DOCS REQUIRED ⚠️\n Provider flagged issue\n Customer must re-upload"]
+  DR --> UR
+
+  UR --> SVS["🟣 SITE VISIT SCHEDULED\n Customer proposed 3 dates\n Provider selected one"]
+  SVS --> SVC["🟣 SITE VISIT CONFIRMED\n Date locked in\n Both parties notified"]
+  SVC --> PP["🔵 PLAN PREPARATION\n Provider measuring & drafting"]
+  PP --> PU["🔵 PLAN UPLOADED\n Plan PDF sent to customer"]
+
+  PU --> CR["🟡 CLIENT REVIEW ⚠️\n Customer must approve or reject"]
+  CR --> RR["🟠 REVISION REQUESTED\n Customer sent comments\n Provider must revise"]
+  RR --> PU
+
+  CR --> AR["🔵 AUTHORITY REVIEW\n Application submitted to authority"]
+  AR --> AA["🟢 AUTHORITY APPROVED ✅\n Approval number generated\n Provider uploads signed docs"]
+  AR --> AJ["🔴 AUTHORITY REJECTED\n Provider must revise plan"]
+  AJ --> PP
+
+  AA --> DONE([Project Complete 🎉])
+
+  P --> T["⚫ TERMINATED\n Declined by client or provider"]
+  UR --> T
+  SVS --> T
+  PP --> T
+
+  style START fill:#1a1a1a,color:white,stroke:#1a1a1a
+  style DONE  fill:#15803d,color:white,stroke:#15803d
+  style P     fill:#eef2ff,color:#4338ca,stroke:#6366f1
+  style UR    fill:#dbeafe,color:#1e40af,stroke:#3b82f6
+  style DR    fill:#fef3c7,color:#92400e,stroke:#f59e0b
+  style SVS   fill:#ede9fe,color:#6d28d9,stroke:#8b5cf6
+  style SVC   fill:#ede9fe,color:#6d28d9,stroke:#8b5cf6
+  style PP    fill:#cffafe,color:#0e7490,stroke:#06b6d4
+  style PU    fill:#e0f2fe,color:#075985,stroke:#0284c7
+  style CR    fill:#fef3c7,color:#92400e,stroke:#f59e0b
+  style RR    fill:#ffedd5,color:#c2410c,stroke:#ea580c
+  style AR    fill:#e0f2fe,color:#0369a1,stroke:#0284c7
+  style AA    fill:#dcfce7,color:#15803d,stroke:#16a34a
+  style AJ    fill:#fee2e2,color:#991b1b,stroke:#dc2626
+  style T     fill:#f3f4f6,color:#374151,stroke:#6b7280
+    </pre>
+  </div>
+
+  <div class="diagram-box">
+    <div class="diagram-title">Status Badges Reference</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:8px">
+      <div style="padding:12px 16px;border-radius:8px;background:#eef2ff;border-left:4px solid #6366f1"><div style="font-size:11px;font-weight:800;color:#6366f1;text-transform:uppercase">Pending</div><div style="font-size:12px;color:#4338ca;margin-top:3px">Submitted, awaiting provider</div></div>
+      <div style="padding:12px 16px;border-radius:8px;background:#dbeafe;border-left:4px solid #3b82f6"><div style="font-size:11px;font-weight:800;color:#1d4ed8;text-transform:uppercase">Under Review</div><div style="font-size:12px;color:#1e40af;margin-top:3px">Provider reviewing documents</div></div>
+      <div style="padding:12px 16px;border-radius:8px;background:#fef3c7;border-left:4px solid #f59e0b"><div style="font-size:11px;font-weight:800;color:#92400e;text-transform:uppercase">Docs Required</div><div style="font-size:12px;color:#92400e;margin-top:3px">Customer must re-upload</div></div>
+      <div style="padding:12px 16px;border-radius:8px;background:#ede9fe;border-left:4px solid #8b5cf6"><div style="font-size:11px;font-weight:800;color:#7c3aed;text-transform:uppercase">Site Visit Scheduled</div><div style="font-size:12px;color:#6d28d9;margin-top:3px">Date proposed / confirmed</div></div>
+      <div style="padding:12px 16px;border-radius:8px;background:#cffafe;border-left:4px solid #06b6d4"><div style="font-size:11px;font-weight:800;color:#0e7490;text-transform:uppercase">Plan Preparation</div><div style="font-size:12px;color:#0e7490;margin-top:3px">Provider preparing plan</div></div>
+      <div style="padding:12px 16px;border-radius:8px;background:#e0f2fe;border-left:4px solid #0284c7"><div style="font-size:11px;font-weight:800;color:#0369a1;text-transform:uppercase">Plan Uploaded</div><div style="font-size:12px;color:#075985;margin-top:3px">Plan ready for review</div></div>
+      <div style="padding:12px 16px;border-radius:8px;background:#fef3c7;border-left:4px solid #f59e0b"><div style="font-size:11px;font-weight:800;color:#92400e;text-transform:uppercase">Client Review ⚠️</div><div style="font-size:12px;color:#92400e;margin-top:3px">Customer must approve</div></div>
+      <div style="padding:12px 16px;border-radius:8px;background:#ffedd5;border-left:4px solid #ea580c"><div style="font-size:11px;font-weight:800;color:#c2410c;text-transform:uppercase">Revision Requested</div><div style="font-size:12px;color:#c2410c;margin-top:3px">Customer requested changes</div></div>
+      <div style="padding:12px 16px;border-radius:8px;background:#e0f2fe;border-left:4px solid #0369a1"><div style="font-size:11px;font-weight:800;color:#0369a1;text-transform:uppercase">Authority Review</div><div style="font-size:12px;color:#0369a1;margin-top:3px">Submitted to authority</div></div>
+      <div style="padding:12px 16px;border-radius:8px;background:#dcfce7;border-left:4px solid #16a34a"><div style="font-size:11px;font-weight:800;color:#15803d;text-transform:uppercase">Authority Approved ✅</div><div style="font-size:12px;color:#15803d;margin-top:3px">Approval number generated</div></div>
+      <div style="padding:12px 16px;border-radius:8px;background:#fee2e2;border-left:4px solid #dc2626"><div style="font-size:11px;font-weight:800;color:#991b1b;text-transform:uppercase">Authority Rejected</div><div style="font-size:12px;color:#991b1b;margin-top:3px">Requires revision</div></div>
+      <div style="padding:12px 16px;border-radius:8px;background:#f3f4f6;border-left:4px solid #6b7280"><div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase">Terminated</div><div style="font-size:12px;color:#6b7280;margin-top:3px">Declined by any party</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ KPBR -->
+<section id="kpbr">
+  <div class="section-title">🏛️ KPBR 2019 Licence-Wise Building Permit Limits</div>
+  <div class="section-sub">Kerala Panchayat Building Rules 2019 — Appendix H2 · All permit approvals are governed by these licence limits</div>
+
+  <div class="diagram-box">
+    <div class="diagram-title">KPBR Licence Hierarchy & Building Limits</div>
+    <pre class="mermaid">
+flowchart TD
+  ROOT([KPBR 2019 Licences]) --> UNLIMITED[Unlimited Licences]
+  ROOT --> LIMITED[Limited Licences]
+
+  UNLIMITED --> A[Architect\nAll permits · Unlimited area · Any height]
+  UNLIMITED --> B[Institution — Architecture\nAll permits · Unlimited]
+  UNLIMITED --> C[Institution — Civil Engineering\nAll permits · Unlimited]
+  UNLIMITED --> D[Engineer – A\nAll permits · Unlimited]
+
+  LIMITED --> E[Engineer – B\n≤ 1000 m² · 4 floors · 14.5 m]
+  LIMITED --> F[Building Designer – B\n≤ 1000 m² · 4 floors · 14.5 m]
+  LIMITED --> G[Building Designer – A\n≤ 500 m² · 3 storeys · 11 m]
+  LIMITED --> H[Supervisor – Senior\n≤ 1000 m² · 4 floors · 14.5 m]
+  LIMITED --> I[Supervisor – A\n≤ 750 m² · 3 floors · 11 m]
+  LIMITED --> J[Supervisor – B\n≤ 300 m² · 2 floors · 7.5 m]
+
+  style A fill:#dcfce7,color:#15803d,stroke:#86efac
+  style B fill:#dcfce7,color:#15803d,stroke:#86efac
+  style C fill:#dcfce7,color:#15803d,stroke:#86efac
+  style D fill:#dcfce7,color:#15803d,stroke:#86efac
+  style E fill:#dbeafe,color:#1d4ed8,stroke:#93c5fd
+  style F fill:#dbeafe,color:#1d4ed8,stroke:#93c5fd
+  style G fill:#ede9fe,color:#7c3aed,stroke:#c4b5fd
+  style H fill:#dbeafe,color:#1d4ed8,stroke:#93c5fd
+  style I fill:#fef3c7,color:#92400e,stroke:#fcd34d
+  style J fill:#fee2e2,color:#991b1b,stroke:#fca5a5
+  style UNLIMITED fill:#dcfce7,color:#15803d
+  style LIMITED fill:#fee2e2,color:#991b1b
+    </pre>
+  </div>
+
+  <div class="diagram-box">
+    <div class="diagram-title">Licence Categories — Full Reference Table (KPBR 2019 Appendix H2)</div>
+    <table class="kpbr-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Licence / Category</th>
+          <th>Maximum Building Area</th>
+          <th>Floor Limit</th>
+          <th>Height Limit</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td><strong>Architect</strong></td><td>All building plans</td><td>As per KPBR</td><td>As per KPBR</td><td><span class="unlimited-tag">UNLIMITED</span></td></tr>
+        <tr><td>2</td><td><strong>Institution (Architecture)</strong></td><td>All building plans</td><td>As per KPBR</td><td>As per KPBR</td><td><span class="unlimited-tag">UNLIMITED</span></td></tr>
+        <tr><td>3</td><td><strong>Institution (Civil Engineering)</strong></td><td>All building plans</td><td>As per KPBR</td><td>As per KPBR</td><td><span class="unlimited-tag">UNLIMITED</span></td></tr>
+        <tr><td>4</td><td><strong>Engineer – A</strong></td><td>All building plans</td><td>As per KPBR</td><td>As per KPBR</td><td><span class="unlimited-tag">UNLIMITED</span></td></tr>
+        <tr><td>5</td><td><strong>Building Designer – B</strong></td><td>Up to 1,000 m²</td><td>Up to 4 floors</td><td>Up to 14.5 m</td><td><span class="limited-tag">LIMITED</span></td></tr>
+        <tr><td>6</td><td><strong>Engineer – B</strong></td><td>Up to 1,000 m²</td><td>Up to 4 floors</td><td>Up to 14.5 m</td><td><span class="limited-tag">LIMITED</span></td></tr>
+        <tr><td>7</td><td><strong>Supervisor – Senior</strong></td><td>Up to 1,000 m² total built-up</td><td>Up to 4 floors</td><td>Up to 14.5 m</td><td><span class="limited-tag">LIMITED</span></td></tr>
+        <tr><td>8</td><td><strong>Building Designer – A</strong></td><td>Structural design up to 500 m²</td><td>Up to 3 storeys</td><td>Up to 11 m</td><td><span class="limited-tag">LIMITED</span></td></tr>
+        <tr><td>9</td><td><strong>Supervisor – A</strong></td><td>Up to 750 m² total built-up</td><td>Up to 3 floors</td><td>Up to 11 m</td><td><span class="limited-tag">LIMITED</span></td></tr>
+        <tr><td>10</td><td><strong>Supervisor – B</strong></td><td>Up to 300 m²</td><td>Up to 2 floors</td><td>Up to 7.5 m</td><td><span class="limited-tag">LIMITED</span></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:#6b7280;margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb">
+      <strong>Reference:</strong> Kerala Panchayat Building Rules (KPBR) 2019 – Appendix H2.
+      The above limits are presented as a quick professional reference. Applicable building occupancy, structural design requirements, number of floors, height and other KPBR provisions must also be satisfied.
+      <br><strong>Note:</strong> Development Area limits are intentionally excluded as requested.
+    </p>
+  </div>
+
+  <div class="diagram-box">
+    <div class="diagram-title">How Licence Limits Filter Providers in LEO</div>
+    <pre class="mermaid">
+flowchart LR
+  A[Customer Enters\nBuilding Specs\n450 m² · 2 floors · 8 m] --> B{KPBR Filter Engine}
+
+  B --> C[Architect ✅\nUnlimited — eligible]
+  B --> D[Engineer-A ✅\nUnlimited — eligible]
+  B --> E[Engineer-B ✅\n≤ 1000m² — eligible]
+  B --> F[Supervisor-Senior ✅\n≤ 1000m² — eligible]
+  B --> G[Building Designer-B ✅\n≤ 1000m² — eligible]
+  B --> H[Building Designer-A ⛔\n≤ 500m² — 450m² OK but check floors]
+  B --> I[Supervisor-A ⛔\n≤ 750m² — eligible but check floors]
+  B --> J[Supervisor-B ⛔\n≤ 300m² — EXCEEDS LIMIT]
+
+  C --> K[Shown to Customer ✅]
+  D --> K
+  E --> K
+  F --> K
+  G --> K
+  J --> L[Hidden from Customer ❌\nWith reason shown]
+
+  style K fill:#dcfce7,color:#15803d
+  style L fill:#fee2e2,color:#991b1b
+  style J fill:#fee2e2,color:#991b1b,stroke:#fca5a5
+    </pre>
+  </div>
+</section>
+
+<script>
+  mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose',
+    flowchart: { curve: 'basis', padding: 20 }, fontSize: 13
+  });
+
+  async function initDiagrams() {
+    // Add preload class to all sections so they render off-screen at full width
+    document.querySelectorAll('section').forEach(s => s.classList.add('preload'));
+    await mermaid.run({ querySelector: '.mermaid' });
+    // Remove preload, show only the first section
+    document.querySelectorAll('section').forEach(s => s.classList.remove('preload'));
+    document.getElementById('flow').classList.add('visible');
+  }
+  initDiagrams();
+
+  function show(id) {
+    document.querySelectorAll('section').forEach(s => s.classList.remove('visible'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('visible');
+    event.target.classList.add('active');
+    window.scrollTo(0, 0);
+  }
+</script>
+</body>
+</html>

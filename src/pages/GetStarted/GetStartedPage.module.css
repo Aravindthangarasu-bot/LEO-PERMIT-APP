@@ -1,0 +1,82 @@
+.page { min-height: 100vh; background: var(--surface); }
+
+.body {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 60px 24px;
+}
+
+.header { text-align: center; margin-bottom: 48px; }
+.title  { font-size: clamp(28px, 4vw, 42px); font-weight: 900; color: var(--text); margin-bottom: 12px; }
+.sub    { font-size: 16px; color: var(--text-muted); }
+
+.cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 36px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 40px 36px;
+  border-radius: 20px;
+  border: 2px solid var(--border);
+  background: white;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+.card:hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+.cardDark {
+  background: #1a1a1a;
+  border-color: #1a1a1a;
+  color: white;
+}
+.cardDark:hover { border-color: #444; }
+
+.cardIcon {
+  width: 72px; height: 72px; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 24px;
+}
+
+.card h2 { font-size: 22px; font-weight: 800; margin-bottom: 12px; }
+.card p  { font-size: 14px; line-height: 1.7; margin-bottom: 24px; color: var(--text-muted); }
+.cardDark p { color: rgba(255,255,255,0.6); }
+
+.featureList { list-style: none; padding: 0; margin-bottom: 32px; display: flex; flex-direction: column; gap: 10px; }
+.featureList li {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+}
+.cardDark .featureList li { border-color: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+.featureList li svg { color: var(--success); flex-shrink: 0; }
+.cardDark .featureList li svg { color: #4ade80; }
+
+.cta {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 15px; font-weight: 700;
+  color: var(--primary); margin-top: auto;
+}
+.cardDark .cta { color: white; }
+
+.note {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: rgba(255,255,255,0.4);
+  margin-top: 16px;
+}
+
+.loginLine {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.loginLine a { color: var(--primary); font-weight: 600; text-decoration: none; }
+
+@media (max-width: 640px) {
+  .cards { grid-template-columns: 1fr; }
+}
