@@ -13,9 +13,9 @@ export interface PincodeLookupResult {
 
 const DOCUMENT_OVERRIDES: Record<string, PincodeLookupResult> = {
   '641402': {
-    primary: { office: 'Sulur SO', city: 'Sulur', district: 'Coimbatore', taluk: 'Mettupalayam', state: 'Tamil Nadu' },
+    primary: { office: 'Sulur SO', city: 'Sulur', district: 'Coimbatore', taluk: 'Palladam', state: 'Tamil Nadu' },
     options: [
-      { office: 'Sulur SO', city: 'Sulur', district: 'Coimbatore', taluk: 'Mettupalayam', state: 'Tamil Nadu' },
+      { office: 'Sulur SO', city: 'Sulur', district: 'Coimbatore', taluk: 'Palladam', state: 'Tamil Nadu' },
       { office: 'Appanaickenpatti BO', city: 'Appanaickenpatti', district: 'Coimbatore', taluk: 'Palladam', state: 'Tamil Nadu' },
       { office: 'Kalingal BO', city: 'Kalingal', district: 'Coimbatore', taluk: 'Palladam', state: 'Tamil Nadu' },
       { office: 'Kannampalayam BO', city: 'Kannampalayam', district: 'Coimbatore', taluk: 'Mettupalayam', state: 'Tamil Nadu' },
