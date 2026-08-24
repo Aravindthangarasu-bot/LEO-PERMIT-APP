@@ -5,6 +5,7 @@ import { useAppStore, isLicenceExpired } from '../../context/AppStoreContext';
 import { STATUS_CONFIG } from '../Customer/statusConfig';
 import { PERMIT_TYPES } from '../../data/mockData';
 import ActivityThread from '../../components/ActivityThread';
+import { sortByNewest } from '../../utils/sorting';
 import styles from './Admin.module.css';
 
 export default function AllApplications() {
@@ -26,7 +27,7 @@ export default function AllApplications() {
   }, [searchParams]);
 
   useEffect(() => {
-    setApps(applications);
+    setApps(sortByNewest(applications, app => app.submittedAt));
   }, [applications]);
 
   const handleFilterChange = (f: string) => {
@@ -44,7 +45,7 @@ export default function AllApplications() {
 
   const activeProviders = providers.filter(p => p.status === 'active' && !isLicenceExpired(p));
 
-  const filtered = apps.filter(a => {
+  const filtered = sortByNewest(apps.filter(a => {
     const normalizedSearch = search.trim().toLowerCase();
     const exactApplicationId = normalizedSearch.length > 0 && a.id.toLowerCase() === normalizedSearch;
     const matchS = a.id.toLowerCase().includes(normalizedSearch) ||
@@ -62,7 +63,7 @@ export default function AllApplications() {
     
     // An exact application number must always be retrievable, regardless of the active status filter.
     return matchS && (exactApplicationId || matchF);
-  });
+  }), app => app.submittedAt);
 
   const handleAssign = () => {
     if (!assignProvider || !selected) return;
@@ -139,7 +140,7 @@ export default function AllApplications() {
                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{app.customerPhone}</div>
                   </td>
                   <td>{app.type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</td>
-                  <td style={{ fontSize: 12 }}>{new Date(app.submittedAt).toLocaleDateString('en-IN')}</td>
+                  <td style={{ fontSize: 12 }}>{new Date(app.submittedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
                   <td>
                     {app.assignedProviderName
                       ? <span style={{ fontWeight: 500 }}>{app.assignedProviderName}</span>

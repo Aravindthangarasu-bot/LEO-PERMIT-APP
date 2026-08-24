@@ -5,12 +5,13 @@ import { useAuth } from '../../context/AuthContext';
 import { useAppStore } from '../../context/AppStoreContext';
 import { PERMIT_TYPES } from '../../data/mockData';
 import { STATUS_CONFIG } from './statusConfig';
+import { sortByNewest } from '../../utils/sorting';
 import styles from './Customer.module.css';
 
 export default function MyApplications() {
   const { user } = useAuth();
   const { getAppsForUser } = useAppStore();
-  const apps = user ? getAppsForUser(user) : [];
+  const apps = sortByNewest(user ? getAppsForUser(user) : [], app => app.submittedAt);
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [filter, setFilter] = useState(searchParams.get('status') || 'all');
@@ -82,7 +83,7 @@ export default function MyApplications() {
                   <div className={styles.appId}>{app.id}</div>
                   <div className={styles.appType}>{PERMIT_TYPES.find(p => p.value === app.type)?.label}</div>
                   <div className={styles.appAddr}>{app.address}</div>
-                  <div className={styles.appDate}>{new Date(app.submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                  <div className={styles.appDate}>{new Date(app.submittedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
                 </div>
                 <div className={styles.appRowRight}>
                   <span className={styles.appBadge} style={{ background: sc.bg, color: sc.color }}>

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useAppStore, isLicenceExpired } from '../../context/AppStoreContext';
 import styles from '../../components/DashboardShared.module.css';
+import { sortByNewest } from '../../utils/sorting';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -18,8 +19,8 @@ export default function AdminDashboard() {
     activeProviders: providers.filter(p => p.status === 'active' && !isLicenceExpired(p)).length,
   };
 
-  const pendingApps = applications.filter(a => a.status === 'pending');
-  const pendingProviders = providers.filter(p => p.status === 'pending');
+  const pendingApps = sortByNewest(applications.filter(a => a.status === 'pending'), app => app.submittedAt);
+  const pendingProviders = sortByNewest(providers.filter(p => p.status === 'pending'), provider => provider.joinedAt);
 
   const handleSearch = () => {
     if (!searchTerm.trim()) return;

@@ -11,12 +11,13 @@ import ActivityThread from '../../components/ActivityThread';
 import ActionConsole from '../../components/ActionConsole';
 import type { ApplicationStatus, PermitApplication } from '../../types';
 import styles from './Provider.module.css';
+import { sortByNewest } from '../../utils/sorting';
 
 export default function AssignedApplications() {
   const { user } = useAuth();
   const { updateApplication, publishApplicationUpdate, getAppsForUser, getStaffForProvider, getMyProviderProfile } = useAppStore();
   const provider = user ? getMyProviderProfile(user) : null;
-  const myApps   = user ? getAppsForUser(user) : [];
+  const myApps   = sortByNewest(user ? getAppsForUser(user) : [], app => app.submittedAt);
   const myStaff  = user ? getStaffForProvider(user) : [];
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get('search') || '');
@@ -52,7 +53,7 @@ export default function AssignedApplications() {
   // Security: only expose active staff for THIS provider
   const activeStaff = myStaff.filter(s => s.status === 'active');
 
-  const filtered = myApps.filter(a => {
+  const filtered = sortByNewest(myApps.filter(a => {
     const s = search.toLowerCase();
     const matchS = a.id.toLowerCase().includes(s) || a.customerName.toLowerCase().includes(s);
     
@@ -67,7 +68,7 @@ export default function AssignedApplications() {
     }
 
     return matchS && matchF;
-  });
+  }), app => app.submittedAt);
   const app = myApps.find(a => a.id === selected) ?? null;
 
   const handleActionConsoleUpdate = async (appId: string, updates: Partial<PermitApplication>, msg: string, notifyType?: 'status_change', notifyMsg?: string) => {
@@ -150,7 +151,7 @@ export default function AssignedApplications() {
                   <div className={styles.appId}>{a.id}</div>
                   <div className={styles.appType}>{PERMIT_TYPES.find(p => p.value === a.type)?.label}</div>
                   <div className={styles.appCustomer}>👤 {a.customerName} · {a.customerPhone}</div>
-                  <div className={styles.appDate}>{new Date(a.submittedAt).toLocaleDateString('en-IN')}</div>
+                  <div className={styles.appDate}>{new Date(a.submittedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
                 </div>
                 <span className={styles.appBadge} style={{ background: sc.bg, color: sc.color }}>
                   <span className={`status-dot ${sc.dot}`} /> {sc.label}

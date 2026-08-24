@@ -4,6 +4,7 @@ import { Search, CheckCircle2, XCircle, Eye, FileText, Bell } from 'lucide-react
 import { getLicenceById, getExpiryNotification } from '../../data/licenceData';
 import { useAppStore, isLicenceExpired } from '../../context/AppStoreContext';
 import styles from './Admin.module.css';
+import { sortByNewest } from '../../utils/sorting';
 
 export default function ManageProviders() {
   const { providers, updateProviderStatus } = useAppStore();
@@ -29,13 +30,13 @@ export default function ManageProviders() {
   const [selected, setSelected] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState('');
 
-  const filtered = providers.filter(p => {
+  const filtered = sortByNewest(providers.filter(p => {
     const matchS = (p.officeName ?? p.name).toLowerCase().includes(search.toLowerCase()) || p.phone.includes(search);
     const expired = isLicenceExpired(p);
     if (filter === 'expired') return expired && matchS;
     if (filter === 'all') return matchS;
     return p.status === filter && matchS;
-  });
+  }), provider => provider.joinedAt);
 
   const detail = providers.find(p => p.id === selected);
 
@@ -95,6 +96,7 @@ export default function ManageProviders() {
                 <div className={styles.providerName}>{p.officeName}</div>
                 <div className={styles.providerMeta}>👤 {p.ownerName} · {p.area}</div>
                 <div className={styles.providerMeta}>{p.phone}</div>
+                <div className={styles.providerMeta}>Onboarded {new Date(p.joinedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
               </div>
               <div className={styles.providerRowRight}>
                 <span className={`badge ${isLicenceExpired(p) ? 'badge-error' : p.status === 'active' ? 'badge-success' : p.status === 'pending' ? 'badge-warning' : 'badge-error'}`}>
@@ -127,6 +129,7 @@ export default function ManageProviders() {
                 <div className={styles.detailName}>{detail.officeName}</div>
                 <div className={styles.detailMeta}>👤 {detail.ownerName} · {detail.area}</div>
                 <div className={styles.detailMeta}>{detail.phone} · {detail.email}</div>
+                <div className={styles.detailMeta}>Onboarded {new Date(detail.joinedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
               </div>
               <span className={`badge ${detail.status === 'active' ? 'badge-success' : detail.status === 'pending' ? 'badge-warning' : 'badge-error'}`}>{detail.status}</span>
             </div>
