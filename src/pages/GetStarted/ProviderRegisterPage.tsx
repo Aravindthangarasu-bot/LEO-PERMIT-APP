@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react';
+import { useState, Fragment, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, Phone, Mail, MapPin, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { KPBR_LICENCE_CATEGORIES } from '../../data/licenceData';
@@ -7,6 +7,7 @@ import DocumentUpload from '../../components/DocumentUpload/DocumentUpload';
 import type { UploadedFile } from '../../components/DocumentUpload/DocumentUpload';
 import { ProviderRegistrationSchema, sanitizeInput } from '../../utils/validation';
 import styles from './ProviderRegisterPage.module.css';
+import { lookupPincode, type PincodeLocation } from '../../utils/pincode';
 
 interface Form {
   ownerName: string; officeName: string; phone: string; email: string;
@@ -39,8 +40,17 @@ export default function ProviderRegisterPage() {
   const [touched, setTouched] = useState<Partial<Record<keyof Form, boolean>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [pincodeLocation, setPincodeLocation] = useState<PincodeLocation | null>(null);
 
   const selectedLicence = KPBR_LICENCE_CATEGORIES.find(l => l.id === form.licenceCategory);
+
+  useEffect(() => {
+    if (!/^\d{6}$/.test(form.pincode)) { setPincodeLocation(null); return; }
+    lookupPincode(form.pincode).then(location => {
+      setPincodeLocation(location);
+      if (location) setForm(current => ({ ...current, area: location.city }));
+    }).catch(() => setPincodeLocation(null));
+  }, [form.pincode]);
 
   const handleChange = (k: keyof Form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     let val = e.target.value;
@@ -278,6 +288,8 @@ export default function ProviderRegisterPage() {
                       officeAddress: form.officeAddress,
                       area: form.area,
                       pincode: form.pincode,
+                      city: pincodeLocation?.city,
+                      taluk: pincodeLocation?.taluk,
                       landmarks: [],
                       licenceCategory: form.licenceCategory,
                       licenceNumber: form.licenceNumber,

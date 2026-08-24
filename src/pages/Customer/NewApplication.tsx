@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react';
+import { useState, Fragment, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, AlertCircle, Star, MapPin, AlertTriangle } from 'lucide-react';
 import { PERMIT_TYPES, REQUIRED_DOCS } from '../../data/mockData';
@@ -8,13 +8,14 @@ import { useAuth } from '../../context/AuthContext';
 import DocumentUpload, { type UploadedFile } from '../../components/DocumentUpload/DocumentUpload';
 import { CustomerApplicationSchema, sanitizeInput } from '../../utils/validation';
 import styles from './Customer.module.css';
+import { lookupPincode, normalizeLocation, rankProvidersByFairness, type PincodeLocation } from '../../utils/pincode';
 
 const STEPS = ['Select Service', 'Property Details', 'Documents', 'Choose Provider'];
 
 export default function NewApplication() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { addApplication, providers, getAppsForUser } = useAppStore();
+  const { addApplication, applications, providers, getAppsForUser } = useAppStore();
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
@@ -23,6 +24,7 @@ export default function NewApplication() {
     address: '',
     pincode: '',
     area: '',
+    taluk: '',
     landmark: '',
     buildingArea: '',
     floors: '',
@@ -32,6 +34,9 @@ export default function NewApplication() {
   const [selectedProvider, setSelectedProvider] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [pincodeLocation, setPincodeLocation] = useState<PincodeLocation | null>(null);
+  const [pincodeLookupState, setPincodeLookupState] = useState<'idle' | 'loading' | 'not_found' | 'error'>('idle');
+  const [providerPage, setProviderPage] = useState(1);
 
   const [uploadedDocs, setUploadedDocs] = useState<Record<string, UploadedFile | null>>(
     () => Object.fromEntries(REQUIRED_DOCS.map(d => [d, null]))
@@ -62,6 +67,29 @@ export default function NewApplication() {
     });
   };
 
+  useEffect(() => {
+    let cancelled = false;
+    if (!/^\d{6}$/.test(form.pincode)) {
+      setPincodeLocation(null);
+      setPincodeLookupState('idle');
+      return;
+    }
+    setPincodeLookupState('loading');
+    lookupPincode(form.pincode).then(location => {
+      if (cancelled) return;
+      setPincodeLocation(location);
+      setPincodeLookupState(location ? 'idle' : 'not_found');
+      if (location) setForm(current => ({ ...current, area: location.city, taluk: location.taluk }));
+    }).catch(() => {
+      if (!cancelled) setPincodeLookupState('error');
+    });
+    return () => { cancelled = true; };
+  }, [form.pincode]);
+
+  useEffect(() => {
+    setProviderPage(1);
+  }, [form.pincode, form.buildingArea, form.floors, form.heightM]);
+
   // Only show active providers with a valid (non-expired) licence
   const activeProviders = providers.filter(p => p.status === 'active' && !isLicenceExpired(p));
   const buildingArea = parseFloat(form.buildingArea) || undefined;
@@ -70,7 +98,11 @@ export default function NewApplication() {
 
   const normalizedPincode = form.pincode.trim();
   const baseProviders = activeProviders.filter(provider =>
-    /^\d{6}$/.test(normalizedPincode) && (provider.pincode ?? '').trim() === normalizedPincode
+    /^\d{6}$/.test(normalizedPincode) &&
+    (provider.pincode ?? '').trim() === normalizedPincode &&
+    (!provider.city && !provider.taluk ||
+      (!provider.city || normalizeLocation(provider.city) === normalizeLocation(pincodeLocation?.city) || normalizeLocation(provider.city) === normalizeLocation(pincodeLocation?.district)) &&
+      (!provider.taluk || normalizeLocation(provider.taluk) === normalizeLocation(pincodeLocation?.taluk)))
   );
   const displayProviders = baseProviders.map(p => {
     const licence = getLicenceById(p.licenceCategory ?? '');
@@ -78,8 +110,11 @@ export default function NewApplication() {
     const reason   = licence ? getIneligibilityReason(licence, buildingArea, floors, heightM) : null;
     return { ...p, licence, eligible, reason };
   });
-  const eligibleProviders   = displayProviders.filter(p => p.eligible);
+  const eligibleProviders   = rankProvidersByFairness(displayProviders.filter(p => p.eligible), applications);
   const ineligibleProviders = displayProviders.filter(p => !p.eligible);
+  const providersPerPage = 8;
+  const providerPageCount = Math.max(1, Math.ceil(eligibleProviders.length / providersPerPage));
+  const visibleProviders = eligibleProviders.slice((providerPage - 1) * providersPerPage, providerPage * providersPerPage);
 
   const validate = (s: number) => {
     const e: Record<string, string> = {};
@@ -180,7 +215,7 @@ export default function NewApplication() {
           <div className={styles.appNumBox}><span>Application ID</span><strong>{newAppId}</strong></div>
           <div className={styles.successBtns}>
             <button className="btn btn-primary" onClick={() => navigate('/customer/applications')}>View My Applications</button>
-            <button className="btn btn-outline" onClick={() => { setSubmitted(false); setStep(1); setForm({ type: '', description: '', address: '', pincode: '', area: '', landmark: '', buildingArea: '', floors: '', heightM: '' }); setSelectedProvider(''); }}>New Application</button>
+            <button className="btn btn-outline" onClick={() => { setSubmitted(false); setStep(1); setForm({ type: '', description: '', address: '', pincode: '', area: '', taluk: '', landmark: '', buildingArea: '', floors: '', heightM: '' }); setSelectedProvider(''); }}>New Application</button>
           </div>
         </div>
       </div>
@@ -250,12 +285,20 @@ export default function NewApplication() {
               </div>
               <div className="form-group">
                 <label className="form-label">Pincode</label>
-                <input className="form-input" type="text" maxLength={6} placeholder="6-digit pincode" value={form.pincode} onChange={e => setForm(f => ({ ...f, pincode: e.target.value.replace(/\D/g, '') }))} />
+                <input className="form-input" type="text" maxLength={6} placeholder="6-digit pincode" value={form.pincode} onChange={set('pincode')} />
                 {errors.pincode && <p className={styles.fieldError}><AlertCircle size={13} /> {errors.pincode}</p>}
               </div>
               <div className="form-group">
                 <label className="form-label">City / Area</label>
-                <input className="form-input" type="text" placeholder="e.g. Thrissur" value={form.area} onChange={set('area')} />
+                <input className="form-input" type="text" placeholder="Resolved from pincode" value={form.area} readOnly />
+                {pincodeLookupState === 'loading' && <p className={styles.hintText}>Looking up pincode location…</p>}
+                {pincodeLocation && <p className={styles.hintText}>{pincodeLocation.city}, {pincodeLocation.district}</p>}
+                {pincodeLookupState === 'not_found' && <p className={styles.fieldError}>Pincode location could not be found.</p>}
+                {pincodeLookupState === 'error' && <p className={styles.fieldError}>Pincode lookup unavailable. You can continue with the entered pincode.</p>}
+              </div>
+              <div className="form-group">
+                <label className="form-label">Taluk</label>
+                <input className="form-input" type="text" placeholder="Resolved from pincode" value={form.taluk} readOnly />
               </div>
               <div className="form-group">
                 <label className="form-label"><MapPin size={13} /> Landmark of Proposed Site</label>
@@ -350,7 +393,7 @@ export default function NewApplication() {
 
             {eligibleProviders.length > 0 && (
               <div className={styles.providerList}>
-                {eligibleProviders.map(p => (
+                {visibleProviders.map(p => (
                   <button
                     key={p.id}
                     className={`${styles.providerSelectCard} ${selectedProvider === p.id ? styles.providerSelectActive : ''}`}
@@ -378,6 +421,13 @@ export default function NewApplication() {
                     {selectedProvider === p.id && <CheckCircle2 size={22} className={styles.tileCheck} />}
                   </button>
                 ))}
+                {providerPageCount > 1 && (
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginTop: 16 }}>
+                    <button type="button" className="btn btn-outline" disabled={providerPage === 1} onClick={() => setProviderPage(page => page - 1)}>Previous</button>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Page {providerPage} of {providerPageCount}</span>
+                    <button type="button" className="btn btn-outline" disabled={providerPage === providerPageCount} onClick={() => setProviderPage(page => page + 1)}>Next</button>
+                  </div>
+                )}
               </div>
             )}
 

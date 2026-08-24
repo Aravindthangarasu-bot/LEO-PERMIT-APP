@@ -97,7 +97,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       const { data: providerData } = await supabase.from('service_providers').select('*');
       if (providerData) setProviders(providerData.map(p => ({
         id: p.id, ownerName: p.owner_name, officeName: p.office_name, phone: p.phone, email: p.email,
-        area: p.area, pincode: p.pincode, licenceCategory: p.licence_category, licenceNumber: p.licence_number,
+        area: p.area, city: p.city, taluk: p.taluk, pincode: p.pincode, licenceCategory: p.licence_category, licenceNumber: p.licence_number,
         licenceExpiry: p.licence_expiry, status: p.status, rating: p.rating, totalApprovals: p.total_approvals,
         name: p.office_name,
         documents: [
@@ -125,6 +125,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             type: a.type || 'new_building_permit',
             status: a.status || 'pending',
             address: a.address || '',
+            city: a.city,
+            taluk: a.taluk,
             landmark: a.landmark || '',
             description: a.description || '',
             assignedProviderId: a.assigned_provider_id,
@@ -216,6 +218,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         type: applicationWithActivity.type,
         status: applicationWithActivity.status,
         address: applicationWithActivity.address,
+        city: applicationWithActivity.city,
+        taluk: applicationWithActivity.taluk,
         landmark: applicationWithActivity.landmark,
         description: applicationWithActivity.description,
         assigned_provider_id: applicationWithActivity.assignedProviderId,
@@ -333,6 +337,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         phone: p.phone,
         email: p.email,
         area: p.area,
+        city: p.city,
+        taluk: p.taluk,
         pincode: p.pincode,
         landmarks: p.landmarks,
         licence_category: p.licenceCategory,

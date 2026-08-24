@@ -8,6 +8,8 @@ export interface User {
   email?: string;
   address?: string;
   pincode?: string;
+  city?: string;
+  taluk?: string;
   avatar?: string;
   providerId?: string; // for staff members
 }
@@ -122,6 +124,8 @@ export interface ServiceProvider {
   officeAddress: string;
   area: string;
   pincode?: string;
+  city?: string;
+  taluk?: string;
   latitude?: number;
   longitude?: number;
   landmarks: string[];
