@@ -1,67 +1,117 @@
-import { useState } from 'react';
-import { Search, FileText, CheckCircle2, XCircle, Calendar, MessageSquare, AlertTriangle, Users, Upload } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, FileText, CheckCircle2, XCircle, X, Calendar, MessageSquare, AlertTriangle, Users, Upload } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { PERMIT_TYPES } from '../../data/mockData';
 import { useAppStore } from '../../context/AppStoreContext';
-import { STATUS_CONFIG } from '../Customer/statusConfig';
 import { useAuth } from '../../context/AuthContext';
+import { STATUS_CONFIG, COMMON_STATUS_FILTERS } from '../Customer/statusConfig';
 import DocumentUpload from '../../components/DocumentUpload/DocumentUpload';
 import type { UploadedFile } from '../../components/DocumentUpload/DocumentUpload';
-import type { ApplicationStatus } from '../../types';
+import ActivityThread from '../../components/ActivityThread';
+import ActionConsole from '../../components/ActionConsole';
+import type { ApplicationStatus, PermitApplication } from '../../types';
 import styles from './Provider.module.css';
 
 export default function AssignedApplications() {
   const { user } = useAuth();
-  const { updateApplication, addNotification, getAppsForUser, getStaffForProvider, getMyProviderProfile } = useAppStore();
+  const { updateApplication, publishApplicationUpdate, getAppsForUser, getStaffForProvider, getMyProviderProfile } = useAppStore();
   const provider = user ? getMyProviderProfile(user) : null;
   const myApps   = user ? getAppsForUser(user) : [];
   const myStaff  = user ? getStaffForProvider(user) : [];
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [filter, setFilter] = useState(searchParams.get('status') || 'all');
   const [selected, setSelected] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get('search')) setSearch(searchParams.get('search') || '');
+    if (searchParams.get('status')) setFilter(searchParams.get('status') || 'all');
+    const applicationId = searchParams.get('application');
+    if (applicationId) {
+      setSearch(applicationId);
+      setFilter('all');
+      setSelected(applicationId);
+    }
+  }, [searchParams]);
   const [notes, setNotes] = useState('');
+  const [selectedAction, setSelectedAction] = useState<'review' | 'docs' | null>(null);
   const [visitDate, setVisitDate] = useState('');
   const [planUpload, setPlanUpload] = useState<UploadedFile | null>(null);
   const [actionDone, setActionDone] = useState('');
   const [assignStaffId, setAssignStaffId] = useState('');
 
+  const closeApplication = () => {
+    setSelected(null);
+    setSearch('');
+    setFilter('all');
+    setActionDone('');
+    setAssignStaffId('');
+    setSearchParams({}, { replace: true });
+  };
+
   // Security: only expose active staff for THIS provider
   const activeStaff = myStaff.filter(s => s.status === 'active');
 
   const filtered = myApps.filter(a => {
-    const matchS = a.id.toLowerCase().includes(search.toLowerCase()) || a.customerName.toLowerCase().includes(search.toLowerCase());
-    const matchF = filter === 'all' || a.status === filter;
+    const s = search.toLowerCase();
+    const matchS = a.id.toLowerCase().includes(s) || a.customerName.toLowerCase().includes(s);
+    
+    let matchF = false;
+    if (filter === 'all') matchF = true;
+    else if (filter === 'in_progress') {
+      matchF = !['pending', 'approved', 'panchayat_approved', 'terminated', 'rejected', 'panchayat_rejected'].includes(a.status);
+    } else if (filter === 'approved_all') {
+      matchF = ['approved', 'panchayat_approved'].includes(a.status);
+    } else {
+      matchF = a.status === filter;
+    }
+
     return matchS && matchF;
   });
   const app = myApps.find(a => a.id === selected) ?? null;
 
-  const notify = (appId: string, customerId: string, type: any, message: string, cName?: string, cPhone?: string) => {
-    addNotification({ id: `n_${Date.now()}`, applicationId: appId, customerId, type, message, contactName: cName, contactPhone: cPhone, timestamp: new Date().toISOString(), read: false });
+  const handleActionConsoleUpdate = async (appId: string, updates: Partial<PermitApplication>, msg: string, notifyType?: 'status_change', notifyMsg?: string) => {
+    if (!await updateApplication(appId, updates)) return;
+    setActionDone(msg);
+    setTimeout(() => setActionDone(''), 3000);
+
+    if (notifyType && notifyMsg) {
+      publishApplicationUpdate({ applicationId: appId, actor: user!, title: 'Application status updated', summary: notifyMsg, type: notifyType, contactName: provider?.officeName, contactPhone: user?.phone });
+    }
   };
 
-  const update = (id: string, patch: Partial<typeof app>, msg: string) => {
-    updateApplication(id, patch as any);
-    setActionDone(msg);
+  const handleServiceMyself = async () => {
+    if (!app) return;
+    const wasAssignedToStaff = app.servicedBy === 'staff';
+    if (!await updateApplication(app.id, {
+      servicedBy: 'provider',
+      ...(wasAssignedToStaff && {
+        assignedStaffId: null,
+        assignedStaffName: null,
+        assignedStaffPhone: null,
+      }),
+    })) return;
+    setActionDone('✓ You are now servicing this application');
+    publishApplicationUpdate({ applicationId: app.id, actor: user!, title: 'Application received', summary: `Your application has been received and is being reviewed by ${provider?.officeName || user!.name}. For questions, contact ${user!.name} at +91 ${user!.phone}.`, type: 'acknowledgement', contactName: user!.name, contactPhone: user!.phone });
     setTimeout(() => setActionDone(''), 3000);
   };
 
-  const handleAssignStaff = () => {
+  const handleAssignStaff = async () => {
     if (!assignStaffId || !app) return;
     const s = activeStaff.find(x => x.id === assignStaffId);
     if (!s) return;
-    update(app.id, { assignedStaffId: s.id, assignedStaffName: s.name, assignedStaffPhone: s.phone, status: 'under_review' },
-      `Assigned to ${s.name}`);
-    notify(app.id, app.customerId, 'staff_assigned',
-      `Your request ${app.id} is now being handled by our office staff. Contact: ${s.name} (+91 ${s.phone}).`,
-      s.name, s.phone
-    );
+    if (!await updateApplication(app.id, { 
+      servicedBy: 'staff',
+      assignedStaffId: s.id, 
+      assignedStaffName: s.name, 
+      assignedStaffPhone: s.phone, 
+      status: 'under_review' 
+    })) return;
+    setActionDone(`Assigned to ${s.name}`);
+    publishApplicationUpdate({ applicationId: app.id, actor: user!, recipientIds: [s.id], title: 'Application handler assigned', summary: `Your application has been received and is being reviewed by ${s.name}. For questions, contact ${s.name} at +91 ${s.phone}.`, type: 'staff_assigned', contactName: s.name, contactPhone: s.phone });
     setAssignStaffId('');
+    setTimeout(() => setActionDone(''), 3000);
   };
-
-  const statusFilters: ApplicationStatus[] = [
-    'pending','under_review','documents_required','site_visit_scheduled',
-    'plan_preparation','plan_uploaded','client_review','plan_revision_requested',
-    'panchayat_review','panchayat_approved','terminated',
-  ];
 
   return (
     <div className={`page-enter ${styles.page}`}>
@@ -79,9 +129,10 @@ export default function AssignedApplications() {
         </div>
         <div className={styles.filterBtns}>
           <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''}`} onClick={() => setFilter('all')}>All</button>
-          {statusFilters.map(f => (
+          <button className={`${styles.filterBtn} ${filter === 'approved_all' ? styles.filterActive : ''}`} onClick={() => setFilter('approved_all')}>Completed</button>
+          {COMMON_STATUS_FILTERS.map(f => (
             <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => setFilter(f)}>
-              {STATUS_CONFIG[f]?.label ?? f}
+              {STATUS_CONFIG[f as keyof typeof STATUS_CONFIG]?.label ?? f}
             </button>
           ))}
         </div>
@@ -89,12 +140,12 @@ export default function AssignedApplications() {
 
       <div className={styles.appGrid}>
         {/* List */}
-        <div className={`card ${styles.appListCard}`}>
+        <div className={`card ${styles.appListCard}`} style={{ gridColumn: '1 / -1', width: '100%' }}>
           {filtered.map(a => {
             const sc = STATUS_CONFIG[a.status];
             return (
               <button key={a.id} className={`${styles.appRow} ${selected === a.id ? styles.appRowActive : ''}`}
-                onClick={() => { setSelected(a.id); setNotes(''); setVisitDate(''); setPlanUpload(null); setActionDone(''); }}>
+                onClick={() => { setSelected(a.id); setActionDone(''); }}>
                 <div className={styles.appRowLeft}>
                   <div className={styles.appId}>{a.id}</div>
                   <div className={styles.appType}>{PERMIT_TYPES.find(p => p.value === a.type)?.label}</div>
@@ -111,7 +162,7 @@ export default function AssignedApplications() {
 
         {/* Detail + Actions */}
         {app && (
-          <div className={`card ${styles.reviewCard}`}>
+          <div className={`card ${styles.reviewCard}`} style={{ gridColumn: '1 / -1', width: '100%' }}>
             {actionDone && <div className={styles.actionSuccess}><CheckCircle2 size={16} /> {actionDone}</div>}
 
             <div className={styles.detailHeader}>
@@ -119,20 +170,36 @@ export default function AssignedApplications() {
                 <div className={styles.appId}>{app.id}</div>
                 <div className={styles.detailType}>{PERMIT_TYPES.find(p => p.value === app.type)?.label}</div>
               </div>
-              <span className={styles.appBadge} style={{ background: STATUS_CONFIG[app.status].bg, color: STATUS_CONFIG[app.status].color }}>
-                {STATUS_CONFIG[app.status].label}
-              </span>
+              <div className={styles.detailHeaderActions}>
+                <span className={styles.appBadge} style={{ background: STATUS_CONFIG[app.status].bg, color: STATUS_CONFIG[app.status].color }}>
+                  {STATUS_CONFIG[app.status].label}
+                </span>
+                <button type="button" className={styles.closeDetailBtn} onClick={closeApplication} aria-label="Close application details" title="Close application details">
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
             {/* Customer info */}
             <div className={styles.detailSection}>
-              <h4>Customer</h4>
-              <div className={styles.detailRows}>
-                <div className={styles.detailRow}><span>Name</span><span>{app.customerName}</span></div>
-                <div className={styles.detailRow}><span>Phone</span><span>{app.customerPhone}</span></div>
-                <div className={styles.detailRow}><span>Address</span><span>{app.address}</span></div>
-                <div className={styles.detailRow}><span>Landmark</span><span>{app.landmark}</span></div>
-                <div className={styles.detailRow}><span>Description</span><span>{app.description}</span></div>
+              <h4>Customer Details</h4>
+              <div className={styles.detailGrid}>
+                <div className={styles.detailGridItem}>
+                  <div className={styles.detailGridLabel}>Name</div>
+                  <div className={styles.detailGridValue}>{app.customerName}</div>
+                </div>
+                <div className={styles.detailGridItem}>
+                  <div className={styles.detailGridLabel}>Phone</div>
+                  <div className={styles.detailGridValue}>{app.customerPhone}</div>
+                </div>
+                <div className={`${styles.detailGridItem} ${styles.detailGridValueFull}`}>
+                  <div className={styles.detailGridLabel}>Address / Landmark</div>
+                  <div className={styles.detailGridValue}>{app.address} {app.landmark ? `(Near ${app.landmark})` : ''}</div>
+                </div>
+                <div className={`${styles.detailGridItem} ${styles.detailGridValueFull}`}>
+                  <div className={styles.detailGridLabel}>Description</div>
+                  <div className={styles.detailGridValue}>{app.description}</div>
+                </div>
               </div>
             </div>
 
@@ -148,171 +215,154 @@ export default function AssignedApplications() {
               ))}
             </div>
 
-            {/* Acknowledgement panel for new pending applications */}
-            {app.status === 'pending' && (
-              <div className={styles.actionPanel}>
-                <h4>Acknowledge Request</h4>
-                <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-                  Acknowledge this request to notify the customer with your contact details.
-                </p>
-                <button className={styles.approveBtn} onClick={() => {
-                  update(app.id, { status: 'under_review' }, 'Request acknowledged. Customer notified.');
-                  notify(app.id, app.customerId, 'acknowledgement',
-                    `Your application ${app.id} has been acknowledged by ${provider?.officeName ?? 'our team'}. Feel free to contact us at +91 ${user?.phone}.`,
-                    provider?.officeName, user?.phone
-                  );
-                }}>
-                  <CheckCircle2 size={16} /> Acknowledge & Notify Customer
-                </button>
+            {/* Service Status Banner */}
+            {app.servicedBy && (
+              <div style={{ 
+                padding: '12px 16px', 
+                background: app.servicedBy === 'provider' ? '#dcfce7' : '#e0f2fe',
+                border: `1px solid ${app.servicedBy === 'provider' ? '#86efac' : '#7dd3fc'}`,
+                borderRadius: '8px',
+                marginBottom: '16px',
+                fontSize: '13px',
+                color: app.servicedBy === 'provider' ? '#166534' : '#0c4a6e',
+                fontWeight: 500
+              }}>
+                {app.servicedBy === 'provider' ? (
+                  <>✓ You are servicing this application</>
+                ) : (
+                  <>✓ Assigned to: <strong>{app.assignedStaffName}</strong> (+91 {app.assignedStaffPhone})</>
+                )}
               </div>
             )}
 
-            {/* Assign to staff panel */}
-            {activeStaff.length > 0 && !['terminated','rejected','approved','panchayat_approved'].includes(app.status) && (
+            {/* Service Choice Panel - Show when servicedBy is not set */}
+            {!app.servicedBy && activeStaff.length > 0 && !['terminated','rejected','approved','panchayat_approved'].includes(app.status) && (
+              <div className={styles.actionPanel} style={{ 
+                background: '#fffbeb',
+                borderLeft: '4px solid #f59e0b',
+                marginBottom: '16px'
+              }}>
+                <h4 style={{ marginBottom: '12px', color: '#92400e' }}>
+                  <AlertTriangle size={16} style={{ marginRight: '8px', display: 'inline' }} />
+                  How would you like to handle this application?
+                </h4>
+                <p style={{ fontSize: '13px', color: '#78350f', marginBottom: '14px' }}>
+                  Choose whether you'll service this application yourself or assign it to one of your office staff members.
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <button 
+                    className={styles.approveBtn} 
+                    onClick={handleServiceMyself}
+                    style={{ 
+                      background: '#15803d',
+                      padding: '12px 16px',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      color: 'white'
+                    }}
+                  >
+                    ✓ Service This Myself
+                  </button>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <select 
+                      className="form-input" 
+                      value={assignStaffId} 
+                      onChange={e => setAssignStaffId(e.target.value)}
+                      style={{ flex: 1 }}
+                    >
+                      <option value="">Select staff member…</option>
+                      {activeStaff.map(s => <option key={s.id} value={s.id}>{s.name} ({s.role})</option>)}
+                    </select>
+                    <button 
+                      className={styles.approveBtn}
+                      onClick={handleAssignStaff} 
+                      disabled={!assignStaffId}
+                      style={{
+                        background: assignStaffId ? '#1d4ed8' : '#cbd5e1',
+                        color: 'white',
+                        padding: '12px 16px',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: assignStaffId ? 'pointer' : 'not-allowed',
+                        fontWeight: 600,
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      Assign
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Assign to staff panel - Show when already assigned to staff and user wants to change */}
+            {app.servicedBy === 'staff' && activeStaff.length > 0 && !['terminated','rejected','approved','panchayat_approved'].includes(app.status) && (
               <div className={styles.actionPanel}>
-                <h4><Users size={14} /> Assign to Staff</h4>
-                {app.assignedStaffName && (
-                  <p style={{ fontSize: 12, color: 'var(--success)', marginBottom: 10 }}>
-                    ✓ Currently assigned to: <strong>{app.assignedStaffName}</strong> (+91 {app.assignedStaffPhone})
-                  </p>
-                )}
+                <h4><Users size={14} /> Change Staff Assignment</h4>
+                <p style={{ fontSize: 12, color: 'var(--success)', marginBottom: 10 }}>
+                  ✓ Currently assigned to: <strong>{app.assignedStaffName}</strong> (+91 {app.assignedStaffPhone})
+                </p>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                   <select className="form-input" style={{ flex: 1 }} value={assignStaffId} onChange={e => setAssignStaffId(e.target.value)}>
-                    <option value="">Select staff member…</option>
+                    <option value="">Select different staff member…</option>
                     {activeStaff.map(s => <option key={s.id} value={s.id}>{s.name} ({s.role})</option>)}
                   </select>
                   <button className={styles.approveBtn} onClick={handleAssignStaff} disabled={!assignStaffId}>
-                    Assign
+                    Change
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Take over from staff */}
+            {app.servicedBy === 'staff' && !['terminated','rejected','approved','panchayat_approved'].includes(app.status) && (
+              <div className={styles.actionPanel} style={{ borderTop: '1px solid #e5e7eb', paddingTop: 12, marginTop: 12 }}>
+                <button 
+                  onClick={handleServiceMyself}
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid #3b82f6',
+                    color: '#3b82f6',
+                    padding: '10px 14px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    borderRadius: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ← Take Over - Service This Myself
+                </button>
               </div>
             )}
 
             {/* ── STAGE-BASED ACTIONS ── */}
-
-            {/* Stage: Verify documents */}
-            {['pending','under_review'].includes(app.status) && (
-              <div className={styles.actionPanel}>
-                <h4>Verify Documents</h4>
-                <div className="form-group">
-                  <label className="form-label">Notes / Issue (if any)</label>
-                  <textarea className="form-input" rows={2} placeholder="Describe document issue or leave blank if all OK…" value={notes} onChange={e => setNotes(e.target.value)} />
-                </div>
-                <div className={styles.actionBtns}>
-                  <button className={styles.approveBtn} onClick={() => {
-                    update(app.id, { status: 'under_review', notes: notes || undefined }, 'Documents verified! Awaiting site visit dates from customer.');
-                    notify(app.id, app.customerId, 'status_change',
-                      `Documents for ${app.id} verified. Please propose 3 site visit dates in your portal. Contact: ${provider?.officeName} (+91 ${user?.phone}).`,
-                      provider?.officeName, user?.phone);
-                  }}>
-                    <CheckCircle2 size={16} /> Documents OK
-                  </button>
-                  <button className={styles.rejectBtn} onClick={() => { if (!notes) return; update(app.id, { status: 'documents_required', notes }, 'Document issue reported to customer.'); }}>
-                    <AlertTriangle size={16} /> Report Issue
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Stage: Select site visit date from customer's 3 options */}
-            {app.status === 'site_visit_scheduled' && app.siteVisitDates && !app.selectedSiteVisitDate && (
-              <div className={styles.actionPanel}>
-                <h4><Calendar size={14} /> Select Site Visit Date</h4>
-                <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>Customer proposed these dates. Select one to confirm.</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-                  {app.siteVisitDates.map(d => (
-                    <label key={d} className={`${styles.dateOption} ${visitDate === d ? styles.dateOptionActive : ''}`}>
-                      <input type="radio" name="visitDate" value={d} checked={visitDate === d} onChange={() => setVisitDate(d)} style={{ display: 'none' }} />
-                      {visitDate === d && <CheckCircle2 size={14} />}
-                      {new Date(d).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                    </label>
-                  ))}
-                </div>
-                <button className={styles.approveBtn} onClick={() => { if (!visitDate) return; update(app.id, { selectedSiteVisitDate: visitDate, status: 'site_visit_confirmed' }, 'Site visit date confirmed!'); }}>
-                  <CheckCircle2 size={16} /> Confirm Date
-                </button>
-              </div>
-            )}
-
-            {/* Stage: Mark site visit done & start plan preparation */}
-            {app.status === 'site_visit_confirmed' && (
-              <div className={styles.actionPanel}>
-                <h4>Site Visit Done?</h4>
-                <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
-                  Confirmed visit: <strong>{app.selectedSiteVisitDate ? new Date(app.selectedSiteVisitDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' }) : '-'}</strong>
-                </p>
-                <button className={styles.approveBtn} onClick={() => update(app.id, { status: 'plan_preparation' }, 'Site visit marked complete. Now prepare the plan.')}>
-                  <CheckCircle2 size={16} /> Mark Site Visit Complete
-                </button>
-              </div>
-            )}
-
-            {/* Stage: Upload plan PDF */}
-            {['plan_preparation','plan_revision_requested'].includes(app.status) && (
-              <div className={styles.actionPanel}>
-                <h4>Upload Plan PDF</h4>
-                {app.status === 'plan_revision_requested' && app.clientComments && (
-                  <div className={styles.clientCommentBox}>
-                    <MessageSquare size={13} /> <strong>Client comments:</strong> {app.clientComments}
-                  </div>
-                )}
-                <DocumentUpload
-                  label="Building Plan (PDF)"
-                  accept=".pdf"
-                  value={planUpload}
-                  onChange={setPlanUpload}
-                  hint="Upload the prepared plan for client review"
-                />
-                <button className={styles.approveBtn} disabled={!planUpload} onClick={() => {
-                  const rev = app.planRevisions ?? [];
-                  update(app.id, {
-                    status: 'client_review',
-                    planUrl: planUpload!.url,
-                    planRevisions: [...rev, { id: `pr${Date.now()}`, version: rev.length + 1, uploadedAt: new Date().toISOString(), comments: planUpload!.name }],
-                  }, 'Plan uploaded! Sent to client for review.');
-                  setPlanUpload(null);
-                }}>
-                  Submit Plan to Client
-                </button>
-              </div>
-            )}
-
-            {/* Stage: Submit to Panchayat */}
-            {app.status === 'panchayat_review' && (
-              <div className={styles.actionPanel}>
-                <h4>Submit to Authority</h4>
-                <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>Client has approved the plan. Submit the application to the authority for final approval.</p>
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <button className={styles.approveBtn} onClick={() => update(app.id, { status: 'panchayat_approved', panchayatStatus: 'approved', approvalNumber: `PERM-KL-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}` }, 'Authority approved! Approval number generated.')}>
-                    <CheckCircle2 size={16} /> Authority Approved
-                  </button>
-                  <button className={styles.rejectBtn} onClick={() => update(app.id, { status: 'panchayat_rejected', panchayatStatus: 'rejected' }, 'Authority rejection recorded.')}>
-                    <XCircle size={16} /> Authority Rejected
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Stage: Upload approved documents */}
-            {app.status === 'panchayat_approved' && (
-              <div className={styles.actionPanel}>
-                <h4><Upload size={14} /> Upload Authority Approved Documents</h4>
-                <p style={{ fontSize: 13, color: 'var(--success)', marginBottom: 12 }}>Approval No: <strong>{app.approvalNumber}</strong></p>
-                <label className={styles.uploadBtn} style={{ width: '100%', justifyContent: 'center' }}>
-                  <Upload size={14} /> Upload Approved Docs
-                  <input type="file" accept=".pdf" style={{ display: 'none' }} onChange={() => update(app.id, { status: 'approved' }, 'Approved documents uploaded. Project complete!')} />
-                </label>
-              </div>
-            )}
+            <ActionConsole 
+              app={app}
+              uploaderRole="provider"
+              onUpdate={(updates, msg, notifyType, notifyMsg) => handleActionConsoleUpdate(app.id, updates, msg, notifyType, notifyMsg)}
+            />
 
             {/* Terminate */}
             {!['terminated','rejected','approved','panchayat_approved'].includes(app.status) && (
               <div className={styles.actionPanel} style={{ borderTop: '1px solid #fca5a5', paddingTop: 16 }}>
-                <button className={styles.rejectBtn} onClick={() => update(app.id, { status: 'terminated', terminatedBy: 'provider', terminationReason: 'Declined by provider' }, 'Project declined and terminated.')}>
+                <button className={styles.rejectBtn} onClick={async () => {
+                  if (!await updateApplication(app.id, { status: 'terminated', terminatedBy: 'provider', terminationReason: 'Declined by provider' })) return;
+                  publishApplicationUpdate({ applicationId: app.id, actor: user!, title: 'Application terminated', summary: 'The service provider terminated this application.', type: 'status_change' });
+                }}>
                   <XCircle size={16} /> Decline / Terminate Project
                 </button>
               </div>
             )}
+            
+          </div>
+        )}
+
+        {app && (
+          <div className={styles.activityPanel} style={{ gridColumn: '1 / -1', width: '100%' }}>
+            <ActivityThread appId={app.id} activities={app.activityLog} />
           </div>
         )}
       </div>

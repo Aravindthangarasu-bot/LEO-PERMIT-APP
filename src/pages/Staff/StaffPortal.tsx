@@ -1,12 +1,14 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { LayoutDashboard, FileText, Bell } from 'lucide-react';
+import { LayoutDashboard, FileText, Bell, WalletCards } from 'lucide-react';
 import PortalLayout from '../../components/PortalLayout/PortalLayout';
 import StaffDashboard from './StaffDashboard';
 import StaffApplications from './StaffApplications';
+import DocumentWallet from '../../components/DocumentWallet';
 
 const NAV_ITEMS = [
   { path: '/staff',              icon: <LayoutDashboard size={18} />, label: 'Dashboard'           },
   { path: '/staff/applications', icon: <FileText size={18} />,        label: 'My Assignments'      },
+  { path: '/staff/wallet',       icon: <WalletCards size={18} />,     label: 'Document Wallet'     },
   { path: '/staff/notifications',icon: <Bell size={18} />,            label: 'Notifications'       },
 ];
 
@@ -16,6 +18,7 @@ export default function StaffPortal() {
       <Routes>
         <Route index element={<StaffDashboard />} />
         <Route path="applications" element={<StaffApplications />} />
+        <Route path="wallet" element={<DocumentWallet />} />
         <Route path="notifications" element={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Notifications coming soon.</div>} />
         <Route path="*" element={<Navigate to="/staff" replace />} />
       </Routes>

@@ -1,14 +1,16 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { LayoutDashboard, FileText, CheckSquare, Star, Settings, Users } from 'lucide-react';
+import { LayoutDashboard, FileText, CheckSquare, Star, Settings, Users, WalletCards } from 'lucide-react';
 import PortalLayout from '../../components/PortalLayout/PortalLayout';
 import ProviderDashboard from './ProviderDashboard';
 import AssignedApplications from './AssignedApplications';
 import StaffManagement from './StaffManagement';
+import DocumentWallet from '../../components/DocumentWallet';
 
 const NAV_ITEMS = [
   { path: '/provider',               icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
   { path: '/provider/applications',  icon: <FileText size={18} />,        label: 'Assigned Applications' },
   { path: '/provider/staff',         icon: <Users size={18} />,           label: 'My Staff' },
+  { path: '/provider/wallet',        icon: <WalletCards size={18} />,     label: 'Document Wallet' },
   { path: '/provider/approved',      icon: <CheckSquare size={18} />,     label: 'Approved Permits' },
   { path: '/provider/reviews',       icon: <Star size={18} />,            label: 'Reviews' },
   { path: '/provider/profile',       icon: <Settings size={18} />,        label: 'Profile & Documents' },
@@ -21,6 +23,7 @@ export default function ProviderPortal() {
         <Route index element={<ProviderDashboard />} />
         <Route path="applications" element={<AssignedApplications />} />
         <Route path="staff"        element={<StaffManagement />} />
+        <Route path="wallet"       element={<DocumentWallet />} />
         <Route path="approved"     element={<ComingSoon title="Approved Permits" />} />
         <Route path="reviews"      element={<ComingSoon title="Reviews" />} />
         <Route path="profile"      element={<ComingSoon title="Profile & Documents" />} />

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, MapPin, LogOut, ChevronDown, LocateFixed, Search, X, CheckCircle2, AlertTriangle, LoaderCircle, Sun, Moon } from 'lucide-react';
+import { Building2, MapPin, LogOut, ChevronDown, Search, X, CheckCircle2, AlertTriangle, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAppStore } from '../../context/AppStoreContext';
 import styles from './Navbar.module.css';
@@ -18,10 +18,7 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
   const [pincode, setPincode] = useState('');
   const [locationName, setLocationName] = useState('');
   const [locationError, setLocationError] = useState('');
-  const [checking, setChecking] = useState(false);
   const [result, setResult] = useState<{ serviceable: boolean; providerCount: number; label: string } | null>(null);
-
-  const [locationChecked, setLocationChecked] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => (localStorage.getItem('leo_theme') as 'light' | 'dark') || 'light');
   const locationFallbackRef = useRef<HTMLDivElement>(null);
 
@@ -29,16 +26,6 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem('leo_theme', theme);
   }, [theme]);
-
-  useEffect(() => {
-    const savedLocation = localStorage.getItem('leo_location');
-    if (savedLocation) {
-      const saved = JSON.parse(savedLocation) as { latitude: number; longitude: number; label: string };
-      checkCoordinates(saved.latitude, saved.longitude, saved.label);
-    } else {
-      detectLocation();
-    }
-  }, []);
 
   useEffect(() => {
     if (!locationError) return;
@@ -58,77 +45,20 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
     };
   }, [locationError]);
 
-  const distanceKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const earthRadius = 6371;
-    const toRadians = (value: number) => value * Math.PI / 180;
-    const dLat = toRadians(lat2 - lat1);
-    const dLon = toRadians(lon2 - lon1);
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLon / 2) ** 2;
-    return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  };
-
-  const checkCoordinates = (latitude: number, longitude: number, label: string) => {
-    const nearby = providers.filter(provider => provider.status === 'active' && provider.latitude && provider.longitude)
-      .filter(provider => distanceKm(latitude, longitude, provider.latitude!, provider.longitude!) <= 5);
-    setLocationName(label);
-    setResult({ serviceable: nearby.length > 0, providerCount: nearby.length, label });
-    setLocationChecked(true);
-    localStorage.setItem('leo_location', JSON.stringify({ latitude, longitude, label }));
-    setChecking(false);
-  };
-
-  const detectLocation = () => {
-    setLocationError('');
-    setResult(null);
-    setChecking(true);
-    if (!navigator.geolocation) {
-      setChecking(false);
-      setLocationChecked(true);
-      setLocationError('Location detection is not supported by this browser. Please enter your pincode.');
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      position => checkCoordinates(position.coords.latitude, position.coords.longitude, 'Current location'),
-      () => {
-        setChecking(false);
-        setLocationChecked(true);
-        setLocationError('We could not access your location. Please allow location access or enter your pincode.');
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 },
-    );
-  };
-
   const checkPincode = () => {
     setLocationError('');
     if (!/^\d{6}$/.test(pincode)) {
-      setLocationError('Enter a 6-digit pincode to check another service area.');
+      setLocationError('Enter a valid 6-digit pincode.');
       return;
     }
     setResult(null);
-    // Dynamically check ALL active providers for the entered pincode
-    const activeProviders = providers.filter(p => p.status === 'active');
-    // First try exact pincode match
-    const byPincode = activeProviders.filter(p => p.pincode === pincode);
-    if (byPincode.length > 0) {
-      const label = byPincode[0].area ? `${byPincode[0].area} · ${pincode}` : `Pincode ${pincode}`;
-      setLocationName(label);
-      setResult({ serviceable: true, providerCount: byPincode.length, label });
-      setLocationChecked(true);
-      return;
-    }
-    // Fallback: check by coordinates if provider has lat/lng
-    const byCoords = activeProviders.filter(p => p.latitude && p.longitude);
-    if (byCoords.length > 0) {
-      // Build a quick lookup from known pincodes via provider data
-      const label = `Pincode ${pincode}`;
-      setLocationName(label);
-      setResult({ serviceable: false, providerCount: 0, label });
-      setLocationChecked(true);
-    } else {
-      setLocationName(`Pincode ${pincode}`);
-      setResult({ serviceable: false, providerCount: 0, label: `Pincode ${pincode}` });
-      setLocationChecked(true);
-    }
+    const normalizedPincode = pincode.trim();
+    const byPincode = providers.filter(provider =>
+      provider.status === 'active' && (provider.pincode ?? '').trim() === normalizedPincode
+    );
+    const label = `Pincode ${normalizedPincode}`;
+    setLocationName(label);
+    setResult({ serviceable: byPincode.length > 0, providerCount: byPincode.length, label });
   };
 
   const handleLogout = () => {
@@ -158,7 +88,7 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
         <div className={styles.actions}>
           <div className={`${styles.navServiceability} ${result ? (result.serviceable ? styles.navServiceable : styles.navNotServiceable) : styles.navServiceabilityPrompt}`}>
             {result ? (result.serviceable ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />) : <MapPin size={15} />}
-            <span>{result ? (result.serviceable ? 'Location serviceable' : 'Current location is not serviceable') : locationChecked ? 'Enter pincode to check' : 'Checking location…'}</span>
+            <span>{result ? (result.serviceable ? 'Pincode is serviceable' : 'Pincode is not serviceable') : 'Check service pincode'}</span>
           </div>
           {result && !result.serviceable ? (
             <div ref={locationFallbackRef} className={styles.locationFallback}>
@@ -168,8 +98,8 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
                   value={pincode}
                   maxLength={6}
                   inputMode="numeric"
-                  placeholder="Check another pincode"
-                  aria-label="Check another pincode"
+                  placeholder="Enter pincode"
+                  aria-label="Enter service pincode"
                   onChange={event => { setPincode(event.target.value.replace(/\D/g, '')); setLocationError(''); }}
                   onKeyDown={event => event.key === 'Enter' && checkPincode()}
                 />
@@ -180,7 +110,7 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
           ) : (
             <button className={`${styles.locationBtn} ${locationName ? styles.locationSelected : ''}`} onClick={() => setLocationOpen(true)}>
               <MapPin size={15} />
-              <span>{locationName || 'Select Location'}</span>
+              <span>{locationName || 'Enter Pincode'}</span>
               <ChevronDown size={14} />
             </button>
           )}
@@ -223,16 +153,10 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
         <div className={styles.locationBackdrop} onClick={() => setLocationOpen(false)}>
           <div className={styles.locationModal} onClick={event => event.stopPropagation()}>
             <div className={styles.locationModalHeader}>
-              <div><h2>Check Service Availability</h2><p>We check for active providers within 5 km.</p></div>
+              <div><h2>Check Service Availability</h2><p>Enter the property's pincode to find active providers.</p></div>
               <button className={styles.closeLocation} onClick={() => setLocationOpen(false)} aria-label="Close"><X size={18} /></button>
             </div>
 
-            <button className={styles.detectLocationBtn} onClick={detectLocation} disabled={checking}>
-              {checking ? <LoaderCircle size={17} className={styles.spin} /> : <LocateFixed size={17} />}
-              {checking ? 'Detecting location…' : 'Use my current location'}
-            </button>
-
-            <div className={styles.locationDivider}><span>or enter pincode</span></div>
             <div className={styles.pincodeCheckRow}>
               <div className={styles.pincodeInputWrap}><Search size={16} /><input value={pincode} maxLength={6} inputMode="numeric" placeholder="6-digit pincode" onChange={event => setPincode(event.target.value.replace(/\D/g, ''))} onKeyDown={event => event.key === 'Enter' && checkPincode()} /></div>
               <button className="btn btn-primary" onClick={checkPincode}>Check</button>
@@ -243,10 +167,10 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
               <div className={`${styles.serviceabilityResult} ${result.serviceable ? styles.serviceable : styles.notServiceable}`}>
                 {result.serviceable ? <CheckCircle2 size={23} /> : <AlertTriangle size={23} />}
                 <div>
-                  <strong>{result.serviceable ? 'Location is serviceable' : 'Location is not serviceable yet'}</strong>
+                  <strong>{result.serviceable ? 'Pincode is serviceable' : 'Pincode is not serviceable yet'}</strong>
                   <p>{result.serviceable
-                    ? `${result.providerCount} active service provider${result.providerCount > 1 ? 's are' : ' is'} available near ${result.label}.`
-                    : `There are no active providers near ${result.label} yet. Change your pincode to search another service area, or check back soon as we expand.`}</p>
+                    ? `${result.providerCount} active service provider${result.providerCount > 1 ? 's are' : ' is'} available for ${result.label}.`
+                    : `There are no active providers for ${result.label} yet. Enter another pincode to check a different service area.`}</p>
                 </div>
               </div>
             )}

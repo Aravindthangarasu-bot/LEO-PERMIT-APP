@@ -1,6 +1,9 @@
 import { Bell, Phone, CheckCircle2, Users, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useAppStore } from '../../context/AppStoreContext';
+import { STATUS_CONFIG } from './statusConfig';
+import { getApplicationNotificationPath } from '../../utils/notificationNavigation';
 import styles from './Customer.module.css';
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
@@ -10,19 +13,13 @@ const TYPE_ICON: Record<string, React.ReactNode> = {
   acknowledgement: <Bell size={16} />,
 };
 
-const TYPE_COLOR: Record<string, string> = {
-  assigned:      '#16a34a',
-  staff_assigned: '#3b82f6',
-  status_change: '#f59e0b',
-  acknowledgement: '#c0522a',
-};
-
 export default function CustomerNotifications() {
   const { user } = useAuth();
-  const { notifications, markNotificationRead } = useAppStore();
+  const { applications, notifications, markNotificationRead } = useAppStore();
+  const navigate = useNavigate();
   // Only show notifications for this customer — matched by both id and phone
   const myNotifs = notifications
-    .filter(n => n.customerId === user?.id || n.customerId === user?.phone)
+    .filter(n => n.userId === user?.id || n.userId === user?.phone)
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   const unread = myNotifs.filter(n => !n.read).length;
@@ -49,13 +46,20 @@ export default function CustomerNotifications() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {myNotifs.map(n => (
+          {myNotifs.map(n => {
+            const application = applications.find(item => item.id === n.applicationId);
+            const statusConfig = application ? STATUS_CONFIG[application.status] : STATUS_CONFIG.pending;
+            return (
             <div
               key={n.id}
+              role="button"
+              tabIndex={0}
               className={`card ${styles.notifCard} ${!n.read ? styles.notifUnread : ''}`}
-              onClick={() => markNotificationRead(n.id)}
+              onClick={() => { if (!user) return; markNotificationRead(n.id); navigate(getApplicationNotificationPath(user.role, n.applicationId)); }}
+              onKeyDown={event => { if ((event.key === 'Enter' || event.key === ' ') && user) { markNotificationRead(n.id); navigate(getApplicationNotificationPath(user.role, n.applicationId)); } }}
+              style={{ borderLeft: `4px solid ${statusConfig.color}`, background: !n.read ? statusConfig.bg : undefined, cursor: 'pointer' }}
             >
-              <div className={styles.notifIcon} style={{ background: `${TYPE_COLOR[n.type]}18`, color: TYPE_COLOR[n.type] }}>
+              <div className={styles.notifIcon} style={{ background: statusConfig.bg, color: statusConfig.color }}>
                 {TYPE_ICON[n.type] ?? <Bell size={16} />}
               </div>
               <div className={styles.notifBody}>
@@ -69,12 +73,12 @@ export default function CustomerNotifications() {
                 )}
                 <p className={styles.notifTime}>
                   {new Date(n.timestamp).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                  {' · App: '}<strong>{n.applicationId}</strong>
+                  {' · App: '}<strong style={{ color: statusConfig.color }}>{n.applicationId} · {statusConfig.label}</strong>
                 </p>
               </div>
               {!n.read && <div className={styles.notifDot} />}
             </div>
-          ))}
+          )})}
         </div>
       )}
     </div>

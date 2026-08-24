@@ -6,11 +6,9 @@
 import { useRef, useState } from 'react';
 import type { DragEvent, ChangeEvent } from 'react';
 import { Upload, X, FileText, CheckCircle2, AlertCircle, Eye, Loader2 } from 'lucide-react';
-import { uploadData, getUrl, remove as removeS3 } from 'aws-amplify/storage';
+import { supabase } from '../../supabaseClient';
+import { USE_SUPABASE } from '../../context/AppStoreContext';
 import styles from './DocumentUpload.module.css';
-
-// FEATURE FLAG: Set to true once the AWS S3 Bucket is configured in aws-exports.ts
-const USE_AWS_S3 = false;
 
 export interface UploadedFile {
   id: string;
@@ -67,18 +65,23 @@ export default function DocumentUpload({ label, accept = '.pdf,.jpg,.jpeg,.png',
       setIsUploading(true);
       const fileId = `doc_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
 
-      if (USE_AWS_S3) {
-        // Upload to AWS S3
-        const result = uploadData({
-          path: `public/${fileId}`,
-          data: file,
-          options: { contentType: file.type }
-        });
-        await result.result; // Wait for upload to complete
+      if (USE_SUPABASE) {
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(`public/${fileId}`, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+          
+        if (uploadError) throw uploadError;
         
-        // Get secure pre-signed URL for viewing
-        const urlResult = await getUrl({ path: `public/${fileId}` });
-        onChange({ id: fileId, name: file.name, sizeBytes: file.size, mimeType: file.type, url: urlResult.url.toString() });
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('documents')
+          .getPublicUrl(`public/${fileId}`);
+          
+        onChange({ id: fileId, name: file.name, sizeBytes: file.size, mimeType: file.type, url: urlData.publicUrl });
       } else {
         // Local Mock (Blob URL)
         if (value?.url && value.url.startsWith('blob:')) URL.revokeObjectURL(value.url);
@@ -86,7 +89,7 @@ export default function DocumentUpload({ label, accept = '.pdf,.jpg,.jpeg,.png',
         onChange({ id: fileId, name: file.name, sizeBytes: file.size, mimeType: file.type, url });
       }
     } catch (err: any) {
-      console.error('S3 Upload Failed:', err);
+      console.error('Supabase Upload Failed:', err);
       setError('Upload failed. Please check your connection and try again.');
     } finally {
       setIsUploading(false);
@@ -109,13 +112,13 @@ export default function DocumentUpload({ label, accept = '.pdf,.jpg,.jpeg,.png',
   const removeFile = async () => {
     if (value) {
       try {
-        if (USE_AWS_S3 && !value.url.startsWith('blob:')) {
-          await removeS3({ path: `public/${value.id}` });
+        if (USE_SUPABASE && !value.url.startsWith('blob:')) {
+          await supabase.storage.from('documents').remove([`public/${value.id}`]);
         } else if (value.url.startsWith('blob:')) {
           URL.revokeObjectURL(value.url);
         }
       } catch (err) {
-        console.error('Failed to remove file from S3:', err);
+        console.error('Failed to remove file from Supabase:', err);
       }
     }
     onChange(null);

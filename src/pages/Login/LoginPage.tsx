@@ -70,20 +70,23 @@ export default function LoginPage() {
     }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     setError('');
     const code = otp.join('');
     if (code.length < 6) {
       setError('Please enter the complete 6-digit OTP.');
       return;
     }
-    // Demo: any 6-digit OTP is accepted
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      login(phone, role);
+    try {
+      await login(phone, role);
       navigate(role === 'admin' ? '/admin' : role === 'provider' ? '/provider' : role === 'staff' ? '/staff' : '/customer', { replace: true });
-    }, 800);
+    } catch (err: any) {
+      console.error('Login verification error:', err);
+      setError(err?.message || 'Login failed. User not found.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

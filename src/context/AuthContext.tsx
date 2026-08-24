@@ -1,9 +1,11 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import { signIn, signOut as amplifySignOut, getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
+// Removed AWS Auth import
 import type { User, UserRole } from '../types';
 
-// FEATURE FLAG: Set to true once the AWS Cognito User Pool is configured in aws-exports.ts
-const USE_AWS_COGNITO = false;
+import { supabase } from '../supabaseClient';
+import { USE_SUPABASE } from './AppStoreContext';
+
+// FEATURE FLAG: Toggle between Mock Data (false) and Supabase (true)
 
 interface AuthContextValue {
   user: User | null;
@@ -36,50 +38,69 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const login = async (phone: string, role: UserRole, password?: string) => {
-    if (USE_AWS_COGNITO) {
+    if (USE_SUPABASE) {
       try {
-        // Authenticate via AWS Cognito
-        const { isSignedIn } = await signIn({ username: phone, password: password || '123456' });
-        if (isSignedIn) {
-          const authUser = await getCurrentUser();
-          const session = await fetchAuthSession();
-          
-          // Decode standard JWT claims from Cognito (e.g. sub, phone_number, custom:role)
-          const tokens = session.tokens;
-          const u: User = {
-            id: authUser.userId,
-            name: tokens?.idToken?.payload['name']?.toString() || 'AWS User',
-            phone: phone,
-            role: (tokens?.idToken?.payload['custom:role']?.toString() as UserRole) || role,
-          };
-          
-          setUser(u);
-          sessionStorage.setItem('permit_user', JSON.stringify(u));
+        let authUser: User | null = null;
+        
+        if (role === 'customer' || role === 'admin') {
+          const { data, error } = await supabase.from('users').select('*').or(`phone.eq.${phone},phone.eq.91${phone}`).single();
+          if (!error && data) {
+            authUser = { id: data.id, name: data.name, phone: data.phone, role: data.role as UserRole };
+          }
+        } 
+        else if (role === 'provider') {
+          const { data, error } = await supabase.from('service_providers').select('*').or(`phone.eq.${phone},phone.eq.91${phone}`).single();
+          if (!error && data) {
+            authUser = { id: data.id, name: data.owner_name, phone: data.phone, role: 'provider' };
+          }
+        }
+        else if (role === 'staff' || role === 'manager' || role === 'associate') {
+          const { data, error } = await supabase.from('staff_members').select('*').or(`phone.eq.${phone},phone.eq.91${phone}`).single();
+          if (!error && data) {
+            authUser = { id: data.id, name: data.name, phone: data.phone, role: 'staff', providerId: data.provider_id };
+          }
+        }
+
+        // Fallback to DEMO_USERS map if not in DB
+        if (!authUser && DEMO_USERS[phone]) {
+          authUser = DEMO_USERS[phone];
+        }
+
+        if (authUser) {
+          setUser(authUser);
+          sessionStorage.setItem('permit_user', JSON.stringify(authUser));
+          return;
+        } else {
+          throw new Error('User not found. Please check your mobile number.');
         }
       } catch (error) {
-        console.error('AWS Cognito Sign-in failed', error);
+        console.error('Sign-in error:', error);
+        if (DEMO_USERS[phone]) {
+          const authUser = DEMO_USERS[phone];
+          setUser(authUser);
+          sessionStorage.setItem('permit_user', JSON.stringify(authUser));
+          return;
+        }
         throw error;
       }
     } else {
-      // Mock Login
-      const found = Object.values(DEMO_USERS).find(u => u.phone === phone);
-      const u: User = found ?? {
-        id: `new_${Date.now()}`,
-        name: role === 'customer' ? 'New Customer' : role === 'staff' ? 'New Staff' : 'New User',
-        phone,
-        role,
-      };
-      setUser(u);
-      sessionStorage.setItem('permit_user', JSON.stringify(u));
+      const demo = DEMO_USERS[phone];
+      if (demo) {
+        setUser(demo);
+        sessionStorage.setItem('permit_user', JSON.stringify(demo));
+      } else {
+        throw new Error('User not found');
+      }
     }
   };
 
   const logout = async () => {
-    if (USE_AWS_COGNITO) {
+    if (USE_SUPABASE) {
       try {
-        await amplifySignOut();
+        // Clear Supabase session if using real Auth
+        await supabase.auth.signOut();
       } catch (error) {
-        console.error('AWS Cognito Sign-out failed', error);
+        console.error('Sign-out failed', error);
       }
     }
     setUser(null);

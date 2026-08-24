@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Search, FileText, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAppStore } from '../../context/AppStoreContext';
@@ -11,12 +11,33 @@ export default function MyApplications() {
   const { user } = useAuth();
   const { getAppsForUser } = useAppStore();
   const apps = user ? getAppsForUser(user) : [];
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [searchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [filter, setFilter] = useState(searchParams.get('status') || 'all');
+
+  useEffect(() => {
+    if (searchParams.get('search')) setSearch(searchParams.get('search') || '');
+    if (searchParams.get('status')) setFilter(searchParams.get('status') || 'all');
+  }, [searchParams]);
 
   const filtered = apps.filter(a => {
-    const matchS = a.id.toLowerCase().includes(search.toLowerCase()) || a.address.toLowerCase().includes(search.toLowerCase());
-    const matchF = filter === 'all' || a.status === filter;
+    const s = search.toLowerCase();
+    const matchS = a.id.toLowerCase().includes(s) || 
+                   a.address.toLowerCase().includes(s) || 
+                   a.type.replace(/_/g, ' ').includes(s);
+    
+    let matchF = false;
+    if (filter === 'all') matchF = true;
+    else if (filter === 'in_progress') {
+      matchF = !['pending', 'approved', 'panchayat_approved', 'terminated', 'rejected', 'panchayat_rejected'].includes(a.status);
+    } else if (filter === 'approved_all') {
+      matchF = ['approved', 'panchayat_approved'].includes(a.status);
+    } else if (filter === 'rejected_all') {
+      matchF = ['rejected', 'panchayat_rejected'].includes(a.status);
+    } else {
+      matchF = a.status === filter;
+    }
+
     return matchS && matchF;
   });
 
@@ -37,9 +58,12 @@ export default function MyApplications() {
         </div>
         <div className={styles.filterBtns}>
           {['all', 'pending', 'under_review', 'documents_required', 'site_visit_scheduled',
-            'client_review', 'panchayat_review', 'panchayat_approved', 'terminated'].map(f => (
+            'client_review', 'panchayat_review', 'approved_all', 'rejected_all', 'terminated'].map(f => (
             <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => setFilter(f)}>
-              {f === 'all' ? 'All' : STATUS_CONFIG[f as keyof typeof STATUS_CONFIG]?.label ?? f}
+              {f === 'all' ? 'All' 
+                : f === 'approved_all' ? 'Approved' 
+                : f === 'rejected_all' ? 'Rejected' 
+                : STATUS_CONFIG[f as keyof typeof STATUS_CONFIG]?.label ?? f}
             </button>
           ))}
         </div>

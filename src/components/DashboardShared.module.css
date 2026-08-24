@@ -1,0 +1,313 @@
+.page {
+  padding-bottom: 60px;
+}
+
+/* HERO SECTION (Mirrors Landing Page) */
+.hero {
+  text-align: center;
+  padding: 60px 20px 40px;
+  position: relative;
+}
+
+.heroHeading {
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 900;
+  color: var(--text);
+  line-height: 1.1;
+  letter-spacing: -1px;
+  margin-bottom: 16px;
+}
+
+.heroHighlight {
+  color: var(--primary);
+  display: inline-block;
+}
+
+.heroSub {
+  font-size: clamp(15px, 2vw, 18px);
+  color: var(--text-muted);
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+/* Search Box (Mirrors Landing Page) */
+.searchBox {
+  display: flex;
+  align-items: center;
+  max-width: 680px;
+  margin: 40px auto 0;
+  background: white;
+  border-radius: 16px;
+  padding: 8px 8px 8px 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  position: relative;
+  border: 1px solid var(--border);
+}
+
+.searchInner { display: flex; align-items: center; flex: 1; gap: 10px; }
+.searchIcon  { color: #9ca3af; flex-shrink: 0; }
+.searchInput {
+  flex: 1; border: none; outline: none; background: transparent;
+  font-size: 15px; color: #1a1a1a; caret-color: var(--primary);
+  cursor: text; padding: 8px 0;
+}
+.searchInput::placeholder { color: #9ca3af; }
+.searchBtn { border-radius: 10px; padding: 12px 24px; font-size: 15px; }
+
+
+/* ACTION CARDS (Mirrors Landing Page CTA section) */
+.actionSection { padding: 40px 20px; max-width: 1000px; margin: 0 auto; }
+
+.actionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.ctaCard {
+  padding: 40px 36px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+.ctaCardDark {
+  background: #1a1a1a;
+  border-color: #1a1a1a;
+  color: white;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.ctaIcon {
+  width: 60px; height: 60px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 24px;
+}
+
+.ctaCard h3 { font-size: 22px; font-weight: 800; margin-bottom: 12px; }
+.ctaCard p  { font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 24px; }
+.ctaCardDark p { color: rgba(255,255,255,0.65); }
+
+.ctaList { list-style: none; padding: 0; margin-bottom: 32px; }
+.ctaList li {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 14px; padding: 12px 0;
+  color: var(--text); border-bottom: 1px solid var(--border);
+}
+.ctaList li span { flex: 1; }
+.ctaCardDark .ctaList li { color: rgba(255,255,255,0.85); border-color: rgba(255,255,255,0.1); }
+
+.itemBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+.badgeLight { background: var(--primary-bg); color: var(--primary); }
+.badgeDark { background: rgba(255,255,255,0.15); color: white; }
+
+.ctaBtn { width: 100%; justify-content: center; padding: 14px 24px; font-size: 15px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;}
+.ctaBtnWhite {
+  width: 100%; justify-content: center; padding: 14px 24px;
+  font-size: 15px; border-radius: 10px;
+  background: white; color: #1a1a1a; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: background 0.2s;
+  text-decoration: none;
+}
+.ctaBtnWhite:hover { background: #f3f4f6; }
+
+
+/* STATS BANNER (Mirrors Landing Page Stats) */
+.statsSection {
+  background: var(--primary);
+  padding: 60px 20px;
+  margin-top: 40px;
+}
+
+.statsGrid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 32px;
+  text-align: center;
+}
+
+.statValue { font-size: 42px; font-weight: 900; color: white; line-height: 1; }
+.statLabel { font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+/* Notifications Widget */
+.notificationsWidget {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 320px;
+  max-width: calc(100% - 40px);
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  text-align: left;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.notifHeader {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notifList {
+  max-height: 250px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.notifItem {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 32px;
+}
+.notifItem:last-child {
+  border-bottom: none;
+}
+
+.notifTime {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.notifClose {
+  position: absolute;
+  top: 12px;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 2px;
+  border-radius: 4px;
+}
+.notifClose:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+@media (max-width: 1000px) {
+  .notificationsWidget {
+    position: static;
+    width: 100%;
+    margin: 0 auto 24px;
+    max-width: 680px;
+  }
+}
+/* Search Dropdown */
+.searchSuggestions {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  z-index: 50;
+  text-align: left;
+}
+.searchSuggestion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+  color: var(--text);
+}
+.searchSuggestion:last-child {
+  border-bottom: none;
+}
+.searchSuggestion:hover {
+  background: var(--surface);
+  color: var(--primary);
+}
+.suggestionText {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.suggestionText strong {
+  font-size: 14px;
+  font-weight: 700;
+}
+.suggestionText small {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.statBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  padding: 16px;
+  border-radius: 16px;
+  transition: background 0.2s, transform 0.2s;
+  color: white;
+}
+.statBlock:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Filters */
+.filterContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  max-width: 800px;
+  margin: 16px auto 0;
+}
+
+.filterBtn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: white;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filterBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.filterActive {
+  border-color: var(--primary) !important;
+  background: var(--primary-bg) !important;
+  color: var(--primary) !important;
+}

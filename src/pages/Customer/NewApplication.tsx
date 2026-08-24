@@ -14,7 +14,7 @@ const STEPS = ['Select Service', 'Property Details', 'Documents', 'Choose Provid
 export default function NewApplication() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { addApplication, providers } = useAppStore();
+  const { addApplication, providers, getAppsForUser } = useAppStore();
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
@@ -31,11 +31,17 @@ export default function NewApplication() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedProvider, setSelectedProvider] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const [uploadedDocs, setUploadedDocs] = useState<Record<string, UploadedFile | null>>(
     () => Object.fromEntries(REQUIRED_DOCS.map(d => [d, null]))
   );
   const [newAppId, setNewAppId] = useState('');
+  const walletDocuments = (user ? getAppsForUser(user) : []).flatMap(application =>
+    application.documents
+      .filter(document => Boolean(document.url))
+      .map(document => ({ ...document, applicationId: application.id }))
+  );
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     let val = e.target.value;
@@ -53,13 +59,10 @@ export default function NewApplication() {
   const floors       = parseInt(form.floors) || undefined;
   const heightM      = parseFloat(form.heightM) || undefined;
 
-  const areaMatched = activeProviders.filter(p =>
-    p.area.toLowerCase().includes(form.area.toLowerCase()) ||
-    p.landmarks.some(l => l.toLowerCase().includes(form.landmark.toLowerCase())) ||
-    form.landmark.toLowerCase().includes(p.area.toLowerCase()) ||
-    form.area === ''
+  const normalizedPincode = form.pincode.trim();
+  const baseProviders = activeProviders.filter(provider =>
+    /^\d{6}$/.test(normalizedPincode) && (provider.pincode ?? '').trim() === normalizedPincode
   );
-  const baseProviders = areaMatched.length > 0 ? areaMatched : activeProviders;
   const displayProviders = baseProviders.map(p => {
     const licence = getLicenceById(p.licenceCategory ?? '');
     const eligible = licence ? canHandleBuilding(licence, buildingArea, floors, heightM) : true;
@@ -99,7 +102,12 @@ export default function NewApplication() {
       if (landErr) e.landmark = landErr;
     }
 
-    if (s === 4 && !selectedProvider) e.provider = 'Please select a service provider';
+    if (s === 4) {
+      const hasProviders = eligibleProviders.length > 0 || ineligibleProviders.length > 0;
+      if (hasProviders && !selectedProvider) {
+        e.provider = 'Please select a service provider';
+      }
+    }
     
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -107,12 +115,20 @@ export default function NewApplication() {
 
   const handleNext = () => { if (validate(step)) setStep(s => s + 1); };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validate(4)) return;
     const provider = providers.find(p => p.id === selectedProvider);
-    const appId = `APP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-    setNewAppId(appId);
-    addApplication({
+    
+    // Calculate new app ID: APP-<phone>-<count>
+    const userApps = user ? getAppsForUser(user) : [];
+    const appCount = userApps.length + 1;
+    const paddedCount = appCount.toString().padStart(2, '0');
+    const phoneStr = user?.phone ?? 'GUEST';
+    const appId = `APP-${phoneStr}-${paddedCount}`;
+    
+    setSubmitting(true);
+    setErrors(current => ({ ...current, submission: '' }));
+    const saved = await addApplication({
       id: appId,
       customerId: user?.id ?? 'guest',
       customerName: user?.name ?? 'Customer',
@@ -131,6 +147,7 @@ export default function NewApplication() {
           name,
           type: f!.mimeType.split('/').pop() ?? 'file',
           uploadedAt: new Date().toISOString(),
+          uploadedBy: 'customer' as const,
           status: 'pending' as const,
           url: f!.url,
           sizeBytes: f!.sizeBytes,
@@ -138,6 +155,12 @@ export default function NewApplication() {
       assignedProviderId: provider?.id,
       assignedProviderName: provider?.officeName ?? provider?.name,
     });
+    setSubmitting(false);
+    if (!saved) {
+      setErrors(current => ({ ...current, submission: 'Failed to submit the application. Please try again.' }));
+      return;
+    }
+    setNewAppId(appId);
     setSubmitted(true);
   };
 
@@ -222,6 +245,7 @@ export default function NewApplication() {
               <div className="form-group">
                 <label className="form-label">Pincode</label>
                 <input className="form-input" type="text" maxLength={6} placeholder="6-digit pincode" value={form.pincode} onChange={e => setForm(f => ({ ...f, pincode: e.target.value.replace(/\D/g, '') }))} />
+                {errors.pincode && <p className={styles.fieldError}><AlertCircle size={13} /> {errors.pincode}</p>}
               </div>
               <div className="form-group">
                 <label className="form-label">City / Area</label>
@@ -231,7 +255,7 @@ export default function NewApplication() {
                 <label className="form-label"><MapPin size={13} /> Landmark of Proposed Site</label>
                 <input className="form-input" type="text" placeholder="e.g. Near Thrissur Railway Station" value={form.landmark} onChange={set('landmark')} />
                 {errors.landmark && <p className={styles.fieldError}><AlertCircle size={13} /> {errors.landmark}</p>}
-                <p className={styles.hintText}>Used to match you with the nearest service provider.</p>
+                <p className={styles.hintText}>Used as a reference for the property location.</p>
               </div>
             </div>
 
@@ -265,13 +289,24 @@ export default function NewApplication() {
             <h3 className={styles.stepTitle}>Step 3: Upload Documents</h3>
             <p className={styles.docsNote}>The following documents are required for all Kerala permit services.</p>
             {REQUIRED_DOCS.map(doc => (
-              <DocumentUpload
-                key={doc}
-                label={doc}
-                value={uploadedDocs[doc]}
-                onChange={file => setUploadedDocs(prev => ({ ...prev, [doc]: file }))}
-                hint="PDF, JPG or PNG · max 5 MB"
-              />
+              <div key={doc}>
+                <DocumentUpload
+                  label={doc}
+                  value={uploadedDocs[doc]}
+                  onChange={file => setUploadedDocs(prev => ({ ...prev, [doc]: file }))}
+                  hint="PDF, JPG or PNG · max 5 MB"
+                />
+                {!uploadedDocs[doc] && walletDocuments.map(document => (
+                  <button
+                    key={`${doc}_${document.id}`}
+                    type="button"
+                    onClick={() => setUploadedDocs(previous => ({ ...previous, [doc]: { id: document.id, name: document.name, sizeBytes: document.sizeBytes ?? 0, mimeType: document.type === 'pdf' ? 'application/pdf' : `image/${document.type}`, url: document.url! } }))}
+                    style={{ margin: '-4px 0 16px', border: '1px solid #86efac', background: '#f0fdf4', color: '#166534', padding: '7px 10px', fontSize: 12, cursor: 'pointer' }}
+                  >
+                    Use saved copy from wallet ({document.applicationId})
+                  </button>
+                ))}
+              </div>
             ))}
             <p className={styles.docDisclaimer}>* You can also upload documents later. Your application will be marked as "Documents Pending" until all documents are received.</p>
           </div>
@@ -282,7 +317,7 @@ export default function NewApplication() {
           <div>
             <h3 className={styles.stepTitle}>Step 4: Choose Service Provider</h3>
             <p className={styles.docsNote}>
-              Providers are matched by your landmark: <strong>{form.landmark || form.area || 'All areas'}</strong>
+              Providers serving pincode <strong>{form.pincode}</strong>
               {(buildingArea || floors || heightM) && (
                 <> and filtered by your building specs:
                   {buildingArea && <strong> {buildingArea} m²</strong>}
@@ -292,8 +327,21 @@ export default function NewApplication() {
               )}
             </p>
             {errors.provider && <p className={styles.fieldError}><AlertCircle size={13} /> {errors.provider}</p>}
+            {errors.submission && <p className={styles.fieldError}><AlertCircle size={13} /> {errors.submission}</p>}
 
             {/* Eligible providers */}
+            {eligibleProviders.length === 0 && ineligibleProviders.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '40px 20px', background: 'var(--surface)', borderRadius: 12, marginTop: 20 }}>
+                <AlertTriangle size={32} style={{ color: 'var(--primary)', marginBottom: 12 }} />
+                <h4 style={{ color: 'var(--text)' }}>No Providers Found for This Pincode</h4>
+                <p style={{ color: 'var(--text-muted)', maxWidth: 500, margin: '0 auto 16px' }}>
+                  We couldn't find any active service providers for pincode <strong>{form.pincode}</strong>.
+                  <strong> However, you can still submit your application!</strong> Our team will review it and manually assign a qualified service provider for you.
+                </p>
+                <button className="btn btn-outline" onClick={() => setStep(2)}>Change Property Details</button>
+              </div>
+            )}
+
             {eligibleProviders.length > 0 && (
               <div className={styles.providerList}>
                 {eligibleProviders.map(p => (
@@ -355,7 +403,7 @@ export default function NewApplication() {
           {step > 1 && <button className="btn btn-outline" onClick={() => setStep(s => s - 1)}>Back</button>}
           {step < 4
             ? <button className="btn btn-primary" onClick={handleNext}>Continue →</button>
-            : <button className="btn btn-primary" onClick={handleSubmit}>Submit Application</button>
+            : <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>{submitting ? 'Submitting…' : 'Submit Application'}</button>
           }
         </div>
       </div>

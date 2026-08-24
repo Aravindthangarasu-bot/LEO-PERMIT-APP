@@ -1,7 +1,7 @@
 import type { ApplicationStatus } from '../../types';
 
 export const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: string; bg: string; dot: string }> = {
-  pending:                  { label: 'Pending',             color: '#6366f1', bg: '#eef2ff',  dot: 'blue'   },
+  pending:                  { label: 'Pending',             color: '#f97316', bg: '#fff7ed',  dot: 'yellow' },
   under_review:             { label: 'Under Review',        color: '#3b82f6', bg: '#dbeafe',  dot: 'blue'   },
   documents_required:       { label: 'Docs Required',       color: '#f59e0b', bg: '#fef3c7',  dot: 'yellow' },
   site_visit_scheduled:     { label: 'Site Visit Scheduled',color: '#8b5cf6', bg: '#ede9fe',  dot: 'blue'   },
@@ -17,6 +17,13 @@ export const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: st
   rejected:                 { label: 'Rejected',             color: '#dc2626', bg: '#fee2e2',  dot: 'red'    },
   terminated:               { label: 'Terminated',           color: '#6b7280', bg: '#f3f4f6',  dot: 'red'    },
 };
+
+export const ALL_STATUS_FILTERS = Object.keys(STATUS_CONFIG) as ApplicationStatus[];
+
+export const COMMON_STATUS_FILTERS: ApplicationStatus[] = [
+  'pending', 'under_review', 'documents_required', 'site_visit_scheduled',
+  'client_review', 'panchayat_review', 'approved', 'rejected', 'terminated'
+];
 
 export const LIFECYCLE_STAGES = [
   { status: 'pending',              label: 'Application Submitted'  },

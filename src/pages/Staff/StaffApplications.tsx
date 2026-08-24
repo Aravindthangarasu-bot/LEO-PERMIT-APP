@@ -1,51 +1,89 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, FileText, CheckCircle2, XCircle, Upload } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAppStore } from '../../context/AppStoreContext';
-import { STATUS_CONFIG } from '../Customer/statusConfig';
+import DocumentUpload from '../../components/DocumentUpload/DocumentUpload';
+import type { UploadedFile } from '../../components/DocumentUpload/DocumentUpload';
+import ActivityThread from '../../components/ActivityThread';
+import ActionConsole from '../../components/ActionConsole';
+import { STATUS_CONFIG, ALL_STATUS_FILTERS, COMMON_STATUS_FILTERS } from '../Customer/statusConfig';
 import { PERMIT_TYPES } from '../../data/mockData';
-import type { ApplicationStatus } from '../../types';
+import type { ApplicationStatus, PermitApplication } from '../../types';
 import styles from './Staff.module.css';
 
 export default function StaffApplications() {
   const { user } = useAuth();
-  const { updateApplication, addNotification, getAppsForUser } = useAppStore();
+  const { updateApplication, publishApplicationUpdate, getAppsForUser } = useAppStore();
   const myApps = user ? getAppsForUser(user) : [];
 
+  const [searchParams] = useSearchParams();
+  const statusFilter = searchParams.get('status');
+
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState<string | null>(null);
+  
+  const [selectedAction, setSelectedAction] = useState<ApplicationStatus | null>(null);
   const [notes, setNotes] = useState('');
   const [actionDone, setActionDone] = useState('');
+
+  useEffect(() => {
+    const applicationId = searchParams.get('application');
+    if (applicationId) {
+      setSearch(applicationId);
+      setFilter('all');
+      setSelected(applicationId);
+    }
+  }, [searchParams]);
 
   // Security: find the app only within the staff's allowed apps (already filtered by getAppsForUser)
   const app = myApps.find(a => a.id === selected) ?? null;
 
-  const filtered = myApps.filter(a =>
-    a.id.toLowerCase().includes(search.toLowerCase()) ||
-    a.customerName.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    let result = myApps;
+    
+    // Status Filter
+    if (filter !== 'all') {
+      result = result.filter(a => a.status === filter);
+    } else if (statusFilter === 'in_progress') {
+      const notInProgress = ['pending', 'approved', 'panchayat_approved', 'terminated', 'rejected', 'panchayat_rejected'];
+      result = result.filter(a => !notInProgress.includes(a.status));
+    } else if (statusFilter === 'approved_all') {
+      result = result.filter(a => ['approved', 'panchayat_approved'].includes(a.status));
+    } else if (statusFilter === 'rejected_all') {
+      result = result.filter(a => ['rejected', 'panchayat_rejected'].includes(a.status));
+    } else if (statusFilter) {
+      result = result.filter(a => a.status === statusFilter);
+    }
+    
+    // Search Filter
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(a =>
+        a.id.toLowerCase().includes(q) ||
+        a.customerName.toLowerCase().includes(q)
+      );
+    }
+    
+    return result;
+  }, [myApps, statusFilter, filter, search]);
 
-  const notify = (appId: string, customerId: string, type: any, message: string) => {
-    addNotification({
-      id: `n_${Date.now()}`,
-      applicationId: appId,
-      customerId,
-      type,
-      message,
-      contactName: user?.name,
-      contactPhone: user?.phone,
-      timestamp: new Date().toISOString(),
-      read: false,
-    });
+  const handleActionConsoleUpdate = async (appId: string, updates: Partial<PermitApplication>, msg: string, notifyType?: 'status_change', notifyMsg?: string) => {
+    if (!await updateApplication(appId, updates)) return;
+    setActionDone(msg);
+    setTimeout(() => setActionDone(''), 3000);
+
+    if (notifyType && notifyMsg) {
+      publishApplicationUpdate({ applicationId: appId, actor: user!, title: 'Application status updated', summary: notifyMsg, type: notifyType });
+    }
   };
 
-  const update = (id: string, status: ApplicationStatus, msg: string) => {
-    updateApplication(id, { status, notes: notes || undefined });
-    const a = myApps.find(x => x.id === id)!;
-    notify(id, a.customerId, 'status_change',
-      `Your application ${id} status updated to "${STATUS_CONFIG[status].label}". Handled by: ${user?.name} (+91 ${user?.phone}).`
-    );
+  const update = (id: string, updates: any, msg: string) => {
+    updateApplication(id, { ...updates, notes: notes.trim() });
     setActionDone(msg);
+    setNotes('');
+    setSelectedAction(null);
     setTimeout(() => setActionDone(''), 3000);
   };
 
@@ -64,6 +102,14 @@ export default function StaffApplications() {
           <input type="text" placeholder="Search by ID or customer…" value={search}
             onChange={e => setSearch(e.target.value)} className={styles.searchInput} />
         </div>
+        <div className={styles.filterBtns}>
+          <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''}`} onClick={() => setFilter('all')}>All</button>
+          {COMMON_STATUS_FILTERS.map(f => (
+            <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => setFilter(f)}>
+              {STATUS_CONFIG[f as keyof typeof STATUS_CONFIG]?.label ?? f}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className={styles.appGrid}>
@@ -74,7 +120,7 @@ export default function StaffApplications() {
                 const sc = STATUS_CONFIG[a.status];
                 return (
                   <button key={a.id} className={`${styles.appRow} ${selected === a.id ? styles.appRowActive : ''}`}
-                    onClick={() => { setSelected(a.id); setNotes(''); setActionDone(''); }}>
+                    onClick={() => { setSelected(a.id); setNotes(''); setSelectedAction(null); setActionDone(''); }}>
                     <div className={styles.appRowLeft}>
                       <div className={styles.appId}>{a.id}</div>
                       <div className={styles.appType}>{PERMIT_TYPES.find(p => p.value === a.type)?.label}</div>
@@ -105,35 +151,48 @@ export default function StaffApplications() {
 
             <div className={styles.detailSection}>
               <h4>Customer Details</h4>
-              <div className={styles.detailRows}>
-                <div className={styles.detailRow}><span>Name</span><span>{app.customerName}</span></div>
-                <div className={styles.detailRow}><span>Phone</span><span>{app.customerPhone}</span></div>
-                <div className={styles.detailRow}><span>Address</span><span>{app.address}</span></div>
-                <div className={styles.detailRow}><span>Description</span><span>{app.description}</span></div>
+              <div className={styles.detailGrid}>
+                <div className={styles.detailGridItem}>
+                  <div className={styles.detailGridLabel}>Name</div>
+                  <div className={styles.detailGridValue}>{app.customerName}</div>
+                </div>
+                <div className={styles.detailGridItem}>
+                  <div className={styles.detailGridLabel}>Phone</div>
+                  <div className={styles.detailGridValue}>{app.customerPhone}</div>
+                </div>
+                <div className={`${styles.detailGridItem} ${styles.detailGridValueFull}`}>
+                  <div className={styles.detailGridLabel}>Address</div>
+                  <div className={styles.detailGridValue}>{app.address}</div>
+                </div>
+                <div className={`${styles.detailGridItem} ${styles.detailGridValueFull}`}>
+                  <div className={styles.detailGridLabel}>Description</div>
+                  <div className={styles.detailGridValue}>{app.description}</div>
+                </div>
               </div>
             </div>
 
-            {!['approved','panchayat_approved','rejected','terminated'].includes(app.status) && (
-              <div className={styles.actionPanel}>
-                <h4>Update Status</h4>
-                <div className="form-group">
-                  <label className="form-label">Notes / Remarks</label>
-                  <textarea className="form-input" rows={2} placeholder="Add notes for the customer…"
-                    value={notes} onChange={e => setNotes(e.target.value)} />
-                </div>
-                <div className={styles.actionBtns}>
-                  <button className={styles.approveBtn} onClick={() => update(app.id, 'under_review', 'Marked as under review.')}>
-                    <CheckCircle2 size={15} /> Under Review
-                  </button>
-                  <button className={styles.docsBtn} onClick={() => update(app.id, 'documents_required', 'Requested more documents.')}>
-                    <Upload size={15} /> Request Docs
-                  </button>
-                  <button className={styles.rejectBtn} onClick={() => update(app.id, 'rejected', 'Application rejected.')}>
-                    <XCircle size={15} /> Reject
-                  </button>
-                </div>
+            {!['terminated','rejected','approved','panchayat_approved'].includes(app.status) && (
+              <div className={styles.actionPanel} style={{ borderTop: '1px solid #fca5a5', paddingTop: 16 }}>
+                <button className={styles.rejectBtn} onClick={async () => {
+                  if (!await updateApplication(app.id, { status: 'terminated', terminatedBy: 'provider', terminationReason: 'Declined by staff' })) return;
+                  publishApplicationUpdate({ applicationId: app.id, actor: user!, title: 'Application terminated', summary: 'The assigned staff member terminated this application.', type: 'status_change' });
+                  setActionDone('Project declined and terminated.');
+                  setTimeout(() => setActionDone(''), 3000);
+                }}>
+                  <XCircle size={16} /> Decline / Terminate Project
+                </button>
               </div>
             )}
+            
+            <div style={{ marginTop: 24 }}>
+              <ActivityThread appId={app.id} activities={app.activityLog} />
+            </div>
+
+            <ActionConsole 
+              app={app}
+              uploaderRole="staff"
+              onUpdate={(updates, msg, notifyType, notifyMsg) => handleActionConsoleUpdate(app.id, updates, msg, notifyType, notifyMsg)}
+            />
           </div>
         )}
       </div>

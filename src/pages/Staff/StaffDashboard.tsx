@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FileText, Clock, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAppStore } from '../../context/AppStoreContext';
@@ -7,6 +7,7 @@ import { PERMIT_TYPES } from '../../data/mockData';
 import styles from './Staff.module.css';
 
 export default function StaffDashboard() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { getAppsForUser, getMyStaffProfile } = useAppStore();
   // Security: getAppsForUser for staff role returns only apps where
@@ -39,15 +40,20 @@ export default function StaffDashboard() {
 
       <div className={styles.statsGrid}>
         {[
-          { icon: <FileText size={22} />,    label: 'Assigned to Me',  value: myApps.length, color: '#6366f1', bg: '#eef2ff' },
-          { icon: <Clock size={22} />,        label: 'Active',          value: active.length, color: '#f59e0b', bg: '#fef3c7' },
-          { icon: <CheckCircle2 size={22} />, label: 'Completed',       value: approved.length, color: '#16a34a', bg: '#dcfce7' },
+          { icon: <FileText size={22} />,    label: 'Assigned to Me',  value: myApps.length, color: '#6366f1', bg: '#eef2ff', filter: '' },
+          { icon: <Clock size={22} />,        label: 'Active',          value: active.length, color: '#f59e0b', bg: '#fef3c7', filter: '?status=in_progress' },
+          { icon: <CheckCircle2 size={22} />, label: 'Completed',       value: approved.length, color: '#16a34a', bg: '#dcfce7', filter: '?status=approved_all' },
         ].map(s => (
-          <div key={s.label} className={`card ${styles.statCard}`}>
+          <button 
+            key={s.label} 
+            className={`card ${styles.statCard}`}
+            onClick={() => navigate(`/staff/applications${s.filter}`)}
+            style={{ cursor: 'pointer', textAlign: 'left', border: 'none', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+          >
             <div className={styles.statIcon} style={{ background: s.bg, color: s.color }}>{s.icon}</div>
             <div className={styles.statValue}>{s.value}</div>
             <div className={styles.statLabel}>{s.label}</div>
-          </div>
+          </button>
         ))}
       </div>
 

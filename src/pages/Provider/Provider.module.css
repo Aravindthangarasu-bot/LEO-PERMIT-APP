@@ -22,10 +22,6 @@
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 16px; margin-bottom: 28px;
 }
-.statCard { padding: 20px; text-align: center; }
-.statIcon { width: 44px; height: 44px; border-radius: 11px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
-.statValue { font-size: 28px; font-weight: 800; color: var(--text); }
-.statLabel { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
 
 /* Licence expiry banner */
 .expiryBanner {
@@ -66,7 +62,8 @@
 
 /* App list */
 .appList  { display: flex; flex-direction: column; gap: 12px; }
-.appItem  { display: flex; align-items: flex-start; justify-content: space-between; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); gap: 12px; }
+.appItem  { display: flex; align-items: flex-start; justify-content: space-between; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); gap: 12px; transition: all 0.3s ease; }
+.appItem:hover { border-color: var(--primary); transform: translateX(4px); box-shadow: var(--shadow); background: white; }
 .appId    { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
 .appType  { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
 .appCustomer { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
@@ -112,7 +109,27 @@
 .appRowContent { flex: 1; min-width: 0; }
 
 /* Review card */
-.reviewCard { padding: 24px; }
+.reviewCard { padding: 24px; position: relative; animation: detailReveal 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.activityPanel { animation: detailReveal 0.32s 0.06s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.detailHeaderActions { display: flex; align-items: center; gap: 10px; }
+.closeDetailBtn {
+  width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-muted); display: inline-flex;
+  align-items: center; justify-content: center; cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+.closeDetailBtn:hover { color: var(--primary); border-color: var(--primary); background: var(--primary-bg); transform: scale(1.05); }
+.closeDetailBtn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+@keyframes detailReveal {
+  from { opacity: 0; transform: translateY(-10px) scale(0.995); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reviewCard, .activityPanel { animation: none; }
+  .closeDetailBtn { transition: none; }
+}
 .actionSuccess {
   display: flex; align-items: center; gap: 8px;
   background: #dcfce7; border: 1px solid #86efac; border-radius: 8px;
@@ -133,33 +150,32 @@
 .docName { flex: 1; }
 
 /* Action panel */
-.actionPanel { background: var(--surface); border-radius: 12px; padding: 20px; }
-.actionPanel h4 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 14px; }
-.actionBtns { display: flex; gap: 10px; flex-wrap: wrap; }
+/* New workflow styles */
+.actionSelector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.actionCardBtn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 12px; border-radius: 12px; border: 2px solid transparent; background: #ffffff; color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.actionCardBtn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); color: var(--text); }
+.actionCardBtn svg { transition: transform 0.2s; }
+.actionCardBtn:hover svg { transform: scale(1.1); }
 
-.approveBtn {
-  display: flex; align-items: center; gap: 6px;
-  padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 700;
-  background: #dcfce7; color: #15803d; border: 1.5px solid #86efac;
-  cursor: pointer; transition: all 0.2s;
-}
-.approveBtn:hover { background: #bbf7d0; }
+.actionCardActive.review { border-color: #22c55e; background: #f0fdf4; color: #166534; }
+.actionCardActive.docs { border-color: #f59e0b; background: #fffbeb; color: #b45309; }
+.actionCardActive.reject { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
 
-.docsBtn {
-  display: flex; align-items: center; gap: 6px;
-  padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 700;
-  background: #fef3c7; color: #92400e; border: 1.5px solid #fcd34d;
-  cursor: pointer; transition: all 0.2s;
-}
-.docsBtn:hover { background: #fde68a; }
+.actionInputArea { background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-.rejectBtn {
-  display: flex; align-items: center; gap: 6px;
-  padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 700;
-  background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5;
-  cursor: pointer; transition: all 0.2s;
-}
-.rejectBtn:hover { background: #fecaca; }
+.actionInputArea label { display: block; font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+.actionInputArea textarea { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-family: inherit; font-size: 14px; transition: border-color 0.2s; resize: vertical; min-height: 80px; margin-bottom: 16px; }
+.actionInputArea textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+
+.submitBtn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; border-radius: 10px; font-size: 14px; font-weight: 800; color: white; border: none; cursor: pointer; transition: all 0.2s; }
+.submitBtn:disabled { background: #cbd5e1; cursor: not-allowed; transform: none !important; opacity: 0.7; }
+.submitBtn.review { background: #22c55e; }
+.submitBtn.review:hover:not(:disabled) { background: #16a34a; transform: translateY(-1px); }
+.submitBtn.docs { background: #f59e0b; }
+.submitBtn.docs:hover:not(:disabled) { background: #d97706; transform: translateY(-1px); }
+.submitBtn.reject { background: #ef4444; }
+.submitBtn.reject:hover:not(:disabled) { background: #dc2626; transform: translateY(-1px); }
 
 /* New workflow styles */
 .appCustomer { font-size: 12px; color: var(--text-muted); margin-top: 2px; }

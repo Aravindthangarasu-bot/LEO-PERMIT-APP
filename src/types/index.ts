@@ -27,10 +27,12 @@ export interface PermitApplication {
   documents: Document[];
   assignedProviderId?: string;
   assignedProviderName?: string;
+  // Who is servicing: 'provider' = provider self-servicing, 'staff' = assigned to staff
+  servicedBy?: 'provider' | 'staff';
   // Staff assignment
-  assignedStaffId?: string;
-  assignedStaffName?: string;
-  assignedStaffPhone?: string;
+  assignedStaffId?: string | null;
+  assignedStaffName?: string | null;
+  assignedStaffPhone?: string | null;
   notes?: string;
   approvalNumber?: string;
   // Site visit
@@ -46,12 +48,24 @@ export interface PermitApplication {
   // Termination
   terminatedBy?: 'client' | 'provider';
   terminationReason?: string;
+  activityLog?: ActivityLogEntry[];
+}
+
+export interface ActivityLogEntry {
+  id: string;
+  userId: string;
+  userName: string;
+  userRole: string;
+  type: 'status_change' | 'comment' | 'document_upload';
+  content: string;
+  timestamp: string;
 }
 
 export interface PlanRevision {
   id: string;
   version: number;
   uploadedAt: string;
+  uploadedBy?: 'provider' | 'staff';
   comments?: string;
 }
 
@@ -92,6 +106,7 @@ export interface Document {
   name: string;
   type: string;
   uploadedAt: string;
+  uploadedBy?: 'customer' | 'provider' | 'staff';
   status: 'pending' | 'verified' | 'rejected';
   url?: string;      // blob URL for in-session viewing
   sizeBytes?: number;
@@ -151,15 +166,27 @@ export interface StaffMember {
   joinedAt: string;
 }
 
-export interface CustomerNotification {
+export interface AppNotification {
   id: string;
   applicationId: string;
-  customerId: string;
-  type: 'assigned' | 'staff_assigned' | 'status_change' | 'acknowledgement';
+  userId: string;
+  type: 'assigned' | 'staff_assigned' | 'status_change' | 'acknowledgement' | 'comment' | 'document_upload' | 'application_update';
+  title?: string;
   message: string;
   contactName?: string;
   contactPhone?: string;
   timestamp: string;
   read: boolean;
+}
+
+export interface ApplicationUpdate {
+  applicationId: string;
+  actor: Pick<User, 'id' | 'name' | 'role' | 'phone'>;
+  recipientIds?: string[];
+  title: string;
+  summary: string;
+  type?: AppNotification['type'];
+  contactName?: string;
+  contactPhone?: string;
 }
 

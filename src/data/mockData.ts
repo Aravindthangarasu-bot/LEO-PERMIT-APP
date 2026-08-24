@@ -1,4 +1,4 @@
-import type { PermitApplication, ServiceProvider } from '../types';
+import type { ServiceProvider } from '../types';
 
 export const PERMIT_TYPES = [
   { value: 'new_building_permit',    label: 'New Building Permit',          icon: '🏠', category: 'permit' },
@@ -25,113 +25,6 @@ const COMMON_DOCS = [
 ];
 
 export const REQUIRED_DOCS = COMMON_DOCS.map(d => d.name);
-
-export const mockApplications: PermitApplication[] = [
-  {
-    id: 'APP-2024-001',
-    customerId: 'c1',
-    customerName: 'Ravi Kumar',
-    customerPhone: '9999900000',
-    type: 'new_building_permit',
-    status: 'panchayat_approved',
-    submittedAt: '2024-11-01T09:00:00Z',
-    updatedAt: '2024-11-20T14:30:00Z',
-    address: '45, MG Road, Thrissur - 680001',
-    landmark: 'Near Thrissur Railway Station',
-    description: 'New 2-storey residential building on 5 cents plot',
-    documents: [
-      { id: 'd1', name: 'Land Document / Title Deed',        type: 'pdf', uploadedAt: '2024-11-01T09:00:00Z', status: 'verified' },
-      { id: 'd2', name: 'Land Possession Certificate',       type: 'pdf', uploadedAt: '2024-11-01T09:05:00Z', status: 'verified' },
-      { id: 'd3', name: 'Latest Land Tax Receipt',           type: 'pdf', uploadedAt: '2024-11-01T09:08:00Z', status: 'verified' },
-      { id: 'd4', name: 'Aadhaar Card of Property Owner',    type: 'pdf', uploadedAt: '2024-11-01T09:10:00Z', status: 'verified' },
-      { id: 'd5', name: 'Landmark of Proposed Site (Photo)', type: 'jpg', uploadedAt: '2024-11-01T09:12:00Z', status: 'verified' },
-    ],
-    assignedProviderId: 'p1',
-    assignedProviderName: 'Arjun Constructions',
-    siteVisitDates: ['2024-11-05', '2024-11-06', '2024-11-07'],
-    selectedSiteVisitDate: '2024-11-06',
-    planUrl: 'plan_v2.pdf',
-    planRevisions: [
-      { id: 'pr1', version: 1, uploadedAt: '2024-11-10T10:00:00Z', comments: 'Initial plan uploaded' },
-      { id: 'pr2', version: 2, uploadedAt: '2024-11-13T10:00:00Z', comments: 'Revised as per client feedback' },
-    ],
-    panchayatStatus: 'approved',
-    approvalNumber: 'PERM-KL-2024-1234',
-    notes: 'All documents verified. Plan approved by the authority.',
-  },
-  {
-    id: 'APP-2024-002',
-    customerId: 'c1',
-    customerName: 'Ravi Kumar',
-    customerPhone: '9999900000',
-    type: 'renovation_permit',
-    status: 'client_review',
-    submittedAt: '2024-12-01T10:30:00Z',
-    updatedAt: '2024-12-12T11:00:00Z',
-    address: '45, MG Road, Thrissur - 680001',
-    landmark: 'Near Thrissur Railway Station',
-    description: 'Renovation of ground floor — kitchen and living area extension',
-    documents: [
-      { id: 'd6', name: 'Land Document / Title Deed',        type: 'pdf', uploadedAt: '2024-12-01T10:30:00Z', status: 'verified' },
-      { id: 'd7', name: 'Land Possession Certificate',       type: 'pdf', uploadedAt: '2024-12-01T10:35:00Z', status: 'verified' },
-      { id: 'd8', name: 'Latest Land Tax Receipt',           type: 'pdf', uploadedAt: '2024-12-01T10:38:00Z', status: 'verified' },
-      { id: 'd9', name: 'Aadhaar Card of Property Owner',    type: 'pdf', uploadedAt: '2024-12-01T10:40:00Z', status: 'verified' },
-      { id: 'd10', name: 'Landmark of Proposed Site (Photo)',type: 'jpg', uploadedAt: '2024-12-01T10:42:00Z', status: 'verified' },
-    ],
-    assignedProviderId: 'p1',
-    assignedProviderName: 'Arjun Constructions',
-    siteVisitDates: ['2024-12-05', '2024-12-06', '2024-12-07'],
-    selectedSiteVisitDate: '2024-12-05',
-    planUrl: 'renovation_plan_v1.pdf',
-    planRevisions: [
-      { id: 'pr3', version: 1, uploadedAt: '2024-12-10T09:00:00Z', comments: 'Renovation plan uploaded for client review' },
-    ],
-  },
-  {
-    id: 'APP-2024-003',
-    customerId: 'c2',
-    customerName: 'Priya Sharma',
-    customerPhone: '9999900001',
-    type: 'compound_wall_permit',
-    status: 'documents_required',
-    submittedAt: '2024-12-10T08:00:00Z',
-    updatedAt: '2024-12-12T09:00:00Z',
-    address: '12, Gandhi Nagar, Palakkad - 678001',
-    landmark: 'Near Palakkad Fort',
-    description: 'Compound / boundary wall construction around 8 cents residential plot',
-    documents: [
-      { id: 'd11', name: 'Land Document / Title Deed',       type: 'pdf', uploadedAt: '2024-12-10T08:00:00Z', status: 'rejected' },
-      { id: 'd12', name: 'Land Possession Certificate',      type: 'pdf', uploadedAt: '2024-12-10T08:05:00Z', status: 'pending' },
-    ],
-    assignedProviderId: 'p2',
-    assignedProviderName: 'BuildRight Engineers',
-    notes: 'Land Document is unclear. Please upload a legible copy. Possession Certificate and remaining documents are also pending.',
-  },
-  {
-    id: 'APP-2024-004',
-    customerId: 'c2',
-    customerName: 'Priya Sharma',
-    customerPhone: '9999900001',
-    type: 'occupancy_certificate',
-    status: 'site_visit_scheduled',
-    submittedAt: '2024-12-18T14:00:00Z',
-    updatedAt: '2024-12-20T10:00:00Z',
-    address: '12, Gandhi Nagar, Palakkad - 678001',
-    landmark: 'Near Palakkad Fort',
-    description: 'Occupancy certificate for completed 2-storey residential building',
-    documents: [
-      { id: 'd13', name: 'Land Document / Title Deed',        type: 'pdf', uploadedAt: '2024-12-18T14:00:00Z', status: 'verified' },
-      { id: 'd14', name: 'Land Possession Certificate',       type: 'pdf', uploadedAt: '2024-12-18T14:05:00Z', status: 'verified' },
-      { id: 'd15', name: 'Latest Land Tax Receipt',           type: 'pdf', uploadedAt: '2024-12-18T14:08:00Z', status: 'verified' },
-      { id: 'd16', name: 'Aadhaar Card of Property Owner',    type: 'pdf', uploadedAt: '2024-12-18T14:10:00Z', status: 'verified' },
-      { id: 'd17', name: 'Landmark of Proposed Site (Photo)', type: 'jpg', uploadedAt: '2024-12-18T14:12:00Z', status: 'verified' },
-    ],
-    assignedProviderId: 'p2',
-    assignedProviderName: 'BuildRight Engineers',
-    siteVisitDates: ['2024-12-22', '2024-12-23', '2024-12-24'],
-    selectedSiteVisitDate: '2024-12-23',
-  },
-];
 
 export const mockProviders: ServiceProvider[] = [
   {

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, FileText, CheckCircle2, XCircle, Calendar, Download, MessageSquare, AlertTriangle } from 'lucide-react';
+import DocumentUpload, { type UploadedFile } from '../../components/DocumentUpload/DocumentUpload';
+import ActivityThread from '../../components/ActivityThread';
 import { useAppStore } from '../../context/AppStoreContext';
 import { useAuth } from '../../context/AuthContext';
 import { canCustomerAccessApp } from '../../utils/security';
@@ -22,6 +24,9 @@ export default function ApplicationDetail() {
   const [dates, setDates] = useState(['', '', '']);
   const [comments, setComments] = useState('');
   const [actionDone, setActionDone] = useState('');
+  
+  const [uploadFile, setUploadFile] = useState<UploadedFile | null>(null);
+  const [uploadName, setUploadName] = useState('');
 
   const app = applications.find(a => a.id === id);
 
@@ -208,6 +213,59 @@ export default function ApplicationDetail() {
             </div>
           )}
 
+          {/* Missing Documents Requested */}
+          {app.status === 'documents_required' && (
+            <div className={`card ${styles.actionCard}`}>
+              <h3 className={styles.cardSectionTitle}><AlertTriangle size={16} style={{ color: '#d97706' }} /> Additional Documents Required</h3>
+              <p className={styles.actionNote}>Your service provider has requested additional documents. Please upload the requested file below.</p>
+              
+              {app.notes && (
+                <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '8px', color: '#92400e', marginBottom: '16px', fontSize: '13px', border: '1px solid #fde68a' }}>
+                  <strong>Provider's Note:</strong> {app.notes}
+                </div>
+              )}
+              
+              <div style={{ marginBottom: 16 }}>
+                <label className="form-label">Document Name</label>
+                <input type="text" className="form-input" placeholder="e.g., Updated Land Tax Receipt" value={uploadName} onChange={e => setUploadName(e.target.value)} />
+              </div>
+              
+              <div style={{ marginBottom: 16 }}>
+                <DocumentUpload
+                  label="Upload Document"
+                  value={uploadFile}
+                  onChange={setUploadFile}
+                />
+              </div>
+              
+              <button 
+                className="btn btn-primary" 
+                style={{ width: '100%', justifyContent: 'center' }} 
+                onClick={() => {
+                  if (!uploadFile || !uploadName.trim()) return;
+                  const newDoc = {
+                    id: uploadFile.id,
+                    name: uploadName.trim() + (uploadFile.mimeType.startsWith('image/') ? '.jpg' : '.pdf'),
+                    type: uploadFile.mimeType.startsWith('image/') ? 'image' : 'pdf',
+                    uploadedAt: new Date().toISOString(),
+                    status: 'pending' as const,
+                    url: uploadFile.url,
+                    sizeBytes: uploadFile.sizeBytes
+                  };
+                  updateApp({ 
+                    documents: [...app.documents, newDoc],
+                    status: 'under_review' 
+                  }, 'Document uploaded successfully!');
+                  setUploadFile(null);
+                  setUploadName('');
+                }}
+                disabled={!uploadFile || !uploadName.trim()}
+              >
+                Upload & Submit
+              </button>
+            </div>
+          )}
+
           {/* Terminate option */}
           {!['terminated','rejected','panchayat_approved','approved'].includes(app.status) && (
             <div className={`card ${styles.actionCard}`} style={{ borderColor: '#fca5a5' }}>
@@ -216,6 +274,7 @@ export default function ApplicationDetail() {
               <button className={styles.terminateBtn} onClick={handleTerminate}><XCircle size={16} /> Terminate Project</button>
             </div>
           )}
+
         </div>
 
         {/* RIGHT — Application Info */}
@@ -257,6 +316,11 @@ export default function ApplicationDetail() {
               ))
             }
           </div>
+
+        </div>
+
+        <div style={{ gridColumn: '1 / -1', width: '100%' }}>
+          <ActivityThread appId={app.id} activities={app.activityLog} />
         </div>
       </div>
     </div>

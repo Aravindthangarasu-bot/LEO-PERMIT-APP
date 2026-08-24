@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, CheckCircle2, XCircle, Eye, FileText, Bell } from 'lucide-react';
 import { getLicenceById, getExpiryNotification } from '../../data/licenceData';
 import { useAppStore, isLicenceExpired } from '../../context/AppStoreContext';
@@ -6,8 +7,25 @@ import styles from './Admin.module.css';
 
 export default function ManageProviders() {
   const { providers, updateProviderStatus } = useAppStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialFilter = searchParams.get('status') || 'all';
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState(initialFilter);
+
+  useEffect(() => {
+    const status = searchParams.get('status') || 'all';
+    setFilter(status);
+  }, [searchParams]);
+
+  const handleFilterChange = (f: string) => {
+    setFilter(f);
+    if (f === 'all') {
+      searchParams.delete('status');
+    } else {
+      searchParams.set('status', f);
+    }
+    setSearchParams(searchParams);
+  };
   const [selected, setSelected] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState('');
 
@@ -56,7 +74,7 @@ export default function ManageProviders() {
             <button
               key={f}
               className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`}
-              onClick={() => setFilter(f)}
+              onClick={() => handleFilterChange(f)}
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
@@ -140,7 +158,16 @@ export default function ManageProviders() {
                   <FileText size={14} />
                   <span className={styles.docName}>{doc.name}</span>
                   <span className={`badge ${doc.status === 'verified' ? 'badge-success' : doc.status === 'rejected' ? 'badge-error' : 'badge-warning'}`}>{doc.status}</span>
-                  <button className={styles.viewDocBtn}><Eye size={13} /></button>
+                  <button 
+                    className={styles.viewDocBtn}
+                    onClick={() => {
+                      if (doc.url && doc.url !== '#') window.open(doc.url, '_blank');
+                      else alert(`Document preview for ${doc.name} is not available in the demo environment.`);
+                    }}
+                    title="View Document"
+                  >
+                    <Eye size={13} />
+                  </button>
                 </div>
               ))}
             </div>

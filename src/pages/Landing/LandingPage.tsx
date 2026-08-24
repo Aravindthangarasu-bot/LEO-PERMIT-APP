@@ -153,7 +153,7 @@ export default function LandingPage() {
       <section className={styles.hero}>
         <div className={styles.heroGrid} />
         <div className={`container ${styles.heroContent}`}>
-          <div className={styles.heroText}>
+          <div className={`${styles.heroText} slide-up`}>
             <h1 className={styles.heroHeading}>
               Build Your Future
               <span className={styles.heroHighlight}> Faster.</span>
@@ -164,7 +164,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className={styles.searchBox}>
+          <div className={`${styles.searchBox} slide-up delay-100`}>
             <div className={styles.searchInner}>
               <MapPin size={18} className={styles.searchIcon} />
               <input
@@ -213,7 +213,7 @@ export default function LandingPage() {
           )}
 
           {/* Feature cards */}
-          <div className={styles.cards}>
+          <div className={`${styles.cards} slide-up delay-200`}>
             {SERVICE_CARDS.map(card => (
               <Link
                 to="/login"

@@ -8,7 +8,7 @@ import DOMPurify from 'dompurify';
  */
 export const sanitizeInput = (value: string | undefined | null): string => {
   if (!value) return '';
-  return DOMPurify.sanitize(value, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }).trim();
+  return DOMPurify.sanitize(value, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
 };
 
 // ── REUSABLE ZOD SCHEMAS ─────────────────────────────────────────────────────
@@ -32,13 +32,13 @@ export const pincodeSchema = z.string()
 export const nameSchema = z.string()
   .min(3, 'Min 3 characters required')
   .max(100, 'Cannot exceed 100 characters')
-  .refine(val => sanitizeInput(val) === val.trim(), 'Invalid characters detected');
+  .refine(val => sanitizeInput(val).trim() === val.trim(), 'Invalid characters detected');
 
 // Address/Description: 10 to 500 characters
 export const addressSchema = z.string()
   .min(10, 'Min 10 characters required')
   .max(500, 'Cannot exceed 500 characters')
-  .refine(val => sanitizeInput(val) === val.trim(), 'Invalid characters detected');
+  .refine(val => sanitizeInput(val).trim() === val.trim(), 'Invalid characters detected');
 
 // OTP: Exactly 6 digits
 export const otpSchema = z.string()
@@ -50,14 +50,14 @@ export const otpSchema = z.string()
 
 export const ProviderRegistrationSchema = z.object({
   ownerName: nameSchema,
-  officeName: z.string().min(1, 'Required').max(150, 'Cannot exceed 150 characters').refine(val => sanitizeInput(val) === val.trim()),
+  officeName: z.string().min(1, 'Required').max(150, 'Cannot exceed 150 characters').refine(val => sanitizeInput(val).trim() === val.trim()),
   phone: phoneSchema,
   email: emailSchema,
   officeAddress: addressSchema,
   area: z.string().min(1, 'Required'),
   pincode: pincodeSchema,
   licenceCategory: z.string().min(1, 'Required'),
-  licenceNumber: z.string().min(1, 'Required').refine(val => sanitizeInput(val) === val.trim()),
+  licenceNumber: z.string().min(1, 'Required').refine(val => sanitizeInput(val).trim() === val.trim()),
   licenceExpiry: z.string().refine(val => {
     const date = new Date(val);
     return !isNaN(date.getTime()) && date > new Date();
@@ -66,7 +66,7 @@ export const ProviderRegistrationSchema = z.object({
 
 export const CustomerApplicationSchema = z.object({
   permitType: z.string().min(1, 'Required'),
-  description: z.string().min(10, 'Min 10 characters').max(1000, 'Max 1000 characters').refine(val => sanitizeInput(val) === val.trim()),
+  description: z.string().min(10, 'Min 10 characters').max(1000, 'Max 1000 characters').refine(val => sanitizeInput(val).trim() === val.trim()),
   address: addressSchema.max(300, 'Cannot exceed 300 characters'),
   area: z.string().min(1, 'Required'),
   landmark: z.string().min(1, 'Required'),
