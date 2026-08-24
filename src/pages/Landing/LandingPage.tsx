@@ -338,7 +338,7 @@ export default function LandingPage() {
               <div className={styles.footerLogo}><FileCheck2 size={20} /></div>
               <div>
                 <div className={styles.footerBrandName}>LEO</div>
-                <div className={styles.footerBrandSub}>Building Permit Services</div>
+                <div className={styles.footerBrandSub}>Licensed Engineering Online</div>
               </div>
             </div>
             <div className={styles.footerLinks}>

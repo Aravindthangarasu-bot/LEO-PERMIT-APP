@@ -98,7 +98,7 @@ export default function LoginPage() {
             <div className={styles.logoBox}><Building2 size={22} /></div>
             <div>
               <div className={styles.brandName}>LEO</div>
-              <div className={styles.brandSub}>Building Permit Services</div>
+              <div className={styles.brandSub}>Licensed Engineering Online</div>
             </div>
           </Link>
 

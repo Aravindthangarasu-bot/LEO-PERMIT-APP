@@ -107,7 +107,7 @@ export default function ProviderRegisterPage() {
         <div className={styles.leftInner}>
           <Link to="/" className={styles.brand}>
             <div className={styles.logoBox}><Building2 size={22} /></div>
-            <div><div className={styles.brandName}>LEO</div><div className={styles.brandSub}>Building Permit Services</div></div>
+            <div><div className={styles.brandName}>LEO</div><div className={styles.brandSub}>Licensed Engineering Online</div></div>
           </Link>
           <div className={styles.leftContent}>
             <h2 className={styles.leftTitle}>Join our network of licensed approvers.</h2>

@@ -81,7 +81,7 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
           </div>
           <div className={styles.brandText}>
             <span className={styles.brandName}>LEO</span>
-            <span className={styles.brandSub}>Building Permit Services</span>
+            <span className={styles.brandSub}>Licensed Engineering Online</span>
           </div>
         </Link>
 
