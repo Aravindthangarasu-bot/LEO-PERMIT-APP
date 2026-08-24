@@ -197,7 +197,9 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       userName: app.customerName,
       userRole: 'customer',
       type: 'status_change',
-      content: 'Application submitted to the service provider.',
+      content: app.assignedProviderId
+        ? 'Application submitted to the service provider.'
+        : 'Application submitted for admin review and provider assignment.',
       timestamp: new Date().toISOString(),
     };
     const applicationWithActivity = {
@@ -236,7 +238,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       } else {
         setApplications(prev => [applicationWithActivity, ...prev]);
         if (app.assignedProviderId) {
-          addNotification({
+          await addNotification({
             id: `n_${Date.now()}_submission`,
             applicationId: app.id,
             userId: app.assignedProviderId,
@@ -248,6 +250,28 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             timestamp: new Date().toISOString(),
             read: false,
           });
+        } else {
+          const { data: admins, error: adminError } = await supabase
+            .from('users')
+            .select('id')
+            .eq('role', 'admin');
+
+          if (adminError) {
+            console.error('Error finding admins for unassigned application:', adminError);
+          } else {
+            await Promise.all((admins ?? []).map(admin => addNotification({
+              id: `n_${Date.now()}_${admin.id}_unassigned`,
+              applicationId: app.id,
+              userId: admin.id,
+              type: 'assigned',
+              title: 'Application needs provider assignment',
+              message: `${app.customerName} submitted ${app.id} without an available provider. Assign a qualified provider.`,
+              contactName: app.customerName,
+              contactPhone: app.customerPhone,
+              timestamp: new Date().toISOString(),
+              read: false,
+            })));
+          }
         }
         return true;
       }

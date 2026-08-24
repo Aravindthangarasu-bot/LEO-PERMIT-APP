@@ -112,11 +112,7 @@ export default function NewApplication() {
     }
 
     if (s === 4) {
-      if (eligibleProviders.length === 0) {
-        e.provider = baseProviders.length === 0
-          ? 'No active service provider is available for this pincode.'
-          : 'No service provider is eligible for these building specifications.';
-      } else if (!eligibleProviders.some(provider => provider.id === selectedProvider)) {
+      if (eligibleProviders.length > 0 && !eligibleProviders.some(provider => provider.id === selectedProvider)) {
         e.provider = 'Please select a service provider';
       }
     }

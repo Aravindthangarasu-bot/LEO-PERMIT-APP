@@ -1,0 +1,3 @@
+ALTER TABLE notifications
+ADD COLUMN IF NOT EXISTS contact_name TEXT,
+ADD COLUMN IF NOT EXISTS contact_phone TEXT;
