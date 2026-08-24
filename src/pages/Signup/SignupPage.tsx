@@ -50,7 +50,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const { login, isAuthenticated } = useAuth();
+  const { registerCustomer, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   // Already logged in — don't show signup page
@@ -100,11 +100,18 @@ export default function SignupPage() {
     if (e.key === 'Backspace' && !otp[idx] && idx > 0) otpRefs.current[idx - 1]?.focus();
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     setOtpError('');
     if (otp.join('').length < 6) { setOtpError('Please enter the complete 6-digit OTP.'); return; }
     setLoading(true);
-    setTimeout(() => { setLoading(false); login(form.phone, 'customer'); navigate('/customer', { replace: true }); }, 800);
+    try {
+      await registerCustomer(form);
+      navigate('/customer', { replace: true });
+    } catch (error) {
+      setOtpError(error instanceof Error ? error.message : 'Unable to create your account. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const cls = (k: keyof FieldErrors) =>

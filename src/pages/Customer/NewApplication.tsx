@@ -127,12 +127,8 @@ export default function NewApplication() {
     if (!validate(4)) return;
     const provider = providers.find(p => p.id === selectedProvider);
     
-    // Calculate new app ID: APP-<phone>-<count>
-    const userApps = user ? getAppsForUser(user) : [];
-    const appCount = userApps.length + 1;
-    const paddedCount = appCount.toString().padStart(2, '0');
     const phoneStr = user?.phone ?? 'GUEST';
-    const appId = `APP-${phoneStr}-${paddedCount}`;
+    const appId = `APP-${phoneStr}-${Date.now().toString(36).toUpperCase()}`;
     
     setSubmitting(true);
     setErrors(current => ({ ...current, submission: '' }));
@@ -178,7 +174,9 @@ export default function NewApplication() {
         <div className={styles.successWrap}>
           <div className={styles.successIcon}><CheckCircle2 size={56} /></div>
           <h2>Application Submitted!</h2>
-          <p>Your application has been sent to the selected provider. You'll receive an SMS update once they review your documents.</p>
+          <p>{selectedProvider
+            ? "Your application has been sent to the selected provider. You'll receive an SMS update once they review your documents."
+            : "Your application has been submitted for admin review. You'll receive an update after a qualified provider is assigned."}</p>
           <div className={styles.appNumBox}><span>Application ID</span><strong>{newAppId}</strong></div>
           <div className={styles.successBtns}>
             <button className="btn btn-primary" onClick={() => navigate('/customer/applications')}>View My Applications</button>
