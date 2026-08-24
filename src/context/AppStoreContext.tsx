@@ -347,6 +347,24 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         return false;
       } else {
         setProviders(prev => [p, ...prev]);
+        const { data: admins, error: adminError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('role', 'admin');
+        if (adminError) {
+          console.error('Error finding admins for provider registration:', adminError);
+        } else {
+          await Promise.all((admins ?? []).map(admin => addNotification({
+            userId: admin.id,
+            type: 'provider_registration',
+            title: 'New provider registration request',
+            message: `${p.officeName} submitted a provider registration for ${p.pincode}. Review the licence details and approve or reject the request.`,
+            contactName: p.ownerName,
+            contactPhone: p.phone,
+            timestamp: new Date().toISOString(),
+            read: false,
+          })));
+        }
         return true;
       }
     } else {
@@ -417,7 +435,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const addNotification = async (n: AppNotification) => {
     if (USE_SUPABASE) {
       const { data, error } = await supabase.from('notifications').insert([{
-        application_id: n.applicationId,
+        application_id: n.applicationId ?? null,
         user_id: n.userId,
         type: n.type,
         title: n.title,

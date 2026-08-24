@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAppStore } from '../context/AppStoreContext';
 import { STATUS_CONFIG } from '../pages/Customer/statusConfig';
-import { getApplicationNotificationPath } from '../utils/notificationNavigation';
+import { getNotificationPath } from '../utils/notificationNavigation';
 
 export default function NotificationsDropdown() {
   const { user } = useAuth();
@@ -16,11 +16,11 @@ export default function NotificationsDropdown() {
   const myNotifs = notifications.filter(n => n.userId === user?.id);
   const unreadCount = myNotifs.filter(n => !n.read).length;
 
-  const openNotification = (notificationId: string, applicationId: string) => {
+  const openNotification = (notificationId: string, applicationId?: string, type?: string) => {
     if (!user) return;
     markNotificationRead(notificationId);
     setOpen(false);
-    navigate(getApplicationNotificationPath(user.role, applicationId));
+    navigate(getNotificationPath(user.role, applicationId, type));
   };
 
   useEffect(() => {
@@ -84,8 +84,8 @@ export default function NotificationsDropdown() {
                 const statusConfig = application ? STATUS_CONFIG[application.status] : STATUS_CONFIG.pending;
                 return (
                 <div key={n.id} role="button" tabIndex={0}
-                  onClick={() => openNotification(n.id, n.applicationId)}
-                  onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') openNotification(n.id, n.applicationId); }}
+                  onClick={() => openNotification(n.id, n.applicationId, n.type)}
+                  onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') openNotification(n.id, n.applicationId, n.type); }}
                   style={{
                   padding: 16, borderBottom: '1px solid var(--border)', 
                   background: n.read ? 'white' : statusConfig.bg,
@@ -100,7 +100,7 @@ export default function NotificationsDropdown() {
                       {new Date(n.timestamp).toLocaleString()}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6, fontSize: 11, fontWeight: 700, color: statusConfig.color }}>
-                      {n.applicationId} · {statusConfig.label} <ExternalLink size={11} />
+                      {n.type === 'provider_registration' ? 'Provider registration request' : `${n.applicationId} · ${statusConfig.label}`} <ExternalLink size={11} />
                     </div>
                   </div>
                   {!n.read && (

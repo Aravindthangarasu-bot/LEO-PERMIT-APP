@@ -168,9 +168,9 @@ export interface StaffMember {
 
 export interface AppNotification {
   id: string;
-  applicationId: string;
+  applicationId?: string;
   userId: string;
-  type: 'assigned' | 'staff_assigned' | 'status_change' | 'acknowledgement' | 'comment' | 'document_upload' | 'application_update';
+  type: 'assigned' | 'provider_registration' | 'staff_assigned' | 'status_change' | 'acknowledgement' | 'comment' | 'document_upload' | 'application_update';
   title?: string;
   message: string;
   contactName?: string;

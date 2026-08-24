@@ -10,3 +10,8 @@ export function getApplicationNotificationPath(role: UserRole, applicationId: st
 
   return '/';
 }
+
+export function getNotificationPath(role: UserRole, applicationId?: string, type?: string): string {
+  if (type === 'provider_registration' && role === 'admin') return '/admin/providers';
+  return applicationId ? getApplicationNotificationPath(role, applicationId) : '/';
+}
