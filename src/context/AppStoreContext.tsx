@@ -29,7 +29,7 @@ interface AppStoreContextValue {
   addApplication: (app: PermitApplication) => Promise<boolean>;
   updateApplication: (id: string, patch: Partial<PermitApplication>) => Promise<boolean>;
   providers: ServiceProvider[];
-  addProvider: (p: ServiceProvider) => void;
+  addProvider: (p: ServiceProvider) => Promise<boolean>;
   updateProviderStatus: (id: string, status: ServiceProvider['status']) => void;
   staff: StaffMember[];
   addStaff: (s: StaffMember) => Promise<{ ok: true } | { ok: false; error: string }>;
@@ -344,12 +344,14 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       }]);
       if (error) {
         console.error('Error inserting provider:', error);
-        alert('Failed to register provider. Please try again.');
+        return false;
       } else {
         setProviders(prev => [p, ...prev]);
+        return true;
       }
     } else {
       setProviders(prev => [p, ...prev]);
+      return true;
     }
   };
 

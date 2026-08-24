@@ -37,6 +37,8 @@ export default function ProviderRegisterPage() {
   });
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
   const [touched, setTouched] = useState<Partial<Record<keyof Form, boolean>>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const selectedLicence = KPBR_LICENCE_CATEGORIES.find(l => l.id === form.licenceCategory);
 
@@ -261,11 +263,13 @@ export default function ProviderRegisterPage() {
               {step > 1 && <button className="btn btn-outline" onClick={() => setStep(s => s - 1)}>Back</button>}
               {step < 2
                 ? <button className="btn btn-primary" onClick={() => { if (validateStep(1)) setStep(2); }}>Continue →</button>
-                : <button className="btn btn-primary" onClick={() => {
+                : <button className="btn btn-primary" disabled={submitting} onClick={async () => {
                   if (validateStep(2)) {
+                    setSubmitting(true);
+                    setSubmitError('');
                     // Submit provider registration into the shared store as pending
-                    addProvider({
-                      id: `pr_${Date.now()}`,
+                    const saved = await addProvider({
+                      id: crypto.randomUUID(),
                       ownerName: form.ownerName,
                       officeName: form.officeName,
                       name: form.officeName,
@@ -288,11 +292,15 @@ export default function ProviderRegisterPage() {
                       specializations: [],
                       documents: [],
                     });
-                    setStep(3);
+                    setSubmitting(false);
+                    if (saved) setStep(3);
+                    else setSubmitError('Failed to register provider. Please try again.');
                   }
-                }}>Submit Application</button>
+                }}>{submitting ? 'Submitting…' : 'Submit Application'}</button>
               }
             </div>
+
+            {submitError && <p className={styles.err}><AlertCircle size={12} /> {submitError}</p>}
 
             <p className={styles.loginLink}>Already registered? <Link to="/login?role=provider">Log in</Link></p>
           </div>
