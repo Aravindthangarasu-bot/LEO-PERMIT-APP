@@ -46,9 +46,9 @@ export default function ProviderRegisterPage() {
 
   useEffect(() => {
     if (!/^\d{6}$/.test(form.pincode)) { setPincodeLocation(null); return; }
-    lookupPincode(form.pincode).then(location => {
-      setPincodeLocation(location);
-      if (location) setForm(current => ({ ...current, area: location.city }));
+    lookupPincode(form.pincode).then(result => {
+      setPincodeLocation(result?.primary ?? null);
+      if (result) setForm(current => ({ ...current, area: result.primary.city }));
     }).catch(() => setPincodeLocation(null));
   }, [form.pincode]);
 
@@ -212,6 +212,7 @@ export default function ProviderRegisterPage() {
                     value={form.pincode} onChange={handleChange('pincode')} onBlur={blur('pincode')} />
                   {touched.pincode && errors.pincode && <p className={styles.err}><AlertCircle size={12} /> {errors.pincode}</p>}
                   {touched.pincode && !errors.pincode && form.pincode.length === 6 && <p className={styles.licenceDesc}>✓ Customers searching for pincode {form.pincode} will find you once approved.</p>}
+                  {pincodeLocation && <p className={styles.licenceDesc}>{pincodeLocation.city}, {pincodeLocation.district} · Taluk: {pincodeLocation.taluk}</p>}
                 </div>
               </>
             )}

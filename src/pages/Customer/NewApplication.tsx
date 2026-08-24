@@ -35,6 +35,7 @@ export default function NewApplication() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [pincodeLocation, setPincodeLocation] = useState<PincodeLocation | null>(null);
+  const [pincodeOptions, setPincodeOptions] = useState<PincodeLocation[]>([]);
   const [pincodeLookupState, setPincodeLookupState] = useState<'idle' | 'loading' | 'not_found' | 'error'>('idle');
   const [providerPage, setProviderPage] = useState(1);
 
@@ -71,15 +72,17 @@ export default function NewApplication() {
     let cancelled = false;
     if (!/^\d{6}$/.test(form.pincode)) {
       setPincodeLocation(null);
+      setPincodeOptions([]);
       setPincodeLookupState('idle');
       return;
     }
     setPincodeLookupState('loading');
-    lookupPincode(form.pincode).then(location => {
+    lookupPincode(form.pincode).then(result => {
       if (cancelled) return;
-      setPincodeLocation(location);
-      setPincodeLookupState(location ? 'idle' : 'not_found');
-      if (location) setForm(current => ({ ...current, area: location.city, taluk: location.taluk }));
+      setPincodeLocation(result?.primary ?? null);
+      setPincodeOptions(result?.options ?? []);
+      setPincodeLookupState(result ? 'idle' : 'not_found');
+      if (result) setForm(current => ({ ...current, area: result.primary.city, taluk: result.primary.taluk }));
     }).catch(() => {
       if (!cancelled) setPincodeLookupState('error');
     });
@@ -290,9 +293,16 @@ export default function NewApplication() {
               </div>
               <div className="form-group">
                 <label className="form-label">City / Area</label>
-                <input className="form-input" type="text" placeholder="Resolved from pincode" value={form.area} readOnly />
+                {pincodeOptions.length > 1 ? (
+                  <select className="form-input" value={pincodeLocation?.office ?? ''} onChange={event => {
+                    const selected = pincodeOptions.find(option => option.office === event.target.value);
+                    if (selected) { setPincodeLocation(selected); setForm(current => ({ ...current, area: selected.city, taluk: selected.taluk })); }
+                  }}>
+                    {pincodeOptions.map(option => <option key={option.office} value={option.office}>{option.city} ({option.taluk})</option>)}
+                  </select>
+                ) : <input className="form-input" type="text" placeholder="Resolved from pincode" value={form.area} readOnly />}
                 {pincodeLookupState === 'loading' && <p className={styles.hintText}>Looking up pincode location…</p>}
-                {pincodeLocation && <p className={styles.hintText}>{pincodeLocation.city}, {pincodeLocation.district}</p>}
+                {pincodeLocation && <p className={styles.hintText}>{pincodeLocation.city}, {pincodeLocation.district} · Taluk: {pincodeLocation.taluk}</p>}
                 {pincodeLookupState === 'not_found' && <p className={styles.fieldError}>Pincode location could not be found.</p>}
                 {pincodeLookupState === 'error' && <p className={styles.fieldError}>Pincode lookup unavailable. You can continue with the entered pincode.</p>}
               </div>
