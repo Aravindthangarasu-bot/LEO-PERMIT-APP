@@ -51,6 +51,15 @@ export default function NewApplication() {
       val = sanitizeInput(val); // XSS sanitization
     }
     setForm(f => ({ ...f, [k]: val }));
+    if (k === 'pincode' || k === 'buildingArea' || k === 'floors' || k === 'heightM') {
+      setSelectedProvider('');
+    }
+    setErrors(current => {
+      const next = { ...current };
+      delete next.submission;
+      delete next.provider;
+      return next;
+    });
   };
 
   // Only show active providers with a valid (non-expired) licence
@@ -103,8 +112,11 @@ export default function NewApplication() {
     }
 
     if (s === 4) {
-      const hasProviders = eligibleProviders.length > 0 || ineligibleProviders.length > 0;
-      if (hasProviders && !selectedProvider) {
+      if (eligibleProviders.length === 0) {
+        e.provider = baseProviders.length === 0
+          ? 'No active service provider is available for this pincode.'
+          : 'No service provider is eligible for these building specifications.';
+      } else if (!eligibleProviders.some(provider => provider.id === selectedProvider)) {
         e.provider = 'Please select a service provider';
       }
     }

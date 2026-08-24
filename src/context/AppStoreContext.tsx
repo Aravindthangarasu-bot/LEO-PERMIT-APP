@@ -174,16 +174,37 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   // ----------------------------------------------------------------------
 
   const addApplication = async (app: PermitApplication) => {
+    let customerId = app.customerId;
+    if (USE_SUPABASE) {
+      const phone = app.customerPhone.replace(/\D/g, '');
+      const phoneVariants = phone.startsWith('91') ? [phone, phone.slice(2)] : [phone, `91${phone}`];
+      const { data: customer, error: customerError } = await supabase
+        .from('users')
+        .select('id')
+        .in('phone', phoneVariants)
+        .maybeSingle();
+
+      if (customerError || !customer) {
+        console.error('Unable to resolve application customer:', customerError);
+        return false;
+      }
+      customerId = customer.id;
+    }
+
     const submissionActivity: ActivityLogEntry = {
       id: `act_${Date.now()}_submission`,
-      userId: app.customerId,
+      userId: customerId,
       userName: app.customerName,
       userRole: 'customer',
       type: 'status_change',
       content: 'Application submitted to the service provider.',
       timestamp: new Date().toISOString(),
     };
-    const applicationWithActivity = { ...app, activityLog: [...(app.activityLog || []), submissionActivity] };
+    const applicationWithActivity = {
+      ...app,
+      customerId,
+      activityLog: [...(app.activityLog || []), submissionActivity],
+    };
     if (USE_SUPABASE) {
       const { error } = await supabase.from('permit_applications').insert([{
         id: applicationWithActivity.id,
