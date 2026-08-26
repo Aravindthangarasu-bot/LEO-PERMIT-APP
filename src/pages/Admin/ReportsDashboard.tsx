@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Activity, AlertTriangle, BarChart3, Bell, CheckCircle2, Clock, FileText, MapPin, PieChart, ShieldCheck, TrendingUp, Users } from 'lucide-react';
 import { useAppStore, isLicenceExpired } from '../../context/AppStoreContext';
 import { PERMIT_TYPES } from '../../data/mockData';
@@ -71,8 +71,21 @@ function BarList({ rows, maxRows = 8, empty = 'No data yet' }: { rows: Array<{ l
   );
 }
 
+const REPORT_TABS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'applications', label: 'Applications' },
+  { id: 'customers', label: 'Customers' },
+  { id: 'providers', label: 'Providers' },
+  { id: 'geography', label: 'Geography' },
+  { id: 'operations', label: 'Operations' },
+  { id: 'activity', label: 'Activity' },
+] as const;
+
+type ReportTab = typeof REPORT_TABS[number]['id'];
+
 export default function ReportsDashboard() {
   const { applications, providers, staff, notifications } = useAppStore();
+  const [activeTab, setActiveTab] = useState<ReportTab>('overview');
 
   const report = useMemo(() => {
     const totalApps = applications.length;
@@ -154,101 +167,69 @@ export default function ReportsDashboard() {
         </div>
       </div>
 
-      <div className={styles.statsGrid}>
-        <MetricCard title="Total Applications" value={report.totalApps} subtitle={`${report.unassignedApps.length} unassigned · ${report.inProgressApps.length} in progress`} icon={<FileText size={22} />} />
-        <MetricCard title="Customers" value={report.uniqueCustomers} subtitle={`${avg(report.totalApps, report.uniqueCustomers)} applications per customer`} icon={<Users size={22} />} tone="#2563eb" />
-        <MetricCard title="Service Providers" value={providers.length} subtitle={`${report.activeProviders.length} active · ${report.pendingProviders.length} pending`} icon={<ShieldCheck size={22} />} tone="#16a34a" />
-        <MetricCard title="Completion Rate" value={pct(report.completedApps.length, report.totalApps)} subtitle={`${report.completedApps.length} completed · ${report.rejectedApps.length} rejected`} icon={<CheckCircle2 size={22} />} tone="#0f766e" />
-        <MetricCard title="Assignment Coverage" value={pct(report.assignedApps.length, report.totalApps)} subtitle={`${report.assignedApps.length} assigned applications`} icon={<TrendingUp size={22} />} tone="#7c3aed" />
-        <MetricCard title="Admin Queue" value={report.unassignedApps.length + report.pendingProviders.length} subtitle={`${report.unassignedApps.length} apps · ${report.pendingProviders.length} providers`} icon={<AlertTriangle size={22} />} tone="#dc2626" />
-        <MetricCard title="Documents" value={report.docsUploaded} subtitle={`${report.documentEvents} upload activities recorded`} icon={<FileText size={22} />} tone="#ea580c" />
-        <MetricCard title="Notifications" value={notifications.length} subtitle={`${report.unreadNotifications.length} unread requests/updates`} icon={<Bell size={22} />} tone="#0891b2" />
+      <div className={styles.filterBtns} style={{ marginBottom: 24 }}>
+        {REPORT_TABS.map(tab => (
+          <button key={tab.id} className={`${styles.filterBtn} ${activeTab === tab.id ? styles.filterActive : ''}`} onClick={() => setActiveTab(tab.id)}>
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      <div className={styles.twoCol}>
-        <section className={`card ${styles.card}`}>
-          <div className={styles.cardHeader}><h2><PieChart size={16} /> Application Status</h2></div>
-          <BarList rows={report.statusRows} />
-        </section>
-        <section className={`card ${styles.card}`}>
-          <div className={styles.cardHeader}><h2><BarChart3 size={16} /> Permit Types</h2></div>
-          <BarList rows={report.permitRows} />
-        </section>
-      </div>
+      {activeTab === 'overview' && (
+        <div className={styles.statsGrid}>
+          <MetricCard title="Total Applications" value={report.totalApps} subtitle={`${report.unassignedApps.length} unassigned · ${report.inProgressApps.length} in progress`} icon={<FileText size={22} />} />
+          <MetricCard title="Customers" value={report.uniqueCustomers} subtitle={`${avg(report.totalApps, report.uniqueCustomers)} applications per customer`} icon={<Users size={22} />} tone="#2563eb" />
+          <MetricCard title="Service Providers" value={providers.length} subtitle={`${report.activeProviders.length} active · ${report.pendingProviders.length} pending`} icon={<ShieldCheck size={22} />} tone="#16a34a" />
+          <MetricCard title="Completion Rate" value={pct(report.completedApps.length, report.totalApps)} subtitle={`${report.completedApps.length} completed · ${report.rejectedApps.length} rejected`} icon={<CheckCircle2 size={22} />} tone="#0f766e" />
+          <MetricCard title="Assignment Coverage" value={pct(report.assignedApps.length, report.totalApps)} subtitle={`${report.assignedApps.length} assigned applications`} icon={<TrendingUp size={22} />} tone="#7c3aed" />
+          <MetricCard title="Admin Queue" value={report.unassignedApps.length + report.pendingProviders.length} subtitle={`${report.unassignedApps.length} apps · ${report.pendingProviders.length} providers`} icon={<AlertTriangle size={22} />} tone="#dc2626" />
+          <MetricCard title="Documents" value={report.docsUploaded} subtitle={`${report.documentEvents} upload activities recorded`} icon={<FileText size={22} />} tone="#ea580c" />
+          <MetricCard title="Notifications" value={notifications.length} subtitle={`${report.unreadNotifications.length} unread requests/updates`} icon={<Bell size={22} />} tone="#0891b2" />
+        </div>
+      )}
 
-      <div className={styles.twoCol} style={{ marginTop: 24 }}>
-        <section className={`card ${styles.card}`}>
-          <div className={styles.cardHeader}><h2><MapPin size={16} /> Application Geography</h2></div>
-          <BarList rows={report.cityRows} empty="No city data yet" />
-        </section>
-        <section className={`card ${styles.card}`}>
-          <div className={styles.cardHeader}><h2><MapPin size={16} /> Taluk Demand</h2></div>
-          <BarList rows={report.talukRows} empty="No taluk data yet" />
-        </section>
-      </div>
+      {activeTab === 'applications' && (
+        <div className={styles.twoCol}>
+          <section className={`card ${styles.card}`}><div className={styles.cardHeader}><h2><PieChart size={16} /> Application Status</h2></div><BarList rows={report.statusRows} /></section>
+          <section className={`card ${styles.card}`}><div className={styles.cardHeader}><h2><BarChart3 size={16} /> Permit Types</h2></div><BarList rows={report.permitRows} /></section>
+        </div>
+      )}
 
-      <div className={styles.twoCol} style={{ marginTop: 24 }}>
-        <section className={`card ${styles.card}`}>
-          <div className={styles.cardHeader}><h2><Users size={16} /> Customer Metrics</h2></div>
-          <BarList rows={report.customerRows} empty="No customer applications yet" />
-        </section>
-        <section className={`card ${styles.card}`}>
-          <div className={styles.cardHeader}><h2><ShieldCheck size={16} /> Provider Workload</h2></div>
-          <BarList rows={report.providerWorkload} empty="No provider assignments yet" />
-        </section>
-      </div>
+      {activeTab === 'customers' && (
+        <div className={styles.twoCol}>
+          <section className={`card ${styles.card}`}><div className={styles.cardHeader}><h2><Users size={16} /> Customer Metrics</h2></div><BarList rows={report.customerRows} empty="No customer applications yet" /></section>
+          <section className={`card ${styles.card}`}><div className={styles.cardHeader}><h2><FileText size={16} /> Customer Documents</h2></div><MetricCard title="Documents" value={report.docsUploaded} subtitle={`${report.documentEvents} upload activities recorded`} icon={<FileText size={20} />} /></section>
+        </div>
+      )}
 
-      <div className={styles.twoCol} style={{ marginTop: 24 }}>
-        <section className={`card ${styles.card}`}>
-          <div className={styles.cardHeader}><h2><Activity size={16} /> Fairness Queue</h2></div>
-          <BarList rows={report.leastLoadedProviders} empty="No active providers yet" />
-        </section>
-        <section className={`card ${styles.card}`}>
-          <div className={styles.cardHeader}><h2><MapPin size={16} /> Provider Coverage by Pincode</h2></div>
-          <BarList rows={report.pincodeRows} empty="No provider pincodes yet" />
-        </section>
-      </div>
+      {activeTab === 'providers' && (
+        <div className={styles.twoCol}>
+          <section className={`card ${styles.card}`}><div className={styles.cardHeader}><h2><ShieldCheck size={16} /> Provider Workload</h2></div><BarList rows={report.providerWorkload} empty="No provider assignments yet" /></section>
+          <section className={`card ${styles.card}`}><div className={styles.cardHeader}><h2><Activity size={16} /> Fairness Queue</h2></div><BarList rows={report.leastLoadedProviders} empty="No active providers yet" /></section>
+          <section className={`card ${styles.card}`}><div className={styles.cardHeader}><h2><MapPin size={16} /> Provider Coverage by Pincode</h2></div><BarList rows={report.pincodeRows} empty="No provider pincodes yet" /></section>
+        </div>
+      )}
 
-      <div className={styles.twoCol} style={{ marginTop: 24 }}>
-        <section className={`card ${styles.card}`}>
-          <div className={styles.cardHeader}><h2><Clock size={16} /> Recent Applications</h2></div>
-          <div className={styles.detailRows}>
-            {report.recentApps.map(app => (
-              <div key={app.id} className={styles.detailRow}>
-                <span>{formatDate(app.submittedAt)}</span>
-                <strong>{app.customerName} · {labelForPermit(app.type)} · {STATUS_CONFIG[app.status]?.label ?? app.status}</strong>
-              </div>
-            ))}
-            {report.recentApps.length === 0 && <div className={styles.emptyState}><p>No applications yet</p></div>}
-          </div>
-        </section>
-        <section className={`card ${styles.card}`}>
-          <div className={styles.cardHeader}><h2><Clock size={16} /> Recent Provider Onboarding</h2></div>
-          <div className={styles.detailRows}>
-            {report.recentProviders.map(provider => (
-              <div key={provider.id} className={styles.detailRow}>
-                <span>{formatDate(provider.joinedAt)}</span>
-                <strong>{provider.officeName} · {provider.status} · {provider.pincode ?? 'no pincode'}</strong>
-              </div>
-            ))}
-            {report.recentProviders.length === 0 && <div className={styles.emptyState}><p>No providers yet</p></div>}
-          </div>
-        </section>
-      </div>
+      {activeTab === 'geography' && (
+        <div className={styles.twoCol}>
+          <section className={`card ${styles.card}`}><div className={styles.cardHeader}><h2><MapPin size={16} /> Application Geography</h2></div><BarList rows={report.cityRows} empty="No city data yet" /></section>
+          <section className={`card ${styles.card}`}><div className={styles.cardHeader}><h2><MapPin size={16} /> Taluk Demand</h2></div><BarList rows={report.talukRows} empty="No taluk data yet" /></section>
+        </div>
+      )}
 
-      <div className={styles.twoCol} style={{ marginTop: 24 }}>
-        <section className={`card ${styles.card}`}>
-          <div className={styles.cardHeader}><h2><Bell size={16} /> Notification Mix</h2></div>
-          <BarList rows={report.notificationRows} empty="No notifications yet" />
-        </section>
-        <section className={`card ${styles.card}`}>
-          <div className={styles.cardHeader}><h2><Users size={16} /> Staff Metrics</h2></div>
-          <div className={styles.statsGrid} style={{ marginBottom: 0 }}>
-            <MetricCard title="Total Staff" value={report.staffCount} subtitle={`${report.activeStaff.length} active`} icon={<Users size={20} />} tone="#4f46e5" />
-            <MetricCard title="Comments" value={report.comments} subtitle="Application comments recorded" icon={<Activity size={20} />} tone="#9333ea" />
-          </div>
-        </section>
-      </div>
+      {activeTab === 'operations' && (
+        <div className={styles.twoCol}>
+          <section className={`card ${styles.card}`}><div className={styles.cardHeader}><h2><Bell size={16} /> Notification Mix</h2></div><BarList rows={report.notificationRows} empty="No notifications yet" /></section>
+          <section className={`card ${styles.card}`}><div className={styles.cardHeader}><h2><Users size={16} /> Staff Metrics</h2></div><div className={styles.statsGrid} style={{ marginBottom: 0 }}><MetricCard title="Total Staff" value={report.staffCount} subtitle={`${report.activeStaff.length} active`} icon={<Users size={20} />} tone="#4f46e5" /><MetricCard title="Comments" value={report.comments} subtitle="Application comments recorded" icon={<Activity size={20} />} tone="#9333ea" /></div></section>
+        </div>
+      )}
+
+      {activeTab === 'activity' && (
+        <div className={styles.twoCol}>
+          <section className={`card ${styles.card}`}><div className={styles.cardHeader}><h2><Clock size={16} /> Recent Applications</h2></div><div className={styles.detailRows}>{report.recentApps.map(app => <div key={app.id} className={styles.detailRow}><span>{formatDate(app.submittedAt)}</span><strong>{app.customerName} · {labelForPermit(app.type)} · {STATUS_CONFIG[app.status]?.label ?? app.status}</strong></div>)}{report.recentApps.length === 0 && <div className={styles.emptyState}><p>No applications yet</p></div>}</div></section>
+          <section className={`card ${styles.card}`}><div className={styles.cardHeader}><h2><Clock size={16} /> Recent Provider Onboarding</h2></div><div className={styles.detailRows}>{report.recentProviders.map(provider => <div key={provider.id} className={styles.detailRow}><span>{formatDate(provider.joinedAt)}</span><strong>{provider.officeName} · {provider.status} · {provider.pincode ?? 'no pincode'}</strong></div>)}{report.recentProviders.length === 0 && <div className={styles.emptyState}><p>No providers yet</p></div>}</div></section>
+        </div>
+      )}
     </div>
   );
 }
