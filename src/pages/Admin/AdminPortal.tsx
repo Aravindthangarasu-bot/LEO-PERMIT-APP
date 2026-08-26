@@ -7,6 +7,7 @@ import AdminDashboard from './AdminDashboard';
 import ManageProviders from './ManageProviders';
 import AddProvider from './AddProvider';
 import AllApplications from './AllApplications';
+import ReportsDashboard from './ReportsDashboard';
 
 const NAV_ITEMS = [
   { path: '/admin',               icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
@@ -25,7 +26,7 @@ export default function AdminPortal() {
         <Route path="providers"    element={<ManageProviders />} />
         <Route path="add-provider" element={<AddProvider />} />
         <Route path="applications" element={<AllApplications />} />
-        <Route path="reports"   element={<ComingSoon title="Reports & Analytics" />} />
+        <Route path="reports"   element={<ReportsDashboard />} />
         <Route path="settings"  element={<ComingSoon title="System Settings" />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
