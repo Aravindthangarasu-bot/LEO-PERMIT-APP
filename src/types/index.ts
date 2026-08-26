@@ -95,6 +95,8 @@ export type ApplicationStatus =
   | 'documents_required'
   | 'site_visit_scheduled'
   | 'site_visit_confirmed'
+  | 'site_visit_completed'
+  | 'site_visit_completion_confirmed'
   | 'plan_preparation'
   | 'plan_uploaded'
   | 'client_review'

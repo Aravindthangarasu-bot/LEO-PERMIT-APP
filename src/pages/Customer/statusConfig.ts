@@ -6,6 +6,8 @@ export const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: st
   documents_required:       { label: 'Docs Required',       color: '#f59e0b', bg: '#fef3c7',  dot: 'yellow' },
   site_visit_scheduled:     { label: 'Site Visit Scheduled',color: '#8b5cf6', bg: '#ede9fe',  dot: 'blue'   },
   site_visit_confirmed:     { label: 'Site Visit Confirmed',color: '#7c3aed', bg: '#ede9fe',  dot: 'blue'   },
+  site_visit_completed:     { label: 'Visit Completed',     color: '#6d28d9', bg: '#f3e8ff',  dot: 'blue'   },
+  site_visit_completion_confirmed: { label: 'Visit Confirmed', color: '#5b21b6', bg: '#f3e8ff', dot: 'blue' },
   plan_preparation:         { label: 'Plan Preparation',    color: '#0891b2', bg: '#cffafe',  dot: 'blue'   },
   plan_uploaded:            { label: 'Plan Uploaded',       color: '#0284c7', bg: '#e0f2fe',  dot: 'blue'   },
   client_review:            { label: 'Awaiting Your Review',color: '#f59e0b', bg: '#fef3c7',  dot: 'yellow' },
@@ -21,7 +23,7 @@ export const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: st
 export const ALL_STATUS_FILTERS = Object.keys(STATUS_CONFIG) as ApplicationStatus[];
 
 export const COMMON_STATUS_FILTERS: ApplicationStatus[] = [
-  'pending', 'under_review', 'documents_required', 'site_visit_scheduled',
+  'pending', 'under_review', 'documents_required', 'site_visit_scheduled', 'site_visit_completed',
   'client_review', 'panchayat_review', 'approved', 'rejected', 'terminated'
 ];
 
@@ -29,6 +31,7 @@ export const LIFECYCLE_STAGES = [
   { status: 'pending',              label: 'Application Submitted'  },
   { status: 'under_review',         label: 'Documents Verified'     },
   { status: 'site_visit_scheduled', label: 'Site Visit Scheduled'   },
+  { status: 'site_visit_completed', label: 'Visit Completed'         },
   { status: 'plan_preparation',     label: 'Plan Preparation'       },
   { status: 'client_review',        label: 'Client Review'          },
   { status: 'panchayat_review',     label: 'Authority Review'       },

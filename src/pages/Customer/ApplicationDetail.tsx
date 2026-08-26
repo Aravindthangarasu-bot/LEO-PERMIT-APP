@@ -12,7 +12,7 @@ import type { ApplicationStatus } from '../../types';
 import styles from './Customer.module.css';
 
 const STAGE_ORDER: ApplicationStatus[] = [
-  'pending', 'under_review', 'site_visit_scheduled', 'plan_preparation',
+  'pending', 'under_review', 'site_visit_scheduled', 'site_visit_completed', 'site_visit_completion_confirmed', 'plan_preparation',
   'client_review', 'panchayat_review', 'panchayat_approved',
 ];
 
@@ -76,6 +76,10 @@ export default function ApplicationDetail() {
     setTimes(['', '', '']);
     setVisitLocation('');
     setConfirmAddressLocation(false);
+  };
+
+  const handleConfirmVisitCompleted = () => {
+    updateApp({ status: 'site_visit_completion_confirmed' }, 'Site visit completion confirmed!');
   };
 
   const handleApprovePlan = () => {
@@ -185,7 +189,7 @@ export default function ApplicationDetail() {
           )}
 
           {/* Site visit dates already submitted */}
-          {app.siteVisitDates && app.siteVisitDates.length > 0 && ['site_visit_scheduled','site_visit_confirmed','plan_preparation','plan_uploaded'].includes(app.status) && (
+          {app.siteVisitDates && app.siteVisitDates.length > 0 && ['site_visit_scheduled','site_visit_confirmed','site_visit_completed','site_visit_completion_confirmed','plan_preparation','plan_uploaded'].includes(app.status) && (
             <div className={`card ${styles.actionCard}`}>
               <h3 className={styles.cardSectionTitle}><Calendar size={16} /> Site Visit</h3>
               <div className={styles.dateRow}>
@@ -200,6 +204,23 @@ export default function ApplicationDetail() {
                 </div>
               )}
               {app.siteVisitLocation && <p className={styles.actionNote}>Location: {app.siteVisitLocation}{app.siteVisitLocationConfirmed ? ' (confirmed from property address)' : ''}</p>}
+            </div>
+          )}
+
+          {app.status === 'site_visit_completed' && (
+            <div className={`card ${styles.actionCard}`}>
+              <h3 className={styles.cardSectionTitle}><CheckCircle2 size={16} /> Confirm Site Visit Completion</h3>
+              <p className={styles.actionNote}>Your service provider marked the visit as completed. Please confirm that the visit was completed at the agreed time and location.</p>
+              <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={handleConfirmVisitCompleted}>
+                Confirm Visit Completed
+              </button>
+            </div>
+          )}
+
+          {app.status === 'site_visit_completion_confirmed' && (
+            <div className={`card ${styles.actionCard}`}>
+              <h3 className={styles.cardSectionTitle}><CheckCircle2 size={16} /> Visit Completion Confirmed</h3>
+              <p className={styles.actionNote}>You confirmed the site visit completion. Your service provider can now continue to plan preparation.</p>
             </div>
           )}
 

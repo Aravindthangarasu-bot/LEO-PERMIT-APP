@@ -9,7 +9,9 @@ const VALID_TRANSITIONS: Partial<Record<ApplicationStatus, ApplicationStatus[]>>
   documents_required: ['under_review'],
   under_review: [],
   site_visit_scheduled: ['site_visit_confirmed'],
-  site_visit_confirmed: ['plan_preparation'],
+  site_visit_confirmed: ['site_visit_completed'],
+  site_visit_completed: [],
+  site_visit_completion_confirmed: ['plan_preparation'],
   plan_preparation: ['plan_uploaded'],
   plan_uploaded: [], // Waits for customer review
   client_review: [], // Waits for customer review
@@ -81,7 +83,12 @@ export default function ActionConsole({ app, onUpdate, uploaderRole = 'provider'
     if (selectedAction === 'site_visit_confirmed') {
       updates.selectedSiteVisitDate = selectedDate;
       successMsg = 'Site visit date confirmed.';
-      notifyMsg = `Your site visit has been confirmed for ${new Date(selectedDate).toLocaleDateString()}.`;
+      notifyMsg = `Your site visit has been confirmed for ${new Date(selectedDate).toLocaleString()}.`;
+    }
+
+    if (selectedAction === 'site_visit_completed') {
+      successMsg = 'Site visit marked as completed.';
+      notifyMsg = 'Your service provider marked the site visit as completed. Please confirm the visit completion.';
     }
 
     if (selectedAction === 'plan_uploaded') {
