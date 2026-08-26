@@ -38,8 +38,11 @@ export interface PermitApplication {
   notes?: string;
   approvalNumber?: string;
   // Site visit
+  siteVisitRequired?: boolean | null;
   siteVisitDates?: string[];
   selectedSiteVisitDate?: string;
+  siteVisitLocation?: string;
+  siteVisitLocationConfirmed?: boolean;
   // Plan
   planUrl?: string;
   planRevisions?: PlanRevision[];

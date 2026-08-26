@@ -7,7 +7,7 @@ import DocumentUpload, { type UploadedFile } from './DocumentUpload/DocumentUplo
 const VALID_TRANSITIONS: Partial<Record<ApplicationStatus, ApplicationStatus[]>> = {
   pending: ['under_review', 'documents_required'],
   documents_required: ['under_review'],
-  under_review: [], // Waits for customer to propose dates -> site_visit_scheduled
+  under_review: [],
   site_visit_scheduled: ['site_visit_confirmed'],
   site_visit_confirmed: ['plan_preparation'],
   plan_preparation: ['plan_uploaded'],
@@ -35,6 +35,26 @@ export default function ActionConsole({ app, onUpdate, uploaderRole = 'provider'
   const [approvalNumber, setApprovalNumber] = useState('');
 
   const validNextStates = VALID_TRANSITIONS[app.status] || [];
+
+  const markVisitRequired = () => {
+    onUpdate(
+      { siteVisitRequired: true, notes: notes.trim() || 'Site visit required before plan preparation.' },
+      'Site visit requested from customer.',
+      'status_change',
+      'A site visit is required. Please provide at least one available date and time. Map location is optional; otherwise confirm the property address.'
+    );
+    setNotes('');
+  };
+
+  const skipSiteVisit = () => {
+    onUpdate(
+      { siteVisitRequired: false, status: 'plan_preparation', notes: notes.trim() || 'Site visit not required for this service.' },
+      'Site visit skipped. Moved to plan preparation.',
+      'status_change',
+      'Your service provider confirmed that a site visit is not required. Plan preparation has started.'
+    );
+    setNotes('');
+  };
 
   const isFormValid = useMemo(() => {
     if (!selectedAction) return false;
@@ -102,6 +122,24 @@ export default function ActionConsole({ app, onUpdate, uploaderRole = 'provider'
     return null; // Terminal states
   }
 
+  if (app.status === 'under_review' && app.siteVisitRequired !== true) {
+    return (
+      <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden', marginTop: 24 }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', margin: 0 }}>Site Visit Decision</h3>
+        </div>
+        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>Decide whether this service requires a physical site visit. If required, the customer will be asked for date, time, and optional map location.</p>
+          <textarea className="form-input" rows={3} placeholder="Provider notes for the customer or internal record..." value={notes} onChange={e => setNotes(e.target.value)} />
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <button className="btn btn-primary" onClick={markVisitRequired}><Calendar size={14} /> Site Visit Required</button>
+            <button className="btn btn-outline" onClick={skipSiteVisit}><CheckCircle2 size={14} /> No Visit Required</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (validNextStates.length === 0) {
     return (
       <div style={{ background: '#f8fafc', padding: 20, borderRadius: 12, border: '1px solid #e2e8f0', marginTop: 24, textAlign: 'center' }}>
@@ -166,7 +204,7 @@ export default function ActionConsole({ app, onUpdate, uploaderRole = 'provider'
                     ))}
                   </div>
                 ) : (
-                  <p style={{ color: 'var(--error)', fontSize: 13 }}>Error: Customer has not provided any dates.</p>
+                  <p style={{ color: 'var(--error)', fontSize: 13 }}>Error: Customer has not provided any date and time options.</p>
                 )}
               </div>
             )}

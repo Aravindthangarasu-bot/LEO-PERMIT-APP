@@ -137,8 +137,11 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             planUrl: a.plan_url,
             clientComments: a.client_comments,
             notes: a.notes,
+            siteVisitRequired: a.site_visit_required,
             siteVisitDates: a.site_visit_dates,
             selectedSiteVisitDate: a.selected_site_visit_date,
+            siteVisitLocation: a.site_visit_location,
+            siteVisitLocationConfirmed: a.site_visit_location_confirmed,
             approvalNumber: a.approval_number,
             documents: a.documents || [],
             planRevisions: a.plan_revisions || [],
@@ -229,8 +232,11 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         plan_url: applicationWithActivity.planUrl,
         client_comments: applicationWithActivity.clientComments,
         notes: applicationWithActivity.notes,
+        site_visit_required: applicationWithActivity.siteVisitRequired,
         site_visit_dates: applicationWithActivity.siteVisitDates,
         selected_site_visit_date: applicationWithActivity.selectedSiteVisitDate,
+        site_visit_location: applicationWithActivity.siteVisitLocation,
+        site_visit_location_confirmed: applicationWithActivity.siteVisitLocationConfirmed,
         approval_number: applicationWithActivity.approvalNumber,
         documents: applicationWithActivity.documents,
         plan_revisions: applicationWithActivity.planRevisions,
@@ -303,8 +309,11 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       if (patch.address !== undefined) updateData.address = patch.address;
       if (patch.landmark !== undefined) updateData.landmark = patch.landmark;
       if (patch.notes !== undefined) updateData.notes = patch.notes;
+      if (patch.siteVisitRequired !== undefined) updateData.site_visit_required = patch.siteVisitRequired;
       if (patch.siteVisitDates !== undefined) updateData.site_visit_dates = patch.siteVisitDates;
       if (patch.selectedSiteVisitDate !== undefined) updateData.selected_site_visit_date = patch.selectedSiteVisitDate;
+      if (patch.siteVisitLocation !== undefined) updateData.site_visit_location = patch.siteVisitLocation;
+      if (patch.siteVisitLocationConfirmed !== undefined) updateData.site_visit_location_confirmed = patch.siteVisitLocationConfirmed;
       if (patch.approvalNumber !== undefined) updateData.approval_number = patch.approvalNumber;
       if (patch.documents !== undefined) updateData.documents = patch.documents;
       if (patch.planRevisions !== undefined) updateData.plan_revisions = patch.planRevisions;

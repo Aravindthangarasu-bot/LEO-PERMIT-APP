@@ -22,6 +22,9 @@ export default function ApplicationDetail() {
   const { user } = useAuth();
   const { applications, updateApplication } = useAppStore();
   const [dates, setDates] = useState(['', '', '']);
+  const [times, setTimes] = useState(['', '', '']);
+  const [visitLocation, setVisitLocation] = useState('');
+  const [confirmAddressLocation, setConfirmAddressLocation] = useState(false);
   const [comments, setComments] = useState('');
   const [actionDone, setActionDone] = useState('');
   
@@ -58,10 +61,21 @@ export default function ApplicationDetail() {
   };
 
   const handleSubmitDates = () => {
-    const filled = dates.filter(d => d);
+    const filled = dates
+      .map((date, index) => date && times[index] ? `${date}T${times[index]}` : '')
+      .filter(Boolean);
     if (filled.length < 1) return;
-    updateApp({ siteVisitDates: filled, status: 'site_visit_scheduled' }, 'Site visit dates submitted!');
+    if (!visitLocation.trim() && !confirmAddressLocation) return;
+    updateApp({
+      siteVisitDates: filled,
+      siteVisitLocation: visitLocation.trim() || app.address,
+      siteVisitLocationConfirmed: !visitLocation.trim(),
+      status: 'site_visit_scheduled'
+    }, 'Site visit date and time submitted!');
     setDates(['', '', '']);
+    setTimes(['', '', '']);
+    setVisitLocation('');
+    setConfirmAddressLocation(false);
   };
 
   const handleApprovePlan = () => {
@@ -130,21 +144,43 @@ export default function ApplicationDetail() {
 
           {/* ACTION PANELS based on status */}
 
-          {/* Customer needs to provide 3 site visit dates */}
-          {app.status === 'under_review' && !app.siteVisitDates && (
+          {/* Customer provides visit schedule only when provider requires a site visit */}
+          {app.status === 'under_review' && app.siteVisitRequired && !app.siteVisitDates && (
             <div className={`card ${styles.actionCard}`}>
-              <h3 className={styles.cardSectionTitle}><Calendar size={16} /> Propose Site Visit Dates</h3>
-              <p className={styles.actionNote}>Your documents are verified. Please provide 3 available dates for the site visit.</p>
+              <h3 className={styles.cardSectionTitle}><Calendar size={16} /> Propose Site Visit Schedule</h3>
+              <p className={styles.actionNote}>Your service provider requires a site visit. Please provide at least one available date and time.</p>
               {dates.map((d, i) => (
                 <div key={i} className="form-group">
-                  <label className="form-label">Date Option {i + 1}{i === 0 ? ' (required)' : ' (optional)'}</label>
-                  <input className="form-input" type="date" value={d} min={new Date().toISOString().split('T')[0]}
-                    onChange={e => setDates(prev => { const n = [...prev]; n[i] = e.target.value; return n; })} />
+                  <label className="form-label">Option {i + 1}{i === 0 ? ' (date and time required)' : ' (optional)'}</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <input className="form-input" type="date" value={d} min={new Date().toISOString().split('T')[0]}
+                      onChange={e => setDates(prev => { const n = [...prev]; n[i] = e.target.value; return n; })} />
+                    <input className="form-input" type="time" value={times[i]}
+                      onChange={e => setTimes(prev => { const n = [...prev]; n[i] = e.target.value; return n; })} />
+                  </div>
                 </div>
               ))}
+              <div className="form-group">
+                <label className="form-label">Map Location / Google Maps Link (optional)</label>
+                <input className="form-input" type="text" placeholder="Paste Google Maps link or coordinates" value={visitLocation} onChange={e => setVisitLocation(e.target.value)} />
+                <p className={styles.actionNote}>If you do not provide a map location, we will use the property address: {app.address}</p>
+              </div>
+              {!visitLocation.trim() && (
+                <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13, marginBottom: 16 }}>
+                  <input type="checkbox" checked={confirmAddressLocation} onChange={e => setConfirmAddressLocation(e.target.checked)} />
+                  <span>I confirm the site visit location is the property address: <strong>{app.address}</strong>{app.landmark ? `, near ${app.landmark}` : ''}.</span>
+                </label>
+              )}
               <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={handleSubmitDates}>
-                Submit Dates
+                Submit Visit Schedule
               </button>
+            </div>
+          )}
+
+          {app.status === 'under_review' && app.siteVisitRequired === false && (
+            <div className={`card ${styles.actionCard}`}>
+              <h3 className={styles.cardSectionTitle}><CheckCircle2 size={16} /> Site Visit Skipped</h3>
+              <p className={styles.actionNote}>Your service provider confirmed that a site visit is not required for this service and has moved to plan preparation.</p>
             </div>
           )}
 
@@ -155,14 +191,15 @@ export default function ApplicationDetail() {
               <div className={styles.dateRow}>
                 <span>Your proposed dates:</span>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
-                  {app.siteVisitDates.map(d => <span key={d} className={styles.dateChip}>{new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>)}
+                  {app.siteVisitDates.map(d => <span key={d} className={styles.dateChip}>{new Date(d).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>)}
                 </div>
               </div>
               {app.selectedSiteVisitDate && (
                 <div className={styles.confirmedDate}>
-                  <CheckCircle2 size={16} /> Confirmed date: <strong>{new Date(app.selectedSiteVisitDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+                  <CheckCircle2 size={16} /> Confirmed visit: <strong>{new Date(app.selectedSiteVisitDate).toLocaleString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong>
                 </div>
               )}
+              {app.siteVisitLocation && <p className={styles.actionNote}>Location: {app.siteVisitLocation}{app.siteVisitLocationConfirmed ? ' (confirmed from property address)' : ''}</p>}
             </div>
           )}
 
