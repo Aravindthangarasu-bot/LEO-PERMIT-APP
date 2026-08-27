@@ -10,7 +10,7 @@ import { USE_SUPABASE } from './AppStoreContext';
 interface AuthContextValue {
   user: User | null;
   login: (phone: string, role: UserRole, password?: string) => Promise<void>;
-  registerCustomer: (details: Pick<User, 'name' | 'phone' | 'email' | 'address' | 'pincode'>) => Promise<void>;
+  registerCustomer: (details: Pick<User, 'name' | 'phone' | 'email' | 'address' | 'pincode' | 'city' | 'taluk' | 'district'>) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -95,15 +95,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const registerCustomer = async (details: Pick<User, 'name' | 'phone' | 'email' | 'address' | 'pincode'>) => {
+  const registerCustomer = async (details: Pick<User, 'name' | 'phone' | 'email' | 'address' | 'pincode' | 'city' | 'taluk' | 'district'>) => {
     const { data, error } = await supabase.from('users').insert({
       name: details.name,
       phone: details.phone,
       email: details.email,
       address: details.address,
       pincode: details.pincode,
+      city: details.city,
+      taluk: details.taluk,
+      district: details.district,
       role: 'customer',
-    }).select('id, name, phone, role, email, address, pincode').single();
+    }).select('id, name, phone, role, email, address, pincode, city, taluk, district').single();
 
     if (error) {
       throw new Error(error.code === '23505' ? 'An account already exists with this phone number.' : 'Unable to create your account. Please try again.');

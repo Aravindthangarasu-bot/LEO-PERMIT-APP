@@ -10,6 +10,7 @@ export interface User {
   pincode?: string;
   city?: string;
   taluk?: string;
+  district?: string;
   avatar?: string;
   providerId?: string; // for staff members
 }
@@ -24,6 +25,9 @@ export interface PermitApplication {
   submittedAt: string;
   updatedAt: string;
   address: string;
+  city?: string;
+  taluk?: string;
+  district?: string;
   landmark: string;
   description: string;
   documents: Document[];
@@ -131,6 +135,7 @@ export interface ServiceProvider {
   pincode?: string;
   city?: string;
   taluk?: string;
+  district?: string;
   latitude?: number;
   longitude?: number;
   landmarks: string[];

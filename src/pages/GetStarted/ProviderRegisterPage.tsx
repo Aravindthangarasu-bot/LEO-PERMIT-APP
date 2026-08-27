@@ -291,6 +291,7 @@ export default function ProviderRegisterPage() {
                       pincode: form.pincode,
                       city: pincodeLocation?.city,
                       taluk: pincodeLocation?.taluk,
+                      district: pincodeLocation?.district,
                       landmarks: [],
                       licenceCategory: form.licenceCategory,
                       licenceNumber: form.licenceNumber,

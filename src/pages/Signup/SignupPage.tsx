@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { Building2, Phone, ArrowLeft, User, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { lookupPincode, type PincodeLookupResult } from '../../utils/pincode';
 import styles from './SignupPage.module.css';
 
 type Step = 'details' | 'otp';
@@ -41,13 +42,14 @@ const VALIDATORS = {
 
 export default function SignupPage() {
   const [step, setStep]       = useState<Step>('details');
-  const [form, setForm]       = useState({ name: '', phone: '', email: '', address: '', pincode: '' });
+  const [form, setForm]       = useState({ name: '', phone: '', email: '', address: '', pincode: '', city: '', taluk: '', district: '' });
   const [errors, setErrors]   = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Partial<Record<keyof FieldErrors, boolean>>>({});
   const [otp, setOtp]         = useState(['', '', '', '', '', '']);
   const [otpError, setOtpError] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [pincodeResult, setPincodeResult] = useState<PincodeLookupResult | null>(null);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const { registerCustomer, isAuthenticated } = useAuth();
@@ -60,6 +62,23 @@ export default function SignupPage() {
   useEffect(() => {
     if (resendTimer > 0) { const t = setTimeout(() => setResendTimer(r => r - 1), 1000); return () => clearTimeout(t); }
   }, [resendTimer]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!/^\d{6}$/.test(form.pincode)) {
+      setPincodeResult(null);
+      setForm(current => ({ ...current, city: '', taluk: '', district: '' }));
+      return;
+    }
+    lookupPincode(form.pincode).then(result => {
+      if (cancelled) return;
+      setPincodeResult(result);
+      if (result) setForm(current => ({ ...current, city: result.primary.city, taluk: result.primary.taluk, district: result.primary.district }));
+    }).catch(() => {
+      if (!cancelled) setPincodeResult(null);
+    });
+    return () => { cancelled = true; };
+  }, [form.pincode]);
 
   const validate = (k: keyof FieldErrors, v: string) => VALIDATORS[k](v);
 
@@ -180,6 +199,33 @@ export default function SignupPage() {
                     {touched.pincode && !errors.pincode && <CheckCircle2 size={16} className={styles.validIcon} />}
                   </div>
                   {touched.pincode && errors.pincode && <p className={styles.fieldError}>{errors.pincode}</p>}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">City / Locality *</label>
+                  <select className="form-input" value={form.city} disabled={!pincodeResult} onChange={e => {
+                    const option = pincodeResult?.options.find(item => item.city === e.target.value);
+                    setForm(current => ({ ...current, city: e.target.value, taluk: option?.taluk ?? current.taluk, district: option?.district ?? current.district }));
+                  }}>
+                    <option value="">Enter pincode first</option>
+                    {(pincodeResult?.options ?? []).map(option => <option key={option.office} value={option.city}>{option.city}</option>)}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Taluk *</label>
+                  <select className="form-input" value={form.taluk} disabled={!pincodeResult} onChange={e => setForm(current => ({ ...current, taluk: e.target.value }))}>
+                    <option value="">Enter pincode first</option>
+                    {[...new Set((pincodeResult?.options ?? []).map(option => option.taluk).filter(Boolean))].map(taluk => <option key={taluk} value={taluk}>{taluk}</option>)}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">District *</label>
+                  <select className="form-input" value={form.district} disabled={!pincodeResult} onChange={e => setForm(current => ({ ...current, district: e.target.value }))}>
+                    <option value="">Enter pincode first</option>
+                    {[...new Set((pincodeResult?.options ?? []).map(option => option.district).filter(Boolean))].map(district => <option key={district} value={district}>{district}</option>)}
+                  </select>
                 </div>
 
                 <div className="form-group">
