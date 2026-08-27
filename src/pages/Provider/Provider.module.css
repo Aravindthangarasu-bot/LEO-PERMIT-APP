@@ -107,6 +107,10 @@
 .appRow:hover      { background: var(--surface); }
 .appRowActive      { background: var(--primary-bg) !important; }
 .appRowContent { flex: 1; min-width: 0; }
+.inlineCustomerExpansion { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; padding: 14px 20px 16px; background: var(--primary-bg); border-bottom: 1px solid var(--border); }
+.inlineCustomerExpansion div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.inlineCustomerExpansion span { color: var(--text-muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.inlineCustomerExpansion strong { color: var(--text); font-size: 12px; overflow-wrap: anywhere; }
 
 /* Review card */
 .reviewCard { padding: 24px; position: relative; animation: detailReveal 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; }
@@ -208,5 +212,6 @@
 @media (max-width: 1100px) {
   .twoCol  { grid-template-columns: 1fr; }
   .appGrid { grid-template-columns: 1fr; }
+  .inlineCustomerExpansion { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 

@@ -10,6 +10,7 @@ export interface User {
   pincode?: string;
   city?: string;
   taluk?: string;
+  district?: string;
   avatar?: string;
   providerId?: string; // for staff members
 }
@@ -137,6 +138,7 @@ export interface ServiceProvider {
   taluk?: string;
   district?: string;
   state?: string;
+  serviceAreas?: ServiceArea[];
   latitude?: number;
   longitude?: number;
   landmarks: string[];
@@ -151,6 +153,7 @@ export interface ServiceProvider {
   // Optional
   logo?: string;
   photoUrl?: string;
+  logoUrl?: string;
   aboutUs?: string;
   projectsCompleted?: string;
   // System
@@ -161,6 +164,14 @@ export interface ServiceProvider {
   totalApprovals: number;
   documents: Document[];
   specializations: PermitType[];
+}
+
+export interface ServiceArea {
+  pincode: string;
+  city: string;
+  taluk: string;
+  district: string;
+  state?: string;
 }
 
 export interface DashboardStats {

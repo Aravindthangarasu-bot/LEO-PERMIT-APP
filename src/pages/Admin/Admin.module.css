@@ -47,6 +47,11 @@
 .table tr:last-child td { border-bottom: none; }
 .table tr:hover td { background: var(--surface); }
 .tableRowActive td { background: var(--primary-bg) !important; }
+.inlineExpansionRow td { padding: 0 16px 16px; background: var(--primary-bg); border-bottom: 1px solid var(--border); }
+.inlineExpansion { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: white; box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06); }
+.inlineExpansion div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.inlineExpansion span { color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.inlineExpansion strong { color: var(--text); font-size: 13px; overflow-wrap: anywhere; }
 
 .appId      { font-size: 12px; font-weight: 700; color: var(--primary); }
 .statusBadge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
@@ -174,4 +179,5 @@
   .twoCol  { grid-template-columns: 1fr; }
   .appGrid { grid-template-columns: 1fr; }
   .formGrid { grid-template-columns: 1fr; }
+  .inlineExpansion { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

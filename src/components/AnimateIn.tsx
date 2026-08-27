@@ -36,9 +36,7 @@ export default function AnimateIn({
     }
 
     return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current);
-      }
+      observer.disconnect();
     };
   }, [threshold]);
 

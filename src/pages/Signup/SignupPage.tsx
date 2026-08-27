@@ -21,7 +21,7 @@ const VALIDATORS = {
   },
   phone: (v: string) => {
     if (!v)                          return 'Mobile number is required.';
-    if (!/^[6-9]\d{9}$/.test(v))    return 'Enter a valid 10-digit Indian mobile number starting with 6?"9.';
+    if (!/^[6-9]\d{9}$/.test(v))    return 'Enter a valid 10-digit Indian mobile number starting with 6–9.';
     return '';
   },
   email: (v: string) => {
@@ -275,14 +275,14 @@ export default function SignupPage() {
                   )}
 
                   <div className="form-group">
-                  <label className="form-label">Address *</label>
-                  <textarea
-                    className={`form-input ${touched.address && errors.address ? styles.inputError : touched.address && !errors.address ? styles.inputValid : ''}`}
-                    rows={2} placeholder="Door no., Street, City"
-                    value={form.address} onChange={handleChange('address')} onBlur={handleBlur('address')}
-                  />
-                  {touched.address && errors.address && <p className={styles.fieldError}>{errors.address}</p>}
-                </div>
+                    <label className="form-label">Address *</label>
+                    <textarea
+                      className={`form-input ${touched.address && errors.address ? styles.inputError : touched.address && !errors.address ? styles.inputValid : ''}`}
+                      rows={2} placeholder="Door no., Street, City"
+                      value={form.address} onChange={handleChange('address')} onBlur={handleBlur('address')}
+                    />
+                    {touched.address && errors.address && <p className={styles.fieldError}>{errors.address}</p>}
+                  </div>
 
                 <button type="submit" className={styles.continueBtn} disabled={loading}>
                   {loading ? 'Processing...' : <>Continue <ChevronRight size={18} /></>}

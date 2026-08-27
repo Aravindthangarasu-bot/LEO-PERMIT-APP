@@ -25,6 +25,7 @@ export default function NewApplication() {
     pincode: '',
     area: '',
     taluk: '',
+    district: '',
     landmark: '',
     buildingArea: '',
     floors: '',
@@ -39,6 +40,7 @@ export default function NewApplication() {
   const [pincodeOptions, setPincodeOptions] = useState<PincodeLocation[]>([]);
   const [pincodeLookupState, setPincodeLookupState] = useState<'idle' | 'loading' | 'not_found' | 'error'>('idle');
   const [providerPage, setProviderPage] = useState(1);
+  const [providerSearch, setProviderSearch] = useState('');
 
   const [uploadedDocs, setUploadedDocs] = useState<Record<string, UploadedFile | null>>(
     () => Object.fromEntries(REQUIRED_DOCS.map(d => [d, null]))
@@ -83,7 +85,7 @@ export default function NewApplication() {
       setPincodeLocation(result?.primary ?? null);
       setPincodeOptions(result?.options ?? []);
       setPincodeLookupState(result ? 'idle' : 'not_found');
-      if (result) setForm(current => ({ ...current, area: result.primary.city, taluk: result.primary.taluk }));
+      if (result) setForm(current => ({ ...current, area: result.primary.city, taluk: result.primary.taluk, district: result.primary.district }));
     }).catch(() => {
       if (!cancelled) setPincodeLookupState('error');
     });
@@ -92,7 +94,7 @@ export default function NewApplication() {
 
   useEffect(() => {
     setProviderPage(1);
-  }, [form.pincode, form.buildingArea, form.floors, form.heightM]);
+  }, [form.pincode, form.buildingArea, form.floors, form.heightM, providerSearch]);
 
   // Only show active providers with a valid (non-expired) licence
   const activeProviders = providers.filter(p => p.status === 'active' && !isLicenceExpired(p));
@@ -101,14 +103,18 @@ export default function NewApplication() {
   const heightM      = parseFloat(form.heightM) || undefined;
 
   const normalizedPincode = form.pincode.trim();
-  const baseProviders = activeProviders.filter(provider =>
+  const exactProviders = activeProviders.filter(provider =>
     /^\d{6}$/.test(normalizedPincode) &&
-    (provider.pincode ?? '').trim() === normalizedPincode &&
-    (!provider.city && !provider.taluk ||
-      (!provider.city || normalizeLocation(provider.city) === normalizeLocation(pincodeLocation?.city) || normalizeLocation(provider.city) === normalizeLocation(pincodeLocation?.district)) &&
-      (!provider.taluk || normalizeLocation(provider.taluk) === normalizeLocation(pincodeLocation?.taluk)))
+    [{ pincode: provider.pincode, city: provider.city, taluk: provider.taluk, district: provider.district }, ...(provider.serviceAreas ?? [])]
+      .some(area => area.pincode === normalizedPincode &&
+        (!area.city || normalizeLocation(area.city) === normalizeLocation(pincodeLocation?.city) || normalizeLocation(area.city) === normalizeLocation(pincodeLocation?.district)) &&
+        (!area.taluk || normalizeLocation(area.taluk) === normalizeLocation(pincodeLocation?.taluk)) &&
+        (!area.district || normalizeLocation(area.district) === normalizeLocation(pincodeLocation?.district)))
   );
-  const displayProviders = baseProviders.map(p => {
+  const searchNeedle = normalizeLocation(providerSearch);
+  const searchedProviders = searchNeedle ? activeProviders.filter(provider => [provider.officeName, provider.city, provider.taluk, provider.district, provider.area, provider.pincode, ...(provider.serviceAreas ?? []).flatMap(area => [area.city, area.taluk, area.district, area.pincode])].some(value => normalizeLocation(value).includes(searchNeedle))) : [];
+  const providerPool = searchNeedle ? searchedProviders : exactProviders;
+  const displayProviders = providerPool.map(p => {
     const licence = getLicenceById(p.licenceCategory ?? '');
     const eligible = licence ? canHandleBuilding(licence, buildingArea, floors, heightM) : true;
     const reason   = licence ? getIneligibilityReason(licence, buildingArea, floors, heightM) : null;
@@ -198,6 +204,9 @@ export default function NewApplication() {
       submittedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       address: form.address,
+      city: form.area,
+      taluk: form.taluk,
+      district: form.district,
       landmark: form.landmark,
       description: form.description,
       documents: Object.entries(uploadedDocs)
@@ -236,7 +245,7 @@ export default function NewApplication() {
           <div className={styles.appNumBox}><span>Application ID</span><strong>{newAppId}</strong></div>
           <div className={styles.successBtns}>
             <button className="btn btn-primary" onClick={() => navigate('/customer/applications')}>View My Applications</button>
-            <button className="btn btn-outline" onClick={() => { setSubmitted(false); setStep(1); setForm({ type: '', description: '', address: '', pincode: '', area: '', taluk: '', landmark: '', buildingArea: '', floors: '', heightM: '' }); setSelectedProvider(''); }}>New Application</button>
+            <button className="btn btn-outline" onClick={() => { setSubmitted(false); setStep(1); setForm({ type: '', description: '', address: '', pincode: '', area: '', taluk: '', district: '', landmark: '', buildingArea: '', floors: '', heightM: '' }); setSelectedProvider(''); setProviderSearch(''); }}>New Application</button>
           </div>
         </div>
       </div>
@@ -314,7 +323,7 @@ export default function NewApplication() {
                 {pincodeOptions.length > 1 ? (
                   <select className="form-input" value={pincodeLocation?.office ?? ''} onChange={event => {
                     const selected = pincodeOptions.find(option => option.office === event.target.value);
-                    if (selected) { setPincodeLocation(selected); setForm(current => ({ ...current, area: selected.city, taluk: selected.taluk })); }
+                    if (selected) { setPincodeLocation(selected); setForm(current => ({ ...current, area: selected.city, taluk: selected.taluk, district: selected.district })); }
                   }}>
                     {pincodeOptions.map(option => <option key={option.office} value={option.office}>{option.city} ({option.taluk})</option>)}
                   </select>
@@ -327,6 +336,10 @@ export default function NewApplication() {
               <div className="form-group">
                 <label className="form-label">Taluk</label>
                 <input className="form-input" type="text" placeholder="Resolved from pincode" value={form.taluk} readOnly />
+              </div>
+              <div className="form-group">
+                <label className="form-label">District</label>
+                <input className="form-input" type="text" placeholder="Resolved from pincode" value={form.district} readOnly />
               </div>
               <div className="form-group">
                 <label className="form-label"><MapPin size={13} /> Landmark of Proposed Site</label>
@@ -405,6 +418,12 @@ export default function NewApplication() {
             </p>
             {errors.provider && <p className={styles.fieldError}><AlertCircle size={13} /> {errors.provider}</p>}
             {errors.submission && <p className={styles.fieldError}><AlertCircle size={13} /> {errors.submission}</p>}
+
+            <div className="form-group" style={{ marginTop: 16 }}>
+              <label className="form-label">Search providers by name, pincode, city, taluk, or district</label>
+              <input className="form-input" type="search" placeholder="Search wider area when no local provider is available" value={providerSearch} onChange={e => setProviderSearch(e.target.value)} />
+              {providerSearch && <p className={styles.hintText}>Showing active providers matching “{providerSearch}”. Verify the selected provider's service area before submitting.</p>}
+            </div>
 
             {/* Eligible providers */}
             {eligibleProviders.length === 0 && ineligibleProviders.length === 0 && (

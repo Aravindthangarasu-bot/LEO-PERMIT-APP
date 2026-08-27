@@ -1,22 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, Calendar, ExternalLink, FileText, MapPin, Phone, UserRound } from 'lucide-react';
 import { useAppStore, isLicenceExpired } from '../../context/AppStoreContext';
 import { STATUS_CONFIG } from '../Customer/statusConfig';
 import { PERMIT_TYPES } from '../../data/mockData';
 import ActivityThread from '../../components/ActivityThread';
-import Pagination from '../../components/Pagination/Pagination';
 import { sortByNewest } from '../../utils/sorting';
+import PaginationControls from '../../components/PaginationControls';
 import styles from './Admin.module.css';
 
 export default function AllApplications() {
-  const { applications, updateApplication, providers } = useAppStore();
+  const { applications, updateApplication, providers, addNotification } = useAppStore();
   const [apps, setApps] = useState(applications);
   const [searchParams, setSearchParams] = useSearchParams();
   const initialFilter = searchParams.get('status') || 'all';
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState(initialFilter);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const status = searchParams.get('status') || 'all';
@@ -33,8 +33,8 @@ export default function AllApplications() {
   }, [applications]);
 
   const handleFilterChange = (f: string) => {
+    setPage(1);
     setFilter(f);
-    setCurrentPage(1);
     if (f === 'all') {
       searchParams.delete('status');
     } else {
@@ -67,20 +67,32 @@ export default function AllApplications() {
     // An exact application number must always be retrievable, regardless of the active status filter.
     return matchS && (exactApplicationId || matchF);
   }), app => app.submittedAt);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / 10));
+  const visibleApps = filtered.slice((page - 1) * 10, page * 10);
 
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginatedApps = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  const handleAssign = () => {
+  const handleAssign = async () => {
     if (!assignProvider || !selected) return;
     const prov = activeProviders.find(p => p.id === assignProvider);
+    if (!prov) return;
     setApps(prev => prev.map(a =>
       a.id === selected
         ? { ...a, assignedProviderId: prov?.id, assignedProviderName: prov?.officeName ?? prov?.name, status: 'under_review' as const, updatedAt: new Date().toISOString() }
         : a
     ));
-    updateApplication(selected, { assignedProviderId: prov?.id, assignedProviderName: prov?.officeName ?? prov?.name, status: 'under_review' });
+    const saved = await updateApplication(selected, { assignedProviderId: prov.id, assignedProviderName: prov.officeName ?? prov.name, status: 'under_review' });
+    if (saved) {
+      await addNotification({
+        applicationId: selected,
+        userId: prov.id,
+        type: 'assigned',
+        title: 'Application assigned to you',
+        message: `${selectedApp?.customerName ?? 'A customer'}'s application ${selected} has been assigned to ${prov.officeName ?? prov.name}. Review it to begin service.`,
+        contactName: selectedApp?.customerName,
+        contactPhone: selectedApp?.customerPhone,
+        timestamp: new Date().toISOString(),
+        read: false,
+      });
+    }
     setAssignProvider('');
   };
 
@@ -103,7 +115,7 @@ export default function AllApplications() {
             value={search}
             onChange={e => {
               setSearch(e.target.value);
-              setCurrentPage(1);
+              setPage(1);
             }}
           />
         </div>
@@ -137,15 +149,15 @@ export default function AllApplications() {
             </tr>
           </thead>
           <tbody>
-            {paginatedApps.map(app => {
+            {visibleApps.map(app => {
               const sc = STATUS_CONFIG[app.status];
               return (
-                <tr
-                  key={app.id}
-                  className={selected === app.id ? styles.tableRowActive : ''}
-                  onClick={() => { setSelected(app.id); setAssignProvider(''); }}
-                  style={{ cursor: 'pointer' }}
-                >
+                <Fragment key={app.id}>
+                  <tr
+                    className={selected === app.id ? styles.tableRowActive : ''}
+                    onClick={() => { setSelected(app.id); setAssignProvider(''); }}
+                    style={{ cursor: 'pointer' }}
+                  >
                   <td className={styles.appId}>{app.id}</td>
                   <td>
                     <div style={{ fontWeight: 600 }}>{app.customerName}</div>
@@ -180,10 +192,24 @@ export default function AllApplications() {
                       <button className={styles.assignBtn} onClick={() => { setSelected(app.id); setAssignProvider(''); }}>Details</button>
                     </div>
                   </td>
-                </tr>
+                  </tr>
+                  {selected === app.id && (
+                    <tr className={styles.inlineExpansionRow}>
+                      <td colSpan={7}>
+                        <div className={styles.inlineExpansion}>
+                          <div><span>Customer</span><strong>{app.customerName} · {app.customerPhone}</strong></div>
+                          <div><span>Property</span><strong>{app.city || app.address}</strong></div>
+                          <div><span>Location</span><strong>{app.taluk || '-'} · {app.district || app.pincode || '-'}</strong></div>
+                          <div><span>Submitted</span><strong>{new Date(app.submittedAt).toLocaleString('en-IN')}</strong></div>
+                          <div><span>Assignment</span><strong>{app.assignedProviderName || 'Awaiting provider assignment'}</strong></div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               );
             })}
-            {filtered.length === 0 && (
+            {visibleApps.length === 0 && (
               <tr>
                 <td colSpan={7} style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)' }}>
                   No application matches this application number or filter.
@@ -192,16 +218,7 @@ export default function AllApplications() {
             )}
           </tbody>
         </table>
-        
-        {filtered.length > 0 && (
-          <Pagination 
-            currentPage={currentPage} 
-            totalPages={totalPages} 
-            totalItems={filtered.length} 
-            itemsPerPage={itemsPerPage} 
-            onPageChange={setCurrentPage} 
-          />
-        )}
+        <PaginationControls page={page} pageCount={pageCount} total={filtered.length} onPageChange={setPage} />
       </div>
 
       {selectedApp && (() => {

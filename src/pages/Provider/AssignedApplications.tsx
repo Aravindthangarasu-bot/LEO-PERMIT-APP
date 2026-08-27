@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { Search, FileText, CheckCircle2, XCircle, X, Calendar, MessageSquare, AlertTriangle, Users, Upload } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { PERMIT_TYPES } from '../../data/mockData';
@@ -9,10 +9,10 @@ import DocumentUpload from '../../components/DocumentUpload/DocumentUpload';
 import type { UploadedFile } from '../../components/DocumentUpload/DocumentUpload';
 import ActivityThread from '../../components/ActivityThread';
 import ActionConsole from '../../components/ActionConsole';
-import Pagination from '../../components/Pagination/Pagination';
 import type { ApplicationStatus, PermitApplication } from '../../types';
 import styles from './Provider.module.css';
 import { sortByNewest } from '../../utils/sorting';
+import PaginationControls from '../../components/PaginationControls';
 
 export default function AssignedApplications() {
   const { user } = useAuth();
@@ -24,7 +24,7 @@ export default function AssignedApplications() {
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [filter, setFilter] = useState(searchParams.get('status') || 'all');
   const [selected, setSelected] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (searchParams.get('search')) setSearch(searchParams.get('search') || '');
@@ -71,10 +71,6 @@ export default function AssignedApplications() {
 
     return matchS && matchF;
   }), app => app.submittedAt);
-
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginatedApps = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const app = myApps.find(a => a.id === selected) ?? null;
 
@@ -133,22 +129,13 @@ export default function AssignedApplications() {
       <div className={styles.filterRow}>
         <div className={styles.searchBox}>
           <Search size={16} />
-          <input 
-            type="text" 
-            placeholder="Search by ID or customer…" 
-            value={search} 
-            onChange={e => {
-              setSearch(e.target.value);
-              setCurrentPage(1);
-            }} 
-            className={styles.searchInput} 
-          />
+          <input type="text" placeholder="Search by ID or customer…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className={styles.searchInput} />
         </div>
         <div className={styles.filterBtns}>
-          <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''}`} onClick={() => { setFilter('all'); setCurrentPage(1); }}>All</button>
-          <button className={`${styles.filterBtn} ${filter === 'approved_all' ? styles.filterActive : ''}`} onClick={() => { setFilter('approved_all'); setCurrentPage(1); }}>Completed</button>
+          <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''}`} onClick={() => { setFilter('all'); setPage(1); }}>All</button>
+          <button className={`${styles.filterBtn} ${filter === 'approved_all' ? styles.filterActive : ''}`} onClick={() => { setFilter('approved_all'); setPage(1); }}>Completed</button>
           {COMMON_STATUS_FILTERS.map(f => (
-            <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => { setFilter(f); setCurrentPage(1); }}>
+            <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => { setFilter(f); setPage(1); }}>
               {STATUS_CONFIG[f as keyof typeof STATUS_CONFIG]?.label ?? f}
             </button>
           ))}
@@ -157,41 +144,40 @@ export default function AssignedApplications() {
 
       <div className={styles.appGrid}>
         {/* List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, gridColumn: '1 / -1', width: '100%' }}>
-          <div className={`card ${styles.appListCard}`}>
-            {paginatedApps.map(a => {
+        <div className={`card ${styles.appListCard}`} style={{ gridColumn: '1 / -1', width: '100%' }}>
+          {filtered.slice((page - 1) * 10, page * 10).map(a => {
             const sc = STATUS_CONFIG[a.status];
             return (
-              <button key={a.id} className={`${styles.appRow} ${selected === a.id ? styles.appRowActive : ''}`}
-                onClick={() => { setSelected(a.id); setActionDone(''); }}>
-                <div className={styles.appRowLeft}>
-                  <div className={styles.appId}>{a.id}</div>
-                  <div className={styles.appType}>{PERMIT_TYPES.find(p => p.value === a.type)?.label}</div>
-                  <div className={styles.appCustomer}>👤 {a.customerName} · {a.customerPhone}</div>
-                  <div className={styles.appDate}>{new Date(a.submittedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
-                </div>
-                <span className={styles.appBadge} style={{ background: sc.bg, color: sc.color }}>
-                  <span className={`status-dot ${sc.dot}`} /> {sc.label}
-                </span>
-              </button>
+              <Fragment key={a.id}>
+                <button className={`${styles.appRow} ${selected === a.id ? styles.appRowActive : ''}`}
+                  onClick={() => { setSelected(a.id); setActionDone(''); }}>
+                  <div className={styles.appRowLeft}>
+                    <div className={styles.appId}>{a.id}</div>
+                    <div className={styles.appType}>{PERMIT_TYPES.find(p => p.value === a.type)?.label}</div>
+                    <div className={styles.appCustomer}>👤 {a.customerName} · {a.customerPhone}</div>
+                    <div className={styles.appDate}>{new Date(a.submittedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                  </div>
+                  <span className={styles.appBadge} style={{ background: sc.bg, color: sc.color }}>
+                    <span className={`status-dot ${sc.dot}`} /> {sc.label}
+                  </span>
+                </button>
+                {selected === a.id && (
+                  <div className={styles.inlineCustomerExpansion}>
+                    <div><span>Customer</span><strong>{a.customerName} · {a.customerPhone}</strong></div>
+                    <div><span>Property</span><strong>{a.city || a.address}</strong></div>
+                    <div><span>Location</span><strong>{a.taluk || '-'} · {a.district || a.pincode || '-'}</strong></div>
+                    <div><span>Submitted</span><strong>{new Date(a.submittedAt).toLocaleString('en-IN')}</strong></div>
+                  </div>
+                )}
+              </Fragment>
             );
           })}
           {filtered.length === 0 && (
-              <div className={styles.emptyState}>
-                <p>No applications found matching your criteria</p>
-              </div>
-            )}
-        </div>
-          
-          {filtered.length > 0 && (
-            <Pagination 
-              currentPage={currentPage} 
-              totalPages={totalPages} 
-              totalItems={filtered.length} 
-              itemsPerPage={itemsPerPage} 
-              onPageChange={setCurrentPage} 
-            />
+            <div className={styles.emptyState}>
+              <p>No applications found matching your criteria</p>
+            </div>
           )}
+          <PaginationControls page={page} pageCount={Math.max(1, Math.ceil(filtered.length / 10))} total={filtered.length} onPageChange={setPage} />
         </div>
 
         {/* Detail + Actions */}
@@ -403,4 +389,3 @@ export default function AssignedApplications() {
     </div>
   );
 }
-

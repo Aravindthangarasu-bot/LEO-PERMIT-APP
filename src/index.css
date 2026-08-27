@@ -141,10 +141,13 @@ input, select, textarea { font-family: inherit; outline: none; }
 }
 @keyframes pageOut {
   from { opacity: 1; transform: translateY(0) scale(1); }
-  to   { opacity: 0; transform: translateY(-12px) scale(0.98); }
+  to { opacity: 0; transform: translateY(-8px) scale(0.995); }
 }
 .page-enter { animation: pageIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 .page-exit { animation: pageOut 0.2s ease forwards; }
+.page-transition.fadeIn { animation: pageIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.page-transition.fadeOut { animation: pageOut 0.16s ease forwards; }
+.animate-wrapper { min-width: 0; }
 
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -174,3 +177,6 @@ input, select, textarea { font-family: inherit; outline: none; }
 .delay-400 { animation-delay: 400ms; opacity: 0; }
 .delay-500 { animation-delay: 500ms; opacity: 0; }
 
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

@@ -16,19 +16,15 @@ export default function PageTransition({ children }: PageTransitionProps) {
       const timer = setTimeout(() => {
         setDisplayLocation(location);
         setTransitionStage('fadeIn');
-      }, 200); // 200ms for exit animation
-      return () => clearTimeout(timer);
+      }, 160);
+      return () => window.clearTimeout(timer);
     }
   }, [location, displayLocation]);
 
   return (
     <div
       className={`page-transition ${transitionStage}`}
-      style={{
-        animation: transitionStage === 'fadeIn' ? 'pageIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' : 'pageOut 0.2s ease forwards'
-      }}
     >
-      {/* We render the previous location while transitioning out */}
       <React.Fragment key={displayLocation.key}>
         {children}
       </React.Fragment>
