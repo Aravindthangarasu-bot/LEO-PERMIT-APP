@@ -7,7 +7,7 @@ export default defineConfig({
   workers: 4,
   reporter: [['html', { outputFolder: 'tests/reports', open: 'never' }], ['list'], ['./csv-reporter.ts']],
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: process.env.TEST_BASE_URL || 'http://localhost:5173',
     headless: true,
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -16,10 +16,13 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox',  use: { ...devices['Desktop Firefox'] } },
   ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
+  // Only start local dev server if not testing against a live URL
+  ...(!process.env.TEST_BASE_URL && {
+    webServer: {
+      command: 'npm run dev',
+      url: 'http://localhost:5173',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120000,
+    },
+  }),
 });

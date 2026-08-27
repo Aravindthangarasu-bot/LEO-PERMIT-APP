@@ -5,6 +5,7 @@ import { useAppStore, isLicenceExpired } from '../../context/AppStoreContext';
 import { STATUS_CONFIG } from '../Customer/statusConfig';
 import { PERMIT_TYPES } from '../../data/mockData';
 import ActivityThread from '../../components/ActivityThread';
+import Pagination from '../../components/Pagination/Pagination';
 import { sortByNewest } from '../../utils/sorting';
 import styles from './Admin.module.css';
 
@@ -15,6 +16,7 @@ export default function AllApplications() {
   const initialFilter = searchParams.get('status') || 'all';
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState(initialFilter);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const status = searchParams.get('status') || 'all';
@@ -32,6 +34,7 @@ export default function AllApplications() {
 
   const handleFilterChange = (f: string) => {
     setFilter(f);
+    setCurrentPage(1);
     if (f === 'all') {
       searchParams.delete('status');
     } else {
@@ -65,6 +68,10 @@ export default function AllApplications() {
     return matchS && (exactApplicationId || matchF);
   }), app => app.submittedAt);
 
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedApps = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   const handleAssign = () => {
     if (!assignProvider || !selected) return;
     const prov = activeProviders.find(p => p.id === assignProvider);
@@ -88,11 +95,16 @@ export default function AllApplications() {
 
       <div className={styles.filterRow}>
         <div className={styles.searchBox}>
-          <Search size={16} />
-          <input
-            type="text" placeholder="Enter application number or customer…"
-            value={search} onChange={e => setSearch(e.target.value)}
+          <Search size={18} className={styles.searchIcon} />
+          <input 
+            type="text" 
+            placeholder="Search by ID or Customer Name..." 
             className={styles.searchInput}
+            value={search}
+            onChange={e => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
           />
         </div>
         <div className={styles.filterBtns}>
@@ -125,7 +137,7 @@ export default function AllApplications() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map(app => {
+            {paginatedApps.map(app => {
               const sc = STATUS_CONFIG[app.status];
               return (
                 <tr
@@ -180,6 +192,16 @@ export default function AllApplications() {
             )}
           </tbody>
         </table>
+        
+        {filtered.length > 0 && (
+          <Pagination 
+            currentPage={currentPage} 
+            totalPages={totalPages} 
+            totalItems={filtered.length} 
+            itemsPerPage={itemsPerPage} 
+            onPageChange={setCurrentPage} 
+          />
+        )}
       </div>
 
       {selectedApp && (() => {

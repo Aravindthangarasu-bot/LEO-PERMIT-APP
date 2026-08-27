@@ -9,6 +9,7 @@ import DocumentUpload from '../../components/DocumentUpload/DocumentUpload';
 import type { UploadedFile } from '../../components/DocumentUpload/DocumentUpload';
 import ActivityThread from '../../components/ActivityThread';
 import ActionConsole from '../../components/ActionConsole';
+import Pagination from '../../components/Pagination/Pagination';
 import type { ApplicationStatus, PermitApplication } from '../../types';
 import styles from './Provider.module.css';
 import { sortByNewest } from '../../utils/sorting';
@@ -23,6 +24,7 @@ export default function AssignedApplications() {
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [filter, setFilter] = useState(searchParams.get('status') || 'all');
   const [selected, setSelected] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (searchParams.get('search')) setSearch(searchParams.get('search') || '');
@@ -69,6 +71,11 @@ export default function AssignedApplications() {
 
     return matchS && matchF;
   }), app => app.submittedAt);
+
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedApps = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   const app = myApps.find(a => a.id === selected) ?? null;
 
   const handleActionConsoleUpdate = async (appId: string, updates: Partial<PermitApplication>, msg: string, notifyType?: 'status_change', notifyMsg?: string) => {
@@ -126,13 +133,22 @@ export default function AssignedApplications() {
       <div className={styles.filterRow}>
         <div className={styles.searchBox}>
           <Search size={16} />
-          <input type="text" placeholder="Search by ID or customer…" value={search} onChange={e => setSearch(e.target.value)} className={styles.searchInput} />
+          <input 
+            type="text" 
+            placeholder="Search by ID or customer…" 
+            value={search} 
+            onChange={e => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }} 
+            className={styles.searchInput} 
+          />
         </div>
         <div className={styles.filterBtns}>
-          <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''}`} onClick={() => setFilter('all')}>All</button>
-          <button className={`${styles.filterBtn} ${filter === 'approved_all' ? styles.filterActive : ''}`} onClick={() => setFilter('approved_all')}>Completed</button>
+          <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''}`} onClick={() => { setFilter('all'); setCurrentPage(1); }}>All</button>
+          <button className={`${styles.filterBtn} ${filter === 'approved_all' ? styles.filterActive : ''}`} onClick={() => { setFilter('approved_all'); setCurrentPage(1); }}>Completed</button>
           {COMMON_STATUS_FILTERS.map(f => (
-            <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => setFilter(f)}>
+            <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => { setFilter(f); setCurrentPage(1); }}>
               {STATUS_CONFIG[f as keyof typeof STATUS_CONFIG]?.label ?? f}
             </button>
           ))}
@@ -141,8 +157,9 @@ export default function AssignedApplications() {
 
       <div className={styles.appGrid}>
         {/* List */}
-        <div className={`card ${styles.appListCard}`} style={{ gridColumn: '1 / -1', width: '100%' }}>
-          {filtered.map(a => {
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, gridColumn: '1 / -1', width: '100%' }}>
+          <div className={`card ${styles.appListCard}`}>
+            {paginatedApps.map(a => {
             const sc = STATUS_CONFIG[a.status];
             return (
               <button key={a.id} className={`${styles.appRow} ${selected === a.id ? styles.appRowActive : ''}`}
@@ -159,6 +176,22 @@ export default function AssignedApplications() {
               </button>
             );
           })}
+          {filtered.length === 0 && (
+              <div className={styles.emptyState}>
+                <p>No applications found matching your criteria</p>
+              </div>
+            )}
+        </div>
+          
+          {filtered.length > 0 && (
+            <Pagination 
+              currentPage={currentPage} 
+              totalPages={totalPages} 
+              totalItems={filtered.length} 
+              itemsPerPage={itemsPerPage} 
+              onPageChange={setCurrentPage} 
+            />
+          )}
         </div>
 
         {/* Detail + Actions */}

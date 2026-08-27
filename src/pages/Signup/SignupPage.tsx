@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
-import { Building2, Phone, ArrowLeft, User, CheckCircle2 } from 'lucide-react';
+import { Building2, Phone, ArrowLeft, User, CheckCircle2, ChevronRight, MapPin } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import Navbar from '../../components/Navbar/Navbar';
 import styles from './SignupPage.module.css';
+import { lookupPincode, type PincodeLocation } from '../../utils/pincode';
 
 type Step = 'details' | 'otp';
 
@@ -19,12 +21,12 @@ const VALIDATORS = {
   },
   phone: (v: string) => {
     if (!v)                          return 'Mobile number is required.';
-    if (!/^[6-9]\d{9}$/.test(v))    return 'Enter a valid 10-digit Indian mobile number starting with 6–9.';
+    if (!/^[6-9]\d{9}$/.test(v))    return 'Enter a valid 10-digit Indian mobile number starting with 6?"9.';
     return '';
   },
   email: (v: string) => {
     if (!v.trim())                           return 'Email address is required.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Enter a valid email address (e.g. name@domain.com).';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Enter a valid email address.';
     return '';
   },
   pincode: (v: string) => {
@@ -34,113 +36,165 @@ const VALIDATORS = {
   },
   address: (v: string) => {
     if (!v.trim())               return 'Address is required.';
-    if (v.trim().length < 10)   return 'Please enter a complete address (min 10 characters).';
+    if (v.trim().length < 10)   return 'Please enter a complete address.';
     return '';
   },
 };
 
 export default function SignupPage() {
   const [step, setStep]       = useState<Step>('details');
-  const [form, setForm]       = useState({ name: '', phone: '', email: '', address: '', pincode: '' });
+  const [form, setForm]       = useState({ name: '', phone: '', email: '', address: '', pincode: '', city: '', taluk: '', district: '', state: '' });
+  const [pincodeOptions, setPincodeOptions] = useState<PincodeLocation[]>([]);
+  const [pincodeStatus, setPincodeStatus] = useState<'idle' | 'loading' | 'error' | 'not_found'>('idle');
   const [errors, setErrors]   = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Partial<Record<keyof FieldErrors, boolean>>>({});
   const [otp, setOtp]         = useState(['', '', '', '', '', '']);
   const [otpError, setOtpError] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
   const [loading, setLoading] = useState(false);
-  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const { registerCustomer, isAuthenticated } = useAuth();
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const { registerCustomer, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
-  // Already logged in — don't show signup page
-  if (isAuthenticated) return <Navigate to="/customer" replace />;
+  // Already logged in
+  if (isAuthenticated && user) {
+    const dest = user.role === 'admin' ? '/admin' : user.role === 'provider' ? '/provider' : user.role === 'staff' ? '/staff' : '/customer';
+    return <Navigate to={dest} replace />;
+  }
 
-  useEffect(() => { if (step === 'otp') setResendTimer(30); }, [step]);
+  // Auto-start resend timer when OTP step opens
   useEffect(() => {
-    if (resendTimer > 0) { const t = setTimeout(() => setResendTimer(r => r - 1), 1000); return () => clearTimeout(t); }
+    if (step === 'otp') {
+      setResendTimer(30);
+    }
+  }, [step]);
+
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const t = setTimeout(() => setResendTimer(r => r - 1), 1000);
+      return () => clearTimeout(t);
+    }
   }, [resendTimer]);
 
-  const validate = (k: keyof FieldErrors, v: string) => VALIDATORS[k](v);
+  useEffect(() => {
+    if (form.pincode.length === 6) {
+      setPincodeStatus('loading');
+      lookupPincode(form.pincode).then(res => {
+        if (!res) {
+          setPincodeStatus('not_found');
+          setPincodeOptions([]);
+          setForm(prev => ({ ...prev, city: '', taluk: '', district: '', state: '' }));
+        } else {
+          setPincodeStatus('idle');
+          setPincodeOptions(res.options);
+          if (res.options.length === 1) {
+            setForm(prev => ({
+              ...prev,
+              city: res.options[0].city,
+              taluk: res.options[0].taluk,
+              district: res.options[0].district,
+              state: res.options[0].state
+            }));
+          } else {
+            // Reset and let them choose from dropdown
+            setForm(prev => ({ ...prev, city: '', taluk: '', district: '', state: '' }));
+          }
+        }
+      });
+    } else {
+      setPincodeOptions([]);
+      setPincodeStatus('idle');
+      setForm(prev => ({ ...prev, city: '', taluk: '', district: '', state: '' }));
+    }
+  }, [form.pincode]);
 
-  const handleChange = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const val = k === 'phone' || k === 'pincode' ? e.target.value.replace(/\D/g, '') : e.target.value;
-    setForm(f => ({ ...f, [k]: val }));
-    // Only show error once user has started typing
-    if (val.length > 0) setErrors(prev => ({ ...prev, [k]: validate(k, val) }));
-    else setErrors(prev => ({ ...prev, [k]: undefined }));
-    if (val.length > 0) setTouched(prev => ({ ...prev, [k]: true }));
-  };
-
-  const handleBlur = (k: keyof FieldErrors) => () => {
-    // Only flag as touched on blur if user actually typed something
-    if (form[k].length > 0) {
-      setTouched(prev => ({ ...prev, [k]: true }));
-      setErrors(prev => ({ ...prev, [k]: validate(k, form[k]) }));
+  const handleChange = (field: keyof FieldErrors) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    let val = e.target.value;
+    if (field === 'phone' || field === 'pincode') val = val.replace(/\D/g, '');
+    
+    setForm(prev => ({ ...prev, [field]: val }));
+    if (touched[field]) {
+      setErrors(prev => ({ ...prev, [field]: VALIDATORS[field](val) }));
     }
   };
 
-  const handleSendOtp = () => {
-    setTouched({ name: true, phone: true, email: true, pincode: true, address: true });
-    const newErrors: FieldErrors = {};
-    (Object.keys(VALIDATORS) as (keyof FieldErrors)[]).forEach(k => { const e = validate(k, form[k]); if (e) newErrors[k] = e; });
+  const handleBlur = (field: keyof FieldErrors) => () => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    setErrors(prev => ({ ...prev, [field]: VALIDATORS[field](form[field]) }));
+  };
+
+  const validateAll = () => {
+    const newErrors: FieldErrors = {
+      name: VALIDATORS.name(form.name),
+      phone: VALIDATORS.phone(form.phone),
+      email: VALIDATORS.email(form.email),
+      pincode: VALIDATORS.pincode(form.pincode),
+      address: VALIDATORS.address(form.address),
+    };
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
-    setLoading(true);
-    setTimeout(() => { setLoading(false); setStep('otp'); }, 800);
+    setTouched({ name: true, phone: true, email: true, pincode: true, address: true });
+    return !Object.values(newErrors).some(err => err !== '');
   };
 
-  const handleOtpChange = (idx: number, val: string) => {
-    if (!/^\d?$/.test(val)) return;
-    const next = [...otp]; next[idx] = val; setOtp(next);
-    if (val && idx < 5) otpRefs.current[idx + 1]?.focus();
+  const handleContinue = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validateAll()) {
+      setLoading(true);
+      setTimeout(() => {
+        setLoading(false);
+        setStep('otp');
+      }, 1000);
+    }
   };
 
-  const handleOtpKeyDown = (idx: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !otp[idx] && idx > 0) otpRefs.current[idx - 1]?.focus();
+  const handleOtpChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    if (value && index < 5) otpRefs.current[index + 1]?.focus();
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
   };
 
   const handleRegister = async () => {
-    setOtpError('');
-    if (otp.join('').length < 6) { setOtpError('Please enter the complete 6-digit OTP.'); return; }
+    const code = otp.join('');
+    if (code.length !== 6) {
+      setOtpError('Please enter all 6 digits.');
+      return;
+    }
+    
     setLoading(true);
+    setOtpError('');
     try {
-      await registerCustomer(form);
-      navigate('/customer', { replace: true });
-    } catch (error) {
-      setOtpError(error instanceof Error ? error.message : 'Unable to create your account. Please try again.');
+      await registerCustomer({ ...form });
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      setOtpError(err?.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const cls = (k: keyof FieldErrors) =>
-    `form-input ${touched[k] && errors[k] ? styles.inputError : touched[k] && !errors[k] ? styles.inputValid : ''}`;
+  const cls = (field: keyof FieldErrors) => `form-input ${touched[field] && errors[field] ? styles.inputError : touched[field] && !errors[field] ? styles.inputValid : ''}`;
 
   return (
     <div className={styles.page}>
-      <div className={styles.left}>
-        <div className={styles.leftInner}>
-          <Link to="/" className={styles.brand}>
-            <div className={styles.logoBox}><Building2 size={22} /></div>
-            <div><div className={styles.brandName}>LEO</div><div className={styles.brandSub}>Licensed Engineering Online</div></div>
-          </Link>
-          <div className={styles.leftContent}>
-            <h2 className={styles.leftTitle}>Start your permit journey today.</h2>
-            <p className={styles.leftDesc}>Create a free account and apply for building permits instantly.</p>
-          </div>
-        </div>
-      </div>
+      <Navbar variant="landing" />
 
-      <div className={styles.right}>
-        <div className={styles.formWrap}>
-          <div className={styles.formBox}>
-            {step === 'details' ? (
-              <>
-                <div className={styles.iconRow}><div className={styles.formIcon}><User size={24} /></div></div>
-                <h1 className={styles.formTitle}>Create Account</h1>
-                <p className={styles.formSub}>Join LEO as a customer to apply for permits.</p>
+      <div className={styles.mainContent}>
+        <div className={styles.loginCard}>
+          {step === 'details' && (
+            <div className={styles.formBox}>
+              <h2 className={styles.formTitle}>Citizen Registration</h2>
+              <p className={styles.formSub}>Join LEO to apply for permits.</p>
 
+              <form onSubmit={handleContinue}>
                 <div className="form-group">
                   <label className="form-label">Full Name *</label>
                   <div className={styles.inputWrap}>
@@ -172,62 +226,119 @@ export default function SignupPage() {
                   {touched.email && errors.email && <p className={styles.fieldError}>{errors.email}</p>}
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Pincode *</label>
-                  <div className={styles.inputWrap}>
-                    <input className={cls('pincode')} type="text" maxLength={6} placeholder="6-digit pincode"
-                      value={form.pincode} onChange={handleChange('pincode')} onBlur={handleBlur('pincode')} />
-                    {touched.pincode && !errors.pincode && <CheckCircle2 size={16} className={styles.validIcon} />}
+                  <div className={styles.grid2}>
+                    <div className="form-group">
+                      <label className="form-label">Pincode *</label>
+                      <div className={styles.inputWrap}>
+                        <input className={cls('pincode')} type="text" maxLength={6} placeholder="6-digit pincode"
+                          value={form.pincode} onChange={handleChange('pincode')} onBlur={handleBlur('pincode')} />
+                      </div>
+                      {touched.pincode && errors.pincode && <p className={styles.fieldError}>{errors.pincode}</p>}
+                      {pincodeStatus === 'loading' && <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>Looking up pincode...</p>}
+                      {pincodeStatus === 'not_found' && <p style={{ fontSize: 12, color: 'var(--danger)' }}>Pincode not found.</p>}
+                    </div>
                   </div>
-                  {touched.pincode && errors.pincode && <p className={styles.fieldError}>{errors.pincode}</p>}
-                </div>
 
-                <div className="form-group">
+                  {pincodeOptions.length > 1 && (
+                    <div className="form-group">
+                      <label className="form-label">Select Your Location *</label>
+                      <div className={styles.inputWrap}>
+                        <select
+                          className="form-input"
+                          value={`${form.city}|${form.taluk}|${form.district}`}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val) {
+                              const [city, taluk, district] = val.split('|');
+                              const opt = pincodeOptions.find(o => o.city === city && o.taluk === taluk && o.district === district);
+                              if (opt) {
+                                setForm(prev => ({ ...prev, city: opt.city, taluk: opt.taluk, district: opt.district, state: opt.state }));
+                              }
+                            }
+                          }}
+                        >
+                          <option value="|">-- Select Location --</option>
+                          {pincodeOptions.map((opt, i) => (
+                            <option key={i} value={`${opt.city}|${opt.taluk}|${opt.district}`}>
+                              {opt.office}, {opt.city} (Taluk: {opt.taluk}, Dist: {opt.district})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {form.city && form.district && pincodeOptions.length <= 1 && (
+                    <div style={{ marginBottom: 16, fontSize: 13, color: 'var(--text-muted)', display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <MapPin size={14} /> {form.city}, {form.taluk}, {form.district}, {form.state}
+                    </div>
+                  )}
+
+                  <div className="form-group">
                   <label className="form-label">Address *</label>
                   <textarea
                     className={`form-input ${touched.address && errors.address ? styles.inputError : touched.address && !errors.address ? styles.inputValid : ''}`}
                     rows={2} placeholder="Door no., Street, City"
                     value={form.address} onChange={handleChange('address')} onBlur={handleBlur('address')}
-                    style={{ resize: 'none' }}
                   />
                   {touched.address && errors.address && <p className={styles.fieldError}>{errors.address}</p>}
                 </div>
 
-                <button className={`btn btn-primary ${styles.continueBtn}`} onClick={handleSendOtp} disabled={loading}>
-                  {loading ? 'Sending OTP…' : 'Send OTP'}
+                <button type="submit" className={styles.continueBtn} disabled={loading}>
+                  {loading ? 'Processing...' : <>Continue <ChevronRight size={18} /></>}
                 </button>
-                <p className={styles.loginLink}>Already have an account? <Link to="/login">Log in</Link></p>
-              </>
-            ) : (
-              <>
-                <button className={styles.backBtn} onClick={() => setStep('details')}><ArrowLeft size={16} /> Back</button>
-                <h1 className={styles.formTitle}>Verify OTP</h1>
-                <p className={styles.formSub}>Enter the 6-digit code sent to +91 {form.phone}</p>
-                <div className={styles.otpRow}>
-                  {otp.map((digit, i) => (
-                    <input key={i} ref={el => { otpRefs.current[i] = el; }} className={styles.otpBox}
-                      type="text" inputMode="numeric" maxLength={1} value={digit}
-                      onChange={e => handleOtpChange(i, e.target.value)}
-                      onKeyDown={e => handleOtpKeyDown(i, e)} />
-                  ))}
+
+                <div className={styles.authLinks}>
+                  Already have an account? <Link to="/login">Login here</Link>
                 </div>
-                {otpError && <p className={styles.fieldError}>{otpError}</p>}
-                <div className={styles.resendRow}>
-                  {resendTimer > 0
-                    ? <span className={styles.timerText}>Resend in {resendTimer}s</span>
-                    : <button className={styles.resendBtn} onClick={() => { setOtp(['','','','','','']); setResendTimer(30); }}>Resend OTP</button>
-                  }
-                </div>
-                <button className={`btn btn-primary ${styles.continueBtn}`} onClick={handleRegister} disabled={loading}>
-                  {loading ? 'Creating account…' : 'Verify & Create Account'}
-                </button>
-                <p className={styles.demoHint}>Demo: any 6-digit OTP works</p>
-              </>
-            )}
-          </div>
+              </form>
+            </div>
+          )}
+
+          {step === 'otp' && (
+            <div className={styles.formBox}>
+              <button className={styles.backBtn} onClick={() => setStep('details')}><ArrowLeft size={16} /> Back</button>
+              <h2 className={styles.formTitle}>Verify Mobile Number</h2>
+              <p className={styles.formSub}>Enter the 6-digit OTP sent to +91 {form.phone}</p>
+              
+              {otpError && <div className={styles.errorAlert}>{otpError}</div>}
+              
+              <div className={styles.otpGrid}>
+                {otp.map((digit, i) => (
+                  <input
+                    key={i}
+                    ref={el => { otpRefs.current[i] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    className={styles.otpInput}
+                    value={digit}
+                    onChange={e => handleOtpChange(i, e.target.value)}
+                    onKeyDown={e => handleOtpKeyDown(i, e)}
+                    autoFocus={i === 0}
+                  />
+                ))}
+              </div>
+
+              <button 
+                className={styles.continueBtn} 
+                onClick={handleRegister}
+                disabled={loading || otp.join('').length !== 6}
+              >
+                {loading ? 'Creating Account...' : 'Complete Registration'}
+              </button>
+
+              <div className={styles.resendText}>
+                {resendTimer > 0 ? (
+                  <span>Resend OTP in {resendTimer}s</span>
+                ) : (
+                  <button className={styles.resendBtn} onClick={() => setResendTimer(30)}>Resend OTP</button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
-

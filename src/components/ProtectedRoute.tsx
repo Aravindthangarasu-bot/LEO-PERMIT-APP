@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
   redirectTo?: string;
 }
 
-export default function ProtectedRoute({ children, allowedRoles, redirectTo = '/login' }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children, allowedRoles, redirectTo = '/' }: ProtectedRouteProps) {
   const { user } = useAuth();
 
   const storedUser = !user ? (() => {
@@ -40,7 +40,7 @@ export default function ProtectedRoute({ children, allowedRoles, redirectTo = '/
 
   // Staff with no providerId linkage — deny access
   if (currentUser.role === 'staff' && !currentUser.providerId) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

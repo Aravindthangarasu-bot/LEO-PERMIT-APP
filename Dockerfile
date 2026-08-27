@@ -1,30 +1,36 @@
-# Stage 1: Build the Vite React app
 FROM node:22-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files and install dependencies
-COPY package*.json ./
-RUN npm install
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# Copy all source files and build the app
+ARG VITE_APP_ENV=production
+ARG VITE_API_URL
+ARG VITE_ADMIN_DOMAIN_KEYWORD=admin
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+
+ENV VITE_APP_ENV=$VITE_APP_ENV \
+    VITE_API_URL=$VITE_API_URL \
+    VITE_ADMIN_DOMAIN_KEYWORD=$VITE_ADMIN_DOMAIN_KEYWORD \
+    VITE_SUPABASE_URL=$VITE_SUPABASE_URL \
+    VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
 COPY . .
-RUN npm run build
+RUN test -n "$VITE_SUPABASE_URL" || (echo "VITE_SUPABASE_URL build argument is required" && exit 1)
+RUN test -n "$VITE_SUPABASE_ANON_KEY" || (echo "VITE_SUPABASE_ANON_KEY build argument is required" && exit 1)
 
-# Stage 2: Serve the app with Nginx
-FROM nginx:alpine
+# Type checking is maintained separately; Vite produces the deployable static bundle.
+RUN npx vite build
 
-# Remove default nginx static assets
+FROM nginx:1.27-alpine
+
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copy custom Nginx configuration to handle React Router properly
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Configure Nginx to run as a non-root user
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
     chmod -R 755 /usr/share/nginx/html && \
     chown -R nginx:nginx /var/cache/nginx && \
@@ -33,11 +39,11 @@ RUN chown -R nginx:nginx /usr/share/nginx/html && \
 RUN touch /var/run/nginx.pid && \
     chown -R nginx:nginx /var/run/nginx.pid
 
-# Switch to non-root user
 USER nginx
 
-# Expose port 8080
 EXPOSE 8080
 
-# Start Nginx server
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget -q --spider http://127.0.0.1:8080/ || exit 1
+
 CMD ["nginx", "-g", "daemon off;"]

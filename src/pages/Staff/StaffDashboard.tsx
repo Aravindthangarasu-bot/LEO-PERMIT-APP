@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useAppStore } from '../../context/AppStoreContext';
 import { STATUS_CONFIG } from '../Customer/statusConfig';
 import { PERMIT_TYPES } from '../../data/mockData';
+import AnimateIn from '../../components/AnimateIn';
 import styles from './Staff.module.css';
 
 export default function StaffDashboard() {
@@ -30,7 +31,8 @@ export default function StaffDashboard() {
   }
 
   return (
-    <div className={`page-enter ${styles.page}`}>
+    <AnimateIn animationClass="fade-in">
+      <div className={`page-enter ${styles.page}`}>
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>Welcome, {user?.name} 👋</h1>
@@ -84,6 +86,7 @@ export default function StaffDashboard() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </AnimateIn>
   );
 }

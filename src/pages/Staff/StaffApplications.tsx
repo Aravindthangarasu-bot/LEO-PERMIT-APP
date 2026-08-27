@@ -7,6 +7,7 @@ import DocumentUpload from '../../components/DocumentUpload/DocumentUpload';
 import type { UploadedFile } from '../../components/DocumentUpload/DocumentUpload';
 import ActivityThread from '../../components/ActivityThread';
 import ActionConsole from '../../components/ActionConsole';
+import Pagination from '../../components/Pagination/Pagination';
 import { STATUS_CONFIG, ALL_STATUS_FILTERS, COMMON_STATUS_FILTERS } from '../Customer/statusConfig';
 import { PERMIT_TYPES } from '../../data/mockData';
 import type { ApplicationStatus, PermitApplication } from '../../types';
@@ -23,6 +24,7 @@ export default function StaffApplications() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   
   const [selectedAction, setSelectedAction] = useState<ApplicationStatus | null>(null);
   const [notes, setNotes] = useState('');
@@ -69,6 +71,10 @@ export default function StaffApplications() {
     return result;
   }, [myApps, statusFilter, filter, search]);
 
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedApps = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   const handleActionConsoleUpdate = async (appId: string, updates: Partial<PermitApplication>, msg: string, notifyType?: 'status_change', notifyMsg?: string) => {
     if (!await updateApplication(appId, updates)) return;
     setActionDone(msg);
@@ -100,12 +106,12 @@ export default function StaffApplications() {
         <div className={styles.searchBox}>
           <Search size={16} />
           <input type="text" placeholder="Search by ID or customer…" value={search}
-            onChange={e => setSearch(e.target.value)} className={styles.searchInput} />
+            onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} className={styles.searchInput} />
         </div>
         <div className={styles.filterBtns}>
-          <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''}`} onClick={() => setFilter('all')}>All</button>
+          <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''}`} onClick={() => { setFilter('all'); setCurrentPage(1); }}>All</button>
           {COMMON_STATUS_FILTERS.map(f => (
-            <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => setFilter(f)}>
+            <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => { setFilter(f); setCurrentPage(1); }}>
               {STATUS_CONFIG[f as keyof typeof STATUS_CONFIG]?.label ?? f}
             </button>
           ))}
@@ -113,26 +119,38 @@ export default function StaffApplications() {
       </div>
 
       <div className={styles.appGrid}>
-        <div className={`card ${styles.appListCard}`}>
-          {filtered.length === 0
-            ? <div className={styles.emptyState}><FileText size={36} /><p>No assignments yet</p></div>
-            : filtered.map(a => {
-                const sc = STATUS_CONFIG[a.status];
-                return (
-                  <button key={a.id} className={`${styles.appRow} ${selected === a.id ? styles.appRowActive : ''}`}
-                    onClick={() => { setSelected(a.id); setNotes(''); setSelectedAction(null); setActionDone(''); }}>
-                    <div className={styles.appRowLeft}>
-                      <div className={styles.appId}>{a.id}</div>
-                      <div className={styles.appType}>{PERMIT_TYPES.find(p => p.value === a.type)?.label}</div>
-                      <div className={styles.appCustomer}>👤 {a.customerName} · {a.customerPhone}</div>
-                    </div>
-                    <span className={styles.appBadge} style={{ background: sc.bg, color: sc.color }}>
-                      <span className={`status-dot ${sc.dot}`} /> {sc.label}
-                    </span>
-                  </button>
-                );
-              })
-          }
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className={`card ${styles.appListCard}`}>
+            {filtered.length === 0
+              ? <div className={styles.emptyState}><FileText size={36} /><p>No assignments yet</p></div>
+              : paginatedApps.map(a => {
+                  const sc = STATUS_CONFIG[a.status];
+                  return (
+                    <button key={a.id} className={`${styles.appRow} ${selected === a.id ? styles.appRowActive : ''}`}
+                      onClick={() => { setSelected(a.id); setNotes(''); setSelectedAction(null); setActionDone(''); }}>
+                      <div className={styles.appRowLeft}>
+                        <div className={styles.appId}>{a.id}</div>
+                        <div className={styles.appType}>{PERMIT_TYPES.find(p => p.value === a.type)?.label}</div>
+                        <div className={styles.appCustomer}>👤 {a.customerName} · {a.customerPhone}</div>
+                      </div>
+                      <span className={styles.appBadge} style={{ background: sc.bg, color: sc.color }}>
+                        <span className={`status-dot ${sc.dot}`} /> {sc.label}
+                      </span>
+                    </button>
+                  );
+                })
+            }
+          </div>
+          
+          {filtered.length > 0 && (
+            <Pagination 
+              currentPage={currentPage} 
+              totalPages={totalPages} 
+              totalItems={filtered.length} 
+              itemsPerPage={itemsPerPage} 
+              onPageChange={setCurrentPage} 
+            />
+          )}
         </div>
 
         {app && (

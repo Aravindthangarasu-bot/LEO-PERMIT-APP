@@ -4,17 +4,19 @@ import PortalLayout from '../../components/PortalLayout/PortalLayout';
 import StaffDashboard from './StaffDashboard';
 import StaffApplications from './StaffApplications';
 import DocumentWallet from '../../components/DocumentWallet';
-
-const NAV_ITEMS = [
-  { path: '/staff',              icon: <LayoutDashboard size={18} />, label: 'Dashboard'           },
-  { path: '/staff/applications', icon: <FileText size={18} />,        label: 'My Assignments'      },
-  { path: '/staff/wallet',       icon: <WalletCards size={18} />,     label: 'Document Wallet'     },
-  { path: '/staff/notifications',icon: <Bell size={18} />,            label: 'Notifications'       },
-];
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function StaffPortal() {
+  const { t } = useLanguage();
+
+  const NAV_ITEMS = [
+    { path: '/staff',              icon: <LayoutDashboard size={18} />, label: t('portal.nav.dashboard')           },
+    { path: '/staff/applications', icon: <FileText size={18} />,        label: t('portal.nav.staffApplications')      },
+    { path: '/staff/wallet',       icon: <WalletCards size={18} />,     label: t('portal.nav.documentWallet')     },
+    { path: '/staff/notifications',icon: <Bell size={18} />,            label: t('portal.nav.notifications')       },
+  ];
   return (
-    <PortalLayout navItems={NAV_ITEMS} portalName="Staff Portal" accentColor="#15803d">
+    <PortalLayout navItems={NAV_ITEMS} portalName={t('portal.staff')} accentColor="#15803d">
       <Routes>
         <Route index element={<StaffDashboard />} />
         <Route path="applications" element={<StaffApplications />} />

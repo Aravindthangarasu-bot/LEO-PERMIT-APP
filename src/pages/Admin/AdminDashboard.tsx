@@ -4,6 +4,7 @@ import {
   Search, ArrowRight, Shield, Clock, FileCheck2, HardHat
 } from 'lucide-react';
 import { useAppStore, isLicenceExpired } from '../../context/AppStoreContext';
+import AnimateIn from '../../components/AnimateIn';
 import styles from '../../components/DashboardShared.module.css';
 import { sortByNewest } from '../../utils/sorting';
 
@@ -28,7 +29,8 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className={`page-enter ${styles.page}`}>
+    <AnimateIn animationClass="fade-in">
+      <div className={`page-enter ${styles.page}`}>
       
       {/* 1. HERO & SEARCH */}
       <section className={styles.hero}>
@@ -84,7 +86,7 @@ export default function AdminDashboard() {
           
           {/* Applications Awaiting Review (Light Card) */}
           <div className={styles.ctaCard}>
-            <div className={styles.ctaIcon} style={{ background: '#fff7ed' }}>
+            <div className={styles.ctaIcon} style={{ background: 'var(--primary-bg)' }}>
               <Clock size={28} style={{ color: 'var(--primary)' }} />
             </div>
             <h3>Applications</h3>
@@ -126,7 +128,7 @@ export default function AdminDashboard() {
 
         </div>
       </section>
-
-    </div>
+      </div>
+    </AnimateIn>
   );
 }

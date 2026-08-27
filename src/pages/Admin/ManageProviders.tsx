@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Search, CheckCircle2, XCircle, Eye, FileText, Bell } from 'lucide-react';
 import { getLicenceById, getExpiryNotification } from '../../data/licenceData';
 import { useAppStore, isLicenceExpired } from '../../context/AppStoreContext';
+import Pagination from '../../components/Pagination/Pagination';
 import styles from './Admin.module.css';
 import { sortByNewest } from '../../utils/sorting';
 
@@ -12,6 +13,7 @@ export default function ManageProviders() {
   const initialFilter = searchParams.get('status') || 'all';
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState(initialFilter);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const status = searchParams.get('status') || 'all';
@@ -20,6 +22,7 @@ export default function ManageProviders() {
 
   const handleFilterChange = (f: string) => {
     setFilter(f);
+    setCurrentPage(1);
     if (f === 'all') {
       searchParams.delete('status');
     } else {
@@ -37,6 +40,10 @@ export default function ManageProviders() {
     if (filter === 'all') return matchS;
     return p.status === filter && matchS;
   }), provider => provider.joinedAt);
+
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedProviders = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const detail = providers.find(p => p.id === selected);
 
@@ -66,7 +73,11 @@ export default function ManageProviders() {
           <Search size={16} />
           <input
             type="text" placeholder="Search by name or phone…"
-            value={search} onChange={e => setSearch(e.target.value)}
+            value={search} 
+            onChange={e => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
             className={styles.searchInput}
           />
         </div>
@@ -84,28 +95,45 @@ export default function ManageProviders() {
       </div>
 
       <div className={styles.appGrid}>
-        <div className={`card ${styles.appListCard}`}>
-          {filtered.map(p => (
-            <button
-              key={p.id}
-              className={`${styles.providerRow} ${selected === p.id ? styles.providerRowActive : ''}`}
-              onClick={() => { setSelected(p.id); setActionMsg(''); }}
-            >
-              <div className={styles.providerRowAvatar}>{p.officeName[0]}</div>
-              <div className={styles.providerRowInfo}>
-                <div className={styles.providerName}>{p.officeName}</div>
-                <div className={styles.providerMeta}>👤 {p.ownerName} · {p.area}</div>
-                <div className={styles.providerMeta}>{p.phone}</div>
-                <div className={styles.providerMeta}>Onboarded {new Date(p.joinedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className={`card ${styles.appListCard}`}>
+            {paginatedProviders.map(p => (
+              <button
+                key={p.id}
+                className={`${styles.providerRow} ${selected === p.id ? styles.providerRowActive : ''}`}
+                onClick={() => { setSelected(p.id); setActionMsg(''); }}
+              >
+                <div className={styles.providerRowAvatar}>{p.officeName[0]}</div>
+                <div className={styles.providerRowInfo}>
+                  <div className={styles.providerName}>{p.officeName}</div>
+                  <div className={styles.providerMeta}>👤 {p.ownerName} · {p.area}</div>
+                  <div className={styles.providerMeta}>{p.phone}</div>
+                  <div className={styles.providerMeta}>Onboarded {new Date(p.joinedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                </div>
+                <div className={styles.providerRowRight}>
+                  <span className={`badge ${isLicenceExpired(p) ? 'badge-error' : p.status === 'active' ? 'badge-success' : p.status === 'pending' ? 'badge-warning' : 'badge-error'}`}>
+                    {isLicenceExpired(p) ? 'Licence Expired' : p.status}
+                  </span>
+                  <div className={styles.providerStats}>⭐ {p.rating || 'N/A'} · {p.totalApprovals} approvals</div>
+                </div>
+              </button>
+            ))}
+            {filtered.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                No service providers found.
               </div>
-              <div className={styles.providerRowRight}>
-                <span className={`badge ${isLicenceExpired(p) ? 'badge-error' : p.status === 'active' ? 'badge-success' : p.status === 'pending' ? 'badge-warning' : 'badge-error'}`}>
-                  {isLicenceExpired(p) ? 'Licence Expired' : p.status}
-                </span>
-                <div className={styles.providerStats}>⭐ {p.rating || 'N/A'} · {p.totalApprovals} approvals</div>
-              </div>
-            </button>
-          ))}
+            )}
+          </div>
+          
+          {filtered.length > 0 && (
+            <Pagination 
+              currentPage={currentPage} 
+              totalPages={totalPages} 
+              totalItems={filtered.length} 
+              itemsPerPage={itemsPerPage} 
+              onPageChange={setCurrentPage} 
+            />
+          )}
         </div>
 
         {detail && (

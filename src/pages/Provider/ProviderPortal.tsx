@@ -5,20 +5,22 @@ import ProviderDashboard from './ProviderDashboard';
 import AssignedApplications from './AssignedApplications';
 import StaffManagement from './StaffManagement';
 import DocumentWallet from '../../components/DocumentWallet';
-
-const NAV_ITEMS = [
-  { path: '/provider',               icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
-  { path: '/provider/applications',  icon: <FileText size={18} />,        label: 'Assigned Applications' },
-  { path: '/provider/staff',         icon: <Users size={18} />,           label: 'My Staff' },
-  { path: '/provider/wallet',        icon: <WalletCards size={18} />,     label: 'Document Wallet' },
-  { path: '/provider/approved',      icon: <CheckSquare size={18} />,     label: 'Approved Permits' },
-  { path: '/provider/reviews',       icon: <Star size={18} />,            label: 'Reviews' },
-  { path: '/provider/profile',       icon: <Settings size={18} />,        label: 'Profile & Documents' },
-];
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function ProviderPortal() {
+  const { t } = useLanguage();
+
+  const NAV_ITEMS = [
+    { path: '/provider',               icon: <LayoutDashboard size={18} />, label: t('portal.nav.dashboard') },
+    { path: '/provider/applications',  icon: <FileText size={18} />,        label: t('portal.nav.assignedApplications') },
+    { path: '/provider/staff',         icon: <Users size={18} />,           label: t('portal.nav.staffManagement') },
+    { path: '/provider/wallet',        icon: <WalletCards size={18} />,     label: t('portal.nav.documentWallet') },
+    { path: '/provider/approved',      icon: <CheckSquare size={18} />,     label: 'Approved Permits' },
+    { path: '/provider/reviews',       icon: <Star size={18} />,            label: 'Reviews' },
+    { path: '/provider/profile',       icon: <Settings size={18} />,        label: 'Profile & Documents' },
+  ];
   return (
-    <PortalLayout navItems={NAV_ITEMS} portalName="Provider Portal" accentColor="#15803d">
+    <PortalLayout navItems={NAV_ITEMS} portalName={t('portal.provider')} accentColor="#15803d">
       <Routes>
         <Route index element={<ProviderDashboard />} />
         <Route path="applications" element={<AssignedApplications />} />

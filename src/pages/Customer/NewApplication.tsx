@@ -32,6 +32,7 @@ export default function NewApplication() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedProvider, setSelectedProvider] = useState('');
+  const [secondarySearchText, setSecondarySearchText] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [pincodeLocation, setPincodeLocation] = useState<PincodeLocation | null>(null);
@@ -119,6 +120,21 @@ export default function NewApplication() {
   const providerPageCount = Math.max(1, Math.ceil(eligibleProviders.length / providersPerPage));
   const visibleProviders = eligibleProviders.slice((providerPage - 1) * providersPerPage, providerPage * providersPerPage);
 
+  const secondaryProviders = secondarySearchText.length >= 3 
+    ? rankProvidersByFairness(
+        activeProviders.filter(p => 
+          (p.taluk && p.taluk.toLowerCase().includes(secondarySearchText.toLowerCase())) ||
+          (p.district && p.district.toLowerCase().includes(secondarySearchText.toLowerCase())) ||
+          (p.city && p.city.toLowerCase().includes(secondarySearchText.toLowerCase()))
+        ).map(p => {
+          const licence = getLicenceById(p.licenceCategory ?? '');
+          const eligible = licence ? canHandleBuilding(licence, buildingArea, floors, heightM) : true;
+          return { ...p, licence, eligible };
+        }).filter(p => p.eligible),
+        applications
+      )
+    : [];
+
   const validate = (s: number) => {
     const e: Record<string, string> = {};
     
@@ -152,6 +168,8 @@ export default function NewApplication() {
     if (s === 4) {
       if (eligibleProviders.length > 0 && !eligibleProviders.some(provider => provider.id === selectedProvider)) {
         e.provider = 'Please select a service provider';
+      } else if (eligibleProviders.length === 0 && selectedProvider && !secondaryProviders.some(p => p.id === selectedProvider)) {
+        e.provider = 'Please select a valid service provider from the search results';
       }
     }
     
@@ -390,18 +408,62 @@ export default function NewApplication() {
 
             {/* Eligible providers */}
             {eligibleProviders.length === 0 && ineligibleProviders.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '40px 20px', background: 'var(--surface)', borderRadius: 12, marginTop: 20 }}>
-                <AlertTriangle size={32} style={{ color: 'var(--primary)', marginBottom: 12 }} />
-                <h4 style={{ color: 'var(--text)' }}>No Providers Found for This Pincode</h4>
-                <p style={{ color: 'var(--text-muted)', maxWidth: 500, margin: '0 auto 16px' }}>
-                  We couldn't find any active service providers for pincode <strong>{form.pincode}</strong>.
-                  <strong> However, you can still submit your application!</strong> Our team will review it and manually assign a qualified service provider for you.
-                </p>
-                <button className="btn btn-outline" onClick={() => setStep(2)}>Change Property Details</button>
-              </div>
-            )}
+                <div style={{ padding: '40px 20px', background: 'var(--surface)', borderRadius: 12, marginTop: 20 }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <AlertTriangle size={32} style={{ color: 'var(--primary)', marginBottom: 12 }} />
+                    <h4 style={{ color: 'var(--text)' }}>No Providers Found for This Pincode</h4>
+                    <p style={{ color: 'var(--text-muted)', maxWidth: 500, margin: '0 auto 16px' }}>
+                      We couldn't find any active service providers for pincode <strong>{form.pincode}</strong>.
+                    </p>
+                  </div>
+                  
+                  <div style={{ maxWidth: 500, margin: '24px auto', background: 'var(--bg-color)', padding: 20, borderRadius: 8 }}>
+                    <h5 style={{ marginBottom: 12 }}>Search Nearby Areas</h5>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="Enter Taluk, District, or City name..." 
+                      value={secondarySearchText}
+                      onChange={e => setSecondarySearchText(e.target.value)}
+                    />
+                    
+                    {secondarySearchText.length > 0 && secondarySearchText.length < 3 && (
+                      <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>Type at least 3 characters to search...</p>
+                    )}
+                    
+                    {secondaryProviders.length > 0 && (
+                      <div className={styles.providerList} style={{ marginTop: 16 }}>
+                        {secondaryProviders.map(p => (
+                          <button
+                            key={p.id}
+                            className={`${styles.providerSelectCard} ${selectedProvider === p.id ? styles.providerSelectActive : ''}`}
+                            onClick={() => setSelectedProvider(p.id)}
+                            style={{ textAlign: 'left' }}
+                          >
+                            <div className={styles.providerSelectAvatar}>{p.officeName[0]}</div>
+                            <div className={styles.providerSelectInfo}>
+                              <div className={styles.providerSelectName}>{p.officeName}</div>
+                              <div className={styles.providerSelectMeta}>
+                                <MapPin size={12} /> {p.city || p.area} ({p.taluk || p.district})
+                              </div>
+                            </div>
+                            {selectedProvider === p.id && <CheckCircle2 size={22} className={styles.tileCheck} />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div style={{ textAlign: 'center', marginTop: 24, borderTop: '1px solid var(--border)', paddingTop: 20 }}>
+                    <p style={{ color: 'var(--text-muted)', maxWidth: 500, margin: '0 auto 16px', fontSize: 14 }}>
+                      <strong>Alternatively, you can skip selection.</strong> Our team will review your application and manually assign a qualified service provider.
+                    </p>
+                    <button className="btn btn-outline" onClick={() => setSelectedProvider('')}>Clear Selection (Submit to Admin)</button>
+                  </div>
+                </div>
+              )}
 
-            {eligibleProviders.length > 0 && (
+              {eligibleProviders.length > 0 && (
               <div className={styles.providerList}>
                 {visibleProviders.map(p => (
                   <button

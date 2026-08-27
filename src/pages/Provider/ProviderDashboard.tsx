@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Search, ArrowRight, Briefcase, Clock, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAppStore } from '../../context/AppStoreContext';
+import AnimateIn from '../../components/AnimateIn';
 import styles from '../../components/DashboardShared.module.css';
 
 export default function ProviderDashboard() {
@@ -36,7 +37,8 @@ export default function ProviderDashboard() {
   };
 
   return (
-    <div className={`page-enter ${styles.page}`}>
+    <AnimateIn animationClass="fade-in">
+      <div className={`page-enter ${styles.page}`}>
 
       {/* 1. HERO & SEARCH */}
       <section className={styles.hero}>
@@ -112,7 +114,7 @@ export default function ProviderDashboard() {
 
           {/* Processing (Light Card) */}
           <div className={styles.ctaCard}>
-            <div className={styles.ctaIcon} style={{ background: '#fff7ed' }}>
+            <div className={styles.ctaIcon} style={{ background: 'var(--primary-bg)' }}>
               <Clock size={28} style={{ color: 'var(--primary)' }} />
             </div>
             <h3>In Progress</h3>
@@ -155,6 +157,7 @@ export default function ProviderDashboard() {
         </div>
       </section>
 
-    </div>
+      </div>
+    </AnimateIn>
   );
 }

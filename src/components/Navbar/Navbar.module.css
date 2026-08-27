@@ -1,202 +1,232 @@
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
-  transition: all 0.3s ease;
+/* ==========================================================================
+   GLOBAL NAVBAR STYLES
+   ========================================================================== */
+
+.navbarWrapper {
+  width: 100%;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
-:global(:root[data-theme='dark']) .navbar {
-  background: rgba(10, 10, 10, 0.75);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+/* ---- 2. MAIN HEADER ---- */
+.mainHeader {
+  background: white;
+  padding: 20px 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
-
-.inner {
+.mainHeaderInner {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  height: 68px;
+  align-items: center;
 }
-
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   text-decoration: none;
 }
-
-.logoBox {
-  width: 42px;
-  height: 42px;
+.logo {
   background: var(--primary);
-  border-radius: 10px;
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  flex-shrink: 0;
 }
-
-.brandText { display: flex; flex-direction: column; line-height: 1.2; }
-.brandName { font-size: 17px; font-weight: 800; color: var(--text); }
-.brandSub  { font-size: 11px; color: var(--text-muted); font-weight: 400; }
-
-.actions { display: flex; align-items: center; gap: 12px; }
-
-.locationBtn {
+.brandText h1 {
+  font-size: 24px;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0 0 4px;
+  letter-spacing: -0.5px;
+}
+.brandText p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+.headerRight {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  background: white;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text);
-  cursor: pointer;
-  transition: border-color 0.2s;
+  gap: 24px;
 }
-.locationBtn:hover { border-color: var(--primary); color: var(--primary); }
-.locationSelected { border-color: var(--primary); color: var(--primary); background: var(--primary-bg); }
-.locationFallback { position: relative; display: flex; align-items: center; }
-.locationInlineInput { display: flex; align-items: center; gap: 7px; min-width: 250px; padding: 6px 7px 6px 11px; border: 1.5px solid #fed7aa; border-radius: 8px; background: #fff7ed; color: #92400e; }
-.locationInlineInput input { min-width: 0; width: 150px; padding: 5px 0; border: none; background: transparent; color: var(--text); font-size: 12px; }
-.locationInlineInput input::placeholder { color: #a16207; }
-.locationInlineInput button { padding: 6px 10px; border-radius: 6px; color: white; background: var(--primary); font-size: 11px; font-weight: 700; }
-.inlineLocationError { position: absolute; top: calc(100% + 7px); right: 0; z-index: 3; width: 230px; padding: 7px 9px; border: 1px solid #fca5a5; border-radius: 6px; color: #991b1b; background: #fff5f5; box-shadow: 0 5px 14px rgba(0,0,0,.12); font-size: 10px; line-height: 1.25; text-align: left; }
-.themeToggle { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); background: var(--white); }
-.themeToggle:hover { color: var(--primary); border-color: var(--primary); }
 
-:global(:root[data-theme='dark']) .locationBtn { background: var(--white); color: var(--text); }
-:global(:root[data-theme='dark']) .locationModal { background: var(--white); }
-
-.navServiceability {
-  display: inline-flex;
+.langToggle {
+  display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 8px 13px;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  padding: 8px 12px;
   border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
 }
-.navServiceable { color: #15803d; background: #f0fdf4; border: 1px solid #86efac; }
-.navNotServiceable { color: #92400e; background: #fff7ed; border: 1px solid #fed7aa; max-width: 260px; }
-.navServiceabilityPrompt { color: var(--text-muted); background: var(--surface); border: 1px solid var(--border); }
 
-.loginBtn  { font-size: 14px; padding: 9px 18px; }
-.signupBtn { font-size: 14px; padding: 9px 20px; }
+.langToggle:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
 
-.userMenu { display: flex; align-items: center; gap: 8px; }
+.contactItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8fafc;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+.contactIcon {
+  color: var(--primary);
+}
+.contactItem div {
+  display: flex;
+  flex-direction: column;
+}
+.contactItem strong {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #64748b;
+}
+.contactItem span {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
 
+/* User Menu for Portals */
+.userMenu {
+  position: relative;
+}
 .userBtn {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  background: var(--primary-bg);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--primary);
-  text-decoration: none;
-  transition: background 0.2s;
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 6px 12px 6px 6px;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
-.userBtn:hover { background: #fde8dc; }
-
-.userAvatar {
-  width: 30px;
-  height: 30px;
+.userBtn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+.avatar {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: var(--primary);
-  color: white;
-  font-size: 13px;
-  font-weight: 700;
+  background: var(--primary-bg);
+  color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
-.logoutBtn { font-size: 13px; padding: 8px 12px; color: var(--text-muted); }
-.logoutBtn:hover { color: var(--error); }
-
-.locationBackdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 96px 20px 20px;
-  background: rgba(17, 24, 39, 0.42);
+.userName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
 }
-
-.locationModal {
-  width: min(100%, 480px);
-  padding: 24px;
-  border: 1px solid var(--border);
-  border-radius: 16px;
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
   background: white;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  border: 1px solid #e2e8f0;
+  min-width: 220px;
+  z-index: 50;
+  overflow: hidden;
+}
+.dropdownHeader {
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+.dropdownHeader strong {
+  display: block;
+  font-size: 14px;
+  color: #0f172a;
+}
+.dropdownHeader span {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+}
+.dropdownItem {
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ef4444;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.dropdownItem:hover {
+  background: #fef2f2;
 }
 
-.locationModalHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
-.locationModalHeader h2 { font-size: 19px; font-weight: 800; margin-bottom: 4px; }
-.locationModalHeader p { color: var(--text-muted); font-size: 12px; }
-.closeLocation { display: flex; padding: 6px; color: var(--text-muted); background: transparent; border-radius: 6px; }
-.closeLocation:hover { color: var(--text); background: var(--surface); }
-
-.detectLocationBtn {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; padding: 12px 16px; border: 1.5px solid var(--primary);
-  border-radius: 8px; color: var(--primary); background: var(--primary-bg);
-  font-size: 13px; font-weight: 700;
+/* ---- 3. NAVIGATION BAR ---- */
+.navBar {
+  background: #1e3a8a; /* Deep blue used in e-gov */
 }
-.detectLocationBtn:hover { background: #fde8dc; }
-.detectLocationBtn:disabled { opacity: 0.65; cursor: wait; }
-.spin { animation: locationSpin 0.9s linear infinite; }
-@keyframes locationSpin { to { transform: rotate(360deg); } }
-
-.locationDivider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: #9ca3af; font-size: 11px; }
-.locationDivider::before, .locationDivider::after { content: ''; height: 1px; flex: 1; background: var(--border); }
-
-.pincodeCheckRow { display: flex; align-items: center; gap: 10px; }
-.pincodeInputWrap { display: flex; align-items: center; gap: 8px; flex: 1; padding: 10px 12px; color: var(--text-muted); border: 1.5px solid var(--border); border-radius: 8px; }
-.pincodeInputWrap:focus-within { border-color: var(--primary); }
-.pincodeInputWrap input { width: 100%; border: none; font-size: 14px; color: var(--text); }
-.pincodeInputWrap input::placeholder { color: #9ca3af; }
-
-.locationError { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; padding: 11px 12px; border-radius: 8px; background: #fee2e2; color: #991b1b; font-size: 12px; line-height: 1.5; }
-.serviceabilityResult { display: flex; align-items: flex-start; gap: 12px; margin-top: 18px; padding: 15px; border: 1px solid; border-radius: 10px; }
-.serviceabilityResult strong { display: block; font-size: 14px; margin-bottom: 4px; }
-.serviceabilityResult p { margin: 0; font-size: 12px; line-height: 1.55; }
-.serviceable { border-color: #86efac; color: #15803d; background: #f0fdf4; }
-.notServiceable { border-color: #fed7aa; color: #92400e; background: #fff7ed; }
-
-@media (max-width: 640px) {
-  .locationBackdrop { padding: 82px 12px 12px; }
-  .locationModal { padding: 20px; }
+.navLinks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+.navLinks li {
+  margin: 0;
+}
+.navLinks a {
+  display: block;
+  padding: 16px 24px;
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.navLinks a:hover {
+  background: #1e40af;
 }
 
-@media (max-width: 640px) {
-  .brandSub { display: none; }
-  .inner { height: auto; min-height: 68px; flex-wrap: wrap; gap: 8px; padding-top: 10px; padding-bottom: 10px; }
-  .actions { flex: 1; min-width: 250px; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
-  .locationBtn { max-width: 180px; padding: 7px 10px; font-size: 11px; }
-  .locationBtn span, .locationBtn svg:last-child { display: inline; }
-  .locationFallback { align-items: flex-end; }
-  .locationInlineInput { min-width: 180px; width: 180px; padding: 6px 7px 6px 10px; }
-  .locationInlineInput input, .locationInlineInput button { display: block; }
-  .locationInlineInput input { width: 100px; font-size: 11px; }
-  .locationInlineInput button { padding: 5px 8px; }
-  .navServiceability { max-width: 190px; padding: 7px 9px; font-size: 10px; white-space: normal; line-height: 1.25; }
-  .themeToggle { width: 32px; height: 32px; }
-  .loginBtn { padding: 7px 9px; font-size: 12px; }
-  .signupBtn { padding: 7px 10px; font-size: 12px; }
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .topStripInner, .mainHeaderInner {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  .navLinks {
+    flex-direction: column;
+  }
+  .navLinks a {
+    text-align: center;
+    padding: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+}
+.navLinks a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.navLinks a.activeLink {
+  background: #1e40af;
 }

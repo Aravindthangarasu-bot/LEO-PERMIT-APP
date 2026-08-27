@@ -7,7 +7,7 @@
 import { test, expect } from '@playwright/test';
 import { loginAs } from '../helpers';
 
-const BASE = 'http://localhost:5177';
+const BASE = '';
 
 // ── PROVIDER LOGIN ────────────────────────────────────────────────────────────
 test.describe('Provider Login — All Providers', () => {

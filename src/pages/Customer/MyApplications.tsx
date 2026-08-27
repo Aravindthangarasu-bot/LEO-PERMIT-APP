@@ -6,6 +6,7 @@ import { useAppStore } from '../../context/AppStoreContext';
 import { PERMIT_TYPES } from '../../data/mockData';
 import { STATUS_CONFIG } from './statusConfig';
 import { sortByNewest } from '../../utils/sorting';
+import Pagination from '../../components/Pagination/Pagination';
 import styles from './Customer.module.css';
 
 export default function MyApplications() {
@@ -15,6 +16,7 @@ export default function MyApplications() {
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [filter, setFilter] = useState(searchParams.get('status') || 'all');
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (searchParams.get('search')) setSearch(searchParams.get('search') || '');
@@ -42,6 +44,10 @@ export default function MyApplications() {
     return matchS && matchF;
   });
 
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedApps = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div className={`page-enter ${styles.page}`}>
       <div className={styles.pageHeader}>
@@ -55,12 +61,18 @@ export default function MyApplications() {
       <div className={styles.filterRow}>
         <div className={styles.searchBox}>
           <Search size={16} />
-          <input type="text" placeholder="Search by ID or address…" value={search} onChange={e => setSearch(e.target.value)} className={styles.searchInput} />
+          <input 
+            type="text" 
+            placeholder="Search by ID or address…" 
+            value={search} 
+            onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} 
+            className={styles.searchInput} 
+          />
         </div>
         <div className={styles.filterBtns}>
           {['all', 'pending', 'under_review', 'documents_required', 'site_visit_scheduled',
             'client_review', 'panchayat_review', 'approved_all', 'rejected_all', 'terminated'].map(f => (
-            <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => setFilter(f)}>
+            <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => { setFilter(f); setCurrentPage(1); }}>
               {f === 'all' ? 'All' 
                 : f === 'approved_all' ? 'Approved' 
                 : f === 'rejected_all' ? 'Rejected' 
@@ -70,31 +82,43 @@ export default function MyApplications() {
         </div>
       </div>
 
-      <div className={`card ${styles.appListCard}`}>
-        {filtered.length === 0 ? (
-          <div className={styles.emptyState}><FileText size={40} /><p>No applications found</p></div>
-        ) : (
-          filtered.map(app => {
-            const sc = STATUS_CONFIG[app.status];
-            const needsAction = ['documents_required','client_review','plan_revision_requested'].includes(app.status);
-            return (
-              <Link key={app.id} to={`/customer/application/${app.id}`} className={styles.appRow}>
-                <div className={styles.appRowLeft}>
-                  <div className={styles.appId}>{app.id}</div>
-                  <div className={styles.appType}>{PERMIT_TYPES.find(p => p.value === app.type)?.label}</div>
-                  <div className={styles.appAddr}>{app.address}</div>
-                  <div className={styles.appDate}>{new Date(app.submittedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
-                </div>
-                <div className={styles.appRowRight}>
-                  <span className={styles.appBadge} style={{ background: sc.bg, color: sc.color }}>
-                    <span className={`status-dot ${sc.dot}`} /> {sc.label}
-                  </span>
-                  {needsAction && <span className={styles.actionTag}>Action Required</span>}
-                  <ChevronRight size={16} style={{ color: 'var(--text-muted)', marginTop: 4 }} />
-                </div>
-              </Link>
-            );
-          })
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className={`card ${styles.appListCard}`}>
+          {filtered.length === 0 ? (
+            <div className={styles.emptyState}><FileText size={40} /><p>No applications found</p></div>
+          ) : (
+            paginatedApps.map(app => {
+              const sc = STATUS_CONFIG[app.status];
+              const needsAction = ['documents_required','client_review','plan_revision_requested'].includes(app.status);
+              return (
+                <Link key={app.id} to={`/customer/application/${app.id}`} className={styles.appRow}>
+                  <div className={styles.appRowLeft}>
+                    <div className={styles.appId}>{app.id}</div>
+                    <div className={styles.appType}>{PERMIT_TYPES.find(p => p.value === app.type)?.label}</div>
+                    <div className={styles.appAddr}>{app.address}</div>
+                    <div className={styles.appDate}>{new Date(app.submittedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                  </div>
+                  <div className={styles.appRowRight}>
+                    <span className={styles.appBadge} style={{ background: sc.bg, color: sc.color }}>
+                      <span className={`status-dot ${sc.dot}`} /> {sc.label}
+                    </span>
+                    {needsAction && <span className={styles.actionTag}>Action Required</span>}
+                    <ChevronRight size={16} style={{ color: 'var(--text-muted)', marginTop: 4 }} />
+                  </div>
+                </Link>
+              );
+            })
+          )}
+        </div>
+        
+        {filtered.length > 0 && (
+          <Pagination 
+            currentPage={currentPage} 
+            totalPages={totalPages} 
+            totalItems={filtered.length} 
+            itemsPerPage={itemsPerPage} 
+            onPageChange={setCurrentPage} 
+          />
         )}
       </div>
     </div>

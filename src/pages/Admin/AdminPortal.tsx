@@ -8,19 +8,21 @@ import ManageProviders from './ManageProviders';
 import AddProvider from './AddProvider';
 import AllApplications from './AllApplications';
 import ReportsDashboard from './ReportsDashboard';
-
-const NAV_ITEMS = [
-  { path: '/admin',               icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
-  { path: '/admin/providers',     icon: <Users size={18} />,           label: 'Service Providers' },
-  { path: '/admin/add-provider',  icon: <UserPlus size={18} />,        label: 'Add Provider' },
-  { path: '/admin/applications',  icon: <FileText size={18} />,        label: 'All Applications' },
-  { path: '/admin/reports',       icon: <BarChart3 size={18} />,       label: 'Reports' },
-  { path: '/admin/settings',      icon: <Settings size={18} />,        label: 'Settings' },
-];
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function AdminPortal() {
+  const { t } = useLanguage();
+
+  const NAV_ITEMS = [
+    { path: '/admin',               icon: <LayoutDashboard size={18} />, label: t('portal.nav.dashboard') },
+    { path: '/admin/providers',     icon: <Users size={18} />,           label: t('portal.nav.manageProviders') },
+    { path: '/admin/add-provider',  icon: <UserPlus size={18} />,        label: 'Add Provider' },
+    { path: '/admin/applications',  icon: <FileText size={18} />,        label: t('portal.nav.allApplications') },
+    { path: '/admin/reports',       icon: <BarChart3 size={18} />,       label: t('portal.nav.reports') },
+    { path: '/admin/settings',      icon: <Settings size={18} />,        label: 'Settings' },
+  ];
   return (
-    <PortalLayout navItems={NAV_ITEMS} portalName="Super Admin" accentColor="#1d4ed8">
+    <PortalLayout navItems={NAV_ITEMS} portalName={t('portal.admin')} accentColor="#1d4ed8">
       <Routes>
         <Route index element={<AdminDashboard />} />
         <Route path="providers"    element={<ManageProviders />} />

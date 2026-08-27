@@ -24,6 +24,10 @@ export interface PermitApplication {
   submittedAt: string;
   updatedAt: string;
   address: string;
+  pincode?: string;
+  city?: string;
+  taluk?: string;
+  district?: string;
   landmark: string;
   description: string;
   documents: Document[];
@@ -131,6 +135,8 @@ export interface ServiceProvider {
   pincode?: string;
   city?: string;
   taluk?: string;
+  district?: string;
+  state?: string;
   latitude?: number;
   longitude?: number;
   landmarks: string[];
@@ -143,6 +149,7 @@ export interface ServiceProvider {
   licenceVerificationStatus: 'pending' | 'processing' | 'verified' | 'failed';
   licenceVerificationNote?: string;
   // Optional
+  logo?: string;
   photoUrl?: string;
   aboutUs?: string;
   projectsCompleted?: string;

@@ -3,6 +3,7 @@ import { UserPlus, CheckCircle2, Phone, Mail, AlertCircle, Users } from 'lucide-
 import { useAuth } from '../../context/AuthContext';
 import { useAppStore } from '../../context/AppStoreContext';
 import { StaffManagementSchema, sanitizeInput } from '../../utils/validation';
+import Pagination from '../../components/Pagination/Pagination';
 import styles from './Provider.module.css';
 
 export default function StaffManagement() {
@@ -16,6 +17,11 @@ export default function StaffManagement() {
   const [form, setForm] = useState({ name: '', phone: '', email: '', role: 'associate' as const });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [actionMsg, setActionMsg] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
+  const totalPages = Math.ceil(myStaff.length / itemsPerPage);
+  const paginatedStaff = myStaff.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const appCountForStaff = (staffId: string) =>
     applications.filter(a => a.assignedStaffId === staffId && !['approved','terminated','panchayat_approved'].includes(a.status)).length;
@@ -147,9 +153,11 @@ export default function StaffManagement() {
               </tr>
             </thead>
             <tbody>
-              {myStaff.map(s => (
+              {paginatedStaff.map(s => (
                 <tr key={s.id}>
-                  <td style={{ fontWeight: 600 }}>{s.name}</td>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{s.name}</div>
+                  </td>
                   <td>
                     <span className={styles.loginIdBadge}>+91 {s.phone}</span>
                   </td>
@@ -179,6 +187,16 @@ export default function StaffManagement() {
               ))}
             </tbody>
           </table>
+          
+          {myStaff.length > 0 && (
+            <Pagination 
+              currentPage={currentPage} 
+              totalPages={totalPages} 
+              totalItems={myStaff.length} 
+              itemsPerPage={itemsPerPage} 
+              onPageChange={setCurrentPage} 
+            />
+          )}
         </div>
       )}
 

@@ -9,6 +9,7 @@ import { USE_SUPABASE } from './AppStoreContext';
 
 interface AuthContextValue {
   user: User | null;
+  verifyPhone: (phone: string) => Promise<UserRole[]>;
   login: (phone: string, role: UserRole, password?: string) => Promise<void>;
   registerCustomer: (details: Pick<User, 'name' | 'phone' | 'email' | 'address' | 'pincode'>) => Promise<void>;
   logout: () => Promise<void>;
@@ -38,13 +39,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return stored ? JSON.parse(stored) : null;
   });
 
+  const verifyPhone = async (phone: string): Promise<UserRole[]> => {
+    const roles: Set<UserRole> = new Set();
+    
+    if (USE_SUPABASE) {
+      try {
+        const [usersRes, providersRes, staffRes] = await Promise.all([
+          supabase.from('users').select('role').or(`phone.eq.${phone},phone.eq.91${phone}`),
+          supabase.from('service_providers').select('id').or(`phone.eq.${phone},phone.eq.91${phone}`),
+          supabase.from('staff_members').select('id').or(`phone.eq.${phone},phone.eq.91${phone}`)
+        ]);
+
+        if (usersRes.data && usersRes.data.length > 0) {
+          usersRes.data.forEach(u => roles.add(u.role as UserRole));
+        }
+        if (providersRes.data && providersRes.data.length > 0) roles.add('provider');
+        if (staffRes.data && staffRes.data.length > 0) roles.add('staff');
+      } catch (e) {
+        console.error('Error verifying phone', e);
+      }
+    } else {
+      const user = DEMO_USERS[phone];
+      if (user) {
+        roles.add(user.role);
+      }
+    }
+
+    return Array.from(roles);
+  };
+
   const login = async (phone: string, role: UserRole, password?: string) => {
     if (USE_SUPABASE) {
       try {
         let authUser: User | null = null;
         
         if (role === 'customer' || role === 'admin') {
-          const { data, error } = await supabase.from('users').select('*').or(`phone.eq.${phone},phone.eq.91${phone}`).single();
+          const { data, error } = await supabase.from('users').select('*').or(`phone.eq.${phone},phone.eq.91${phone}`).eq('role', role).single();
           if (!error && data) {
             authUser = { id: data.id, name: data.name, phone: data.phone, role: data.role as UserRole };
           }
@@ -62,8 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Fallback to DEMO_USERS map if not in DB
-        if (!authUser && DEMO_USERS[phone]) {
+        if (!authUser && DEMO_USERS[phone] && DEMO_USERS[phone].role === role) {
           authUser = DEMO_USERS[phone];
         }
 
@@ -72,25 +101,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           sessionStorage.setItem('permit_user', JSON.stringify(authUser));
           return;
         } else {
-          throw new Error('User not found. Please check your mobile number.');
+          throw new Error('User account not found for selected role.');
         }
-      } catch (error) {
-        console.error('Sign-in error:', error);
-        if (DEMO_USERS[phone]) {
-          const authUser = DEMO_USERS[phone];
-          setUser(authUser);
-          sessionStorage.setItem('permit_user', JSON.stringify(authUser));
-          return;
-        }
-        throw error;
+      } catch (err: any) {
+        throw new Error(err.message || 'Login failed.');
       }
     } else {
-      const demo = DEMO_USERS[phone];
-      if (demo) {
-        setUser(demo);
-        sessionStorage.setItem('permit_user', JSON.stringify(demo));
+      const user = DEMO_USERS[phone];
+      if (user && user.role === role) {
+        setUser(user);
+        sessionStorage.setItem('permit_user', JSON.stringify(user));
       } else {
-        throw new Error('User not found');
+        throw new Error('Account not found for this role.');
       }
     }
   };
@@ -117,7 +139,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     if (USE_SUPABASE) {
       try {
-        // Clear Supabase session if using real Auth
         await supabase.auth.signOut();
       } catch (error) {
         console.error('Sign-out failed', error);
@@ -128,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, registerCustomer, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, verifyPhone, login, registerCustomer, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

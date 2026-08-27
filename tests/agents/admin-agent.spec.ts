@@ -7,7 +7,7 @@
 import { test, expect } from '@playwright/test';
 import { loginAs } from '../helpers';
 
-const BASE = 'http://localhost:5177';
+const BASE = '';
 
 // ── ADMIN LOGIN ───────────────────────────────────────────────────────────────
 test.describe('Admin Login', () => {
@@ -22,12 +22,12 @@ test.describe('Admin Login', () => {
 test.describe('Admin Dashboard Overview', () => {
   test('shows all stat cards', async ({ page }) => {
     await loginAs(page, '7777700000', 'admin');
-    await expect(page.getByText('Total Applications')).toBeVisible();
-    await expect(page.getByText('Pending Review')).toBeVisible();
-    await expect(page.getByText('Approved')).toBeVisible();
-    await expect(page.getByText('Total Providers')).toBeVisible();
-    await expect(page.getByText('Active Providers')).toBeVisible();
-    await expect(page.getByText('Pending Approval')).toBeVisible();
+    await expect(page.getByText('Total Applications', { exact: true })).toBeVisible();
+    await expect(page.getByText('Pending Review', { exact: true })).toBeVisible();
+    await expect(page.getByText('Approved', { exact: true })).toBeVisible();
+    await expect(page.getByText('Total Providers', { exact: true })).toBeVisible();
+    await expect(page.getByText('Active Providers', { exact: true })).toBeVisible();
+    await expect(page.getByText('Pending Approval', { exact: true })).toBeVisible();
   });
 
   test('shows recent applications table', async ({ page }) => {

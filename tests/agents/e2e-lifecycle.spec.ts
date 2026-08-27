@@ -11,7 +11,7 @@
 import { test, expect, Browser, BrowserContext, Page } from '@playwright/test';
 import { loginAs } from '../helpers';
 
-const BASE = 'http://localhost:5177';
+const BASE = '';
 
 // ── LANDING PAGE ──────────────────────────────────────────────────────────────
 test.describe('Landing Page', () => {

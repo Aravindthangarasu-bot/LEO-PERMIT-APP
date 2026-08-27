@@ -6,7 +6,7 @@
 import { test, expect } from '@playwright/test';
 import { loginAs } from '../helpers';
 
-const BASE = 'http://localhost:5177';
+const BASE = '';
 
 // ── SIGNUP VALIDATION ────────────────────────────────────────────────────────
 test.describe('Signup Form Validation', () => {
