@@ -192,8 +192,10 @@ export default function LoginPage() {
               </button>
 
               <p className={styles.signupLink}>
-                New customer?{' '}
-                <Link to="/signup">Create an account</Link>
+                New {role === 'provider' ? 'provider' : 'customer'}?{' '}
+                <Link to={role === 'provider' ? '/provider-register' : '/signup?role=customer'}>
+                  Create an account
+                </Link>
               </p>
             </div>
           )}
