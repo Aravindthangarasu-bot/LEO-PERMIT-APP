@@ -12,6 +12,7 @@ import ActionConsole from '../../components/ActionConsole';
 import type { ApplicationStatus, PermitApplication } from '../../types';
 import styles from './Provider.module.css';
 import { sortByNewest } from '../../utils/sorting';
+import PaginationControls from '../../components/PaginationControls';
 
 export default function AssignedApplications() {
   const { user } = useAuth();
@@ -23,6 +24,7 @@ export default function AssignedApplications() {
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [filter, setFilter] = useState(searchParams.get('status') || 'all');
   const [selected, setSelected] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (searchParams.get('search')) setSearch(searchParams.get('search') || '');
@@ -126,13 +128,13 @@ export default function AssignedApplications() {
       <div className={styles.filterRow}>
         <div className={styles.searchBox}>
           <Search size={16} />
-          <input type="text" placeholder="Search by ID or customer…" value={search} onChange={e => setSearch(e.target.value)} className={styles.searchInput} />
+          <input type="text" placeholder="Search by ID or customer…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className={styles.searchInput} />
         </div>
         <div className={styles.filterBtns}>
-          <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''}`} onClick={() => setFilter('all')}>All</button>
-          <button className={`${styles.filterBtn} ${filter === 'approved_all' ? styles.filterActive : ''}`} onClick={() => setFilter('approved_all')}>Completed</button>
+          <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''}`} onClick={() => { setFilter('all'); setPage(1); }}>All</button>
+          <button className={`${styles.filterBtn} ${filter === 'approved_all' ? styles.filterActive : ''}`} onClick={() => { setFilter('approved_all'); setPage(1); }}>Completed</button>
           {COMMON_STATUS_FILTERS.map(f => (
-            <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => setFilter(f)}>
+            <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => { setFilter(f); setPage(1); }}>
               {STATUS_CONFIG[f as keyof typeof STATUS_CONFIG]?.label ?? f}
             </button>
           ))}
@@ -142,7 +144,7 @@ export default function AssignedApplications() {
       <div className={styles.appGrid}>
         {/* List */}
         <div className={`card ${styles.appListCard}`} style={{ gridColumn: '1 / -1', width: '100%' }}>
-          {filtered.map(a => {
+          {filtered.slice((page - 1) * 10, page * 10).map(a => {
             const sc = STATUS_CONFIG[a.status];
             return (
               <Fragment key={a.id}>
@@ -169,6 +171,7 @@ export default function AssignedApplications() {
               </Fragment>
             );
           })}
+          <PaginationControls page={page} pageCount={Math.max(1, Math.ceil(filtered.length / 10))} total={filtered.length} onPageChange={setPage} />
         </div>
 
         {/* Detail + Actions */}

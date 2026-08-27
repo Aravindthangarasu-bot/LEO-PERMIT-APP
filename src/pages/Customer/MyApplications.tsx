@@ -7,6 +7,7 @@ import { PERMIT_TYPES } from '../../data/mockData';
 import { STATUS_CONFIG } from './statusConfig';
 import { sortByNewest } from '../../utils/sorting';
 import styles from './Customer.module.css';
+import PaginationControls from '../../components/PaginationControls';
 
 export default function MyApplications() {
   const { user } = useAuth();
@@ -15,6 +16,7 @@ export default function MyApplications() {
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [filter, setFilter] = useState(searchParams.get('status') || 'all');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (searchParams.get('search')) setSearch(searchParams.get('search') || '');
@@ -41,6 +43,8 @@ export default function MyApplications() {
 
     return matchS && matchF;
   });
+  const pageCount = Math.max(1, Math.ceil(filtered.length / 10));
+  const visibleApps = filtered.slice((page - 1) * 10, page * 10);
 
   return (
     <div className={`page-enter ${styles.page}`}>
@@ -55,12 +59,12 @@ export default function MyApplications() {
       <div className={styles.filterRow}>
         <div className={styles.searchBox}>
           <Search size={16} />
-          <input type="text" placeholder="Search by ID or address…" value={search} onChange={e => setSearch(e.target.value)} className={styles.searchInput} />
+          <input type="text" placeholder="Search by ID or address…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className={styles.searchInput} />
         </div>
         <div className={styles.filterBtns}>
           {['all', 'pending', 'under_review', 'documents_required', 'site_visit_scheduled',
             'client_review', 'panchayat_review', 'approved_all', 'rejected_all', 'terminated'].map(f => (
-            <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => setFilter(f)}>
+            <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => { setFilter(f); setPage(1); }}>
               {f === 'all' ? 'All' 
                 : f === 'approved_all' ? 'Approved' 
                 : f === 'rejected_all' ? 'Rejected' 
@@ -74,7 +78,7 @@ export default function MyApplications() {
         {filtered.length === 0 ? (
           <div className={styles.emptyState}><FileText size={40} /><p>No applications found</p></div>
         ) : (
-          filtered.map(app => {
+          visibleApps.map(app => {
             const sc = STATUS_CONFIG[app.status];
             const needsAction = ['documents_required','client_review','plan_revision_requested'].includes(app.status);
             return (
@@ -96,6 +100,7 @@ export default function MyApplications() {
             );
           })
         )}
+        <PaginationControls page={page} pageCount={pageCount} total={filtered.length} onPageChange={setPage} />
       </div>
     </div>
   );

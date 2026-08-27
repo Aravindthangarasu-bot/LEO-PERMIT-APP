@@ -11,6 +11,7 @@ import { STATUS_CONFIG, ALL_STATUS_FILTERS, COMMON_STATUS_FILTERS } from '../Cus
 import { PERMIT_TYPES } from '../../data/mockData';
 import type { ApplicationStatus, PermitApplication } from '../../types';
 import styles from './Staff.module.css';
+import PaginationControls from '../../components/PaginationControls';
 
 export default function StaffApplications() {
   const { user } = useAuth();
@@ -23,6 +24,7 @@ export default function StaffApplications() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
   
   const [selectedAction, setSelectedAction] = useState<ApplicationStatus | null>(null);
   const [notes, setNotes] = useState('');
@@ -100,12 +102,12 @@ export default function StaffApplications() {
         <div className={styles.searchBox}>
           <Search size={16} />
           <input type="text" placeholder="Search by ID or customer…" value={search}
-            onChange={e => setSearch(e.target.value)} className={styles.searchInput} />
+            onChange={e => { setSearch(e.target.value); setPage(1); }} className={styles.searchInput} />
         </div>
         <div className={styles.filterBtns}>
-          <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''}`} onClick={() => setFilter('all')}>All</button>
+          <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''}`} onClick={() => { setFilter('all'); setPage(1); }}>All</button>
           {COMMON_STATUS_FILTERS.map(f => (
-            <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => setFilter(f)}>
+            <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => { setFilter(f); setPage(1); }}>
               {STATUS_CONFIG[f as keyof typeof STATUS_CONFIG]?.label ?? f}
             </button>
           ))}
@@ -116,7 +118,7 @@ export default function StaffApplications() {
         <div className={`card ${styles.appListCard}`}>
           {filtered.length === 0
             ? <div className={styles.emptyState}><FileText size={36} /><p>No assignments yet</p></div>
-            : filtered.map(a => {
+            : filtered.slice((page - 1) * 10, page * 10).map(a => {
                 const sc = STATUS_CONFIG[a.status];
                 return (
                   <button key={a.id} className={`${styles.appRow} ${selected === a.id ? styles.appRowActive : ''}`}
@@ -131,8 +133,9 @@ export default function StaffApplications() {
                     </span>
                   </button>
                 );
-              })
+                })
           }
+              <PaginationControls page={page} pageCount={Math.max(1, Math.ceil(filtered.length / 10))} total={filtered.length} onPageChange={setPage} />
         </div>
 
         {app && (

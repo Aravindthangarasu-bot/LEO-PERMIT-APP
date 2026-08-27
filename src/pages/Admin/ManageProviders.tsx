@@ -5,6 +5,7 @@ import { getLicenceById, getExpiryNotification } from '../../data/licenceData';
 import { useAppStore, isLicenceExpired } from '../../context/AppStoreContext';
 import styles from './Admin.module.css';
 import { sortByNewest } from '../../utils/sorting';
+import PaginationControls from '../../components/PaginationControls';
 
 export default function ManageProviders() {
   const { providers, updateProviderStatus } = useAppStore();
@@ -12,6 +13,7 @@ export default function ManageProviders() {
   const initialFilter = searchParams.get('status') || 'all';
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState(initialFilter);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const status = searchParams.get('status') || 'all';
@@ -19,6 +21,7 @@ export default function ManageProviders() {
   }, [searchParams]);
 
   const handleFilterChange = (f: string) => {
+    setPage(1);
     setFilter(f);
     if (f === 'all') {
       searchParams.delete('status');
@@ -37,6 +40,8 @@ export default function ManageProviders() {
     if (filter === 'all') return matchS;
     return p.status === filter && matchS;
   }), provider => provider.joinedAt);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / 10));
+  const visibleProviders = filtered.slice((page - 1) * 10, page * 10);
 
   const detail = providers.find(p => p.id === selected);
 
@@ -66,7 +71,7 @@ export default function ManageProviders() {
           <Search size={16} />
           <input
             type="text" placeholder="Search by name or phone…"
-            value={search} onChange={e => setSearch(e.target.value)}
+            value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
             className={styles.searchInput}
           />
         </div>
@@ -85,7 +90,7 @@ export default function ManageProviders() {
 
       <div className={styles.appGrid}>
         <div className={`card ${styles.appListCard}`}>
-          {filtered.map(p => (
+          {visibleProviders.map(p => (
             <button
               key={p.id}
               className={`${styles.providerRow} ${selected === p.id ? styles.providerRowActive : ''}`}
@@ -106,6 +111,7 @@ export default function ManageProviders() {
               </div>
             </button>
           ))}
+          <PaginationControls page={page} pageCount={pageCount} total={filtered.length} onPageChange={setPage} />
         </div>
 
         {detail && (

@@ -6,6 +6,7 @@ import { STATUS_CONFIG } from '../Customer/statusConfig';
 import { PERMIT_TYPES } from '../../data/mockData';
 import ActivityThread from '../../components/ActivityThread';
 import { sortByNewest } from '../../utils/sorting';
+import PaginationControls from '../../components/PaginationControls';
 import styles from './Admin.module.css';
 
 export default function AllApplications() {
@@ -15,6 +16,7 @@ export default function AllApplications() {
   const initialFilter = searchParams.get('status') || 'all';
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState(initialFilter);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const status = searchParams.get('status') || 'all';
@@ -31,6 +33,7 @@ export default function AllApplications() {
   }, [applications]);
 
   const handleFilterChange = (f: string) => {
+    setPage(1);
     setFilter(f);
     if (f === 'all') {
       searchParams.delete('status');
@@ -64,6 +67,8 @@ export default function AllApplications() {
     // An exact application number must always be retrievable, regardless of the active status filter.
     return matchS && (exactApplicationId || matchF);
   }), app => app.submittedAt);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / 10));
+  const visibleApps = filtered.slice((page - 1) * 10, page * 10);
 
   const handleAssign = async () => {
     if (!assignProvider || !selected) return;
@@ -105,7 +110,7 @@ export default function AllApplications() {
           <Search size={16} />
           <input
             type="text" placeholder="Enter application number or customer…"
-            value={search} onChange={e => setSearch(e.target.value)}
+            value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
             className={styles.searchInput}
           />
         </div>
@@ -139,7 +144,7 @@ export default function AllApplications() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map(app => {
+            {visibleApps.map(app => {
               const sc = STATUS_CONFIG[app.status];
               return (
                 <Fragment key={app.id}>
@@ -199,7 +204,7 @@ export default function AllApplications() {
                 </Fragment>
               );
             })}
-            {filtered.length === 0 && (
+            {visibleApps.length === 0 && (
               <tr>
                 <td colSpan={7} style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)' }}>
                   No application matches this application number or filter.
@@ -208,6 +213,7 @@ export default function AllApplications() {
             )}
           </tbody>
         </table>
+        <PaginationControls page={page} pageCount={pageCount} total={filtered.length} onPageChange={setPage} />
       </div>
 
       {selectedApp && (() => {
