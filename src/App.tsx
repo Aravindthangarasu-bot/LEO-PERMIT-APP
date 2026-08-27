@@ -12,6 +12,7 @@ import ProviderPortal from './pages/Provider/ProviderPortal';
 import AdminPortal from './pages/Admin/AdminPortal';
 import StaffPortal from './pages/Staff/StaffPortal';
 import ApplicationNotificationToast from './components/ApplicationNotificationToast';
+import PageTransition from './components/PageTransition';
 
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -22,7 +23,8 @@ export default function App() {
         <AuthProvider>
           <AppStoreProvider>
             <ApplicationNotificationToast />
-            <Routes>
+            <PageTransition>
+              <Routes>
               {/* Public */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
@@ -71,7 +73,8 @@ export default function App() {
               />
 
               <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+              </Routes>
+            </PageTransition>
           </AppStoreProvider>
         </AuthProvider>
       </BrowserRouter>
