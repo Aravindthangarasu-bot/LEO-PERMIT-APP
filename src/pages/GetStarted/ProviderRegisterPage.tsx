@@ -41,6 +41,9 @@ export default function ProviderRegisterPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [pincodeLocation, setPincodeLocation] = useState<PincodeLocation | null>(null);
+  const [serviceAreas, setServiceAreas] = useState<Array<PincodeLocation & { pincode: string }>>([]);
+  const [additionalPincode, setAdditionalPincode] = useState('');
+  const [additionalLocation, setAdditionalLocation] = useState<PincodeLocation | null>(null);
 
   const selectedLicence = KPBR_LICENCE_CATEGORIES.find(l => l.id === form.licenceCategory);
 
@@ -51,6 +54,18 @@ export default function ProviderRegisterPage() {
       if (result) setForm(current => ({ ...current, area: result.primary.city }));
     }).catch(() => setPincodeLocation(null));
   }, [form.pincode]);
+
+  useEffect(() => {
+    if (!/^\d{6}$/.test(additionalPincode)) { setAdditionalLocation(null); return; }
+    lookupPincode(additionalPincode).then(result => setAdditionalLocation(result?.primary ?? null)).catch(() => setAdditionalLocation(null));
+  }, [additionalPincode]);
+
+  const addServiceArea = () => {
+    if (!additionalLocation || additionalPincode === form.pincode || serviceAreas.some(area => area.pincode === additionalPincode)) return;
+    setServiceAreas(current => [...current, { ...additionalLocation, pincode: additionalPincode }]);
+    setAdditionalPincode('');
+    setAdditionalLocation(null);
+  };
 
   const handleChange = (k: keyof Form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     let val = e.target.value;
@@ -213,6 +228,15 @@ export default function ProviderRegisterPage() {
                   {touched.pincode && errors.pincode && <p className={styles.err}><AlertCircle size={12} /> {errors.pincode}</p>}
                   {touched.pincode && !errors.pincode && form.pincode.length === 6 && <p className={styles.licenceDesc}>✓ Customers searching for pincode {form.pincode} will find you once approved.</p>}
                   {pincodeLocation && <p className={styles.licenceDesc}>{pincodeLocation.city}, {pincodeLocation.district} · Taluk: {pincodeLocation.taluk}</p>}
+                  <div style={{ marginTop: 12 }}>
+                    <label className="form-label">Additional service pincodes</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input className="form-input" type="text" maxLength={6} placeholder="Add nearby pincode" value={additionalPincode} onChange={e => setAdditionalPincode(e.target.value.replace(/\D/g, ''))} />
+                      <button type="button" className="btn btn-outline" disabled={!additionalLocation} onClick={addServiceArea}>Add</button>
+                    </div>
+                    {additionalLocation && <p className={styles.licenceDesc}>{additionalLocation.city}, {additionalLocation.district} · Taluk: {additionalLocation.taluk}</p>}
+                    {serviceAreas.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>{serviceAreas.map(area => <span key={area.pincode} className={styles.licenceDesc}>{area.pincode}: {area.city} ({area.taluk}) <button type="button" onClick={() => setServiceAreas(current => current.filter(item => item.pincode !== area.pincode))}>Remove</button></span>)}</div>}
+                  </div>
                 </div>
               </>
             )}
@@ -292,6 +316,7 @@ export default function ProviderRegisterPage() {
                       city: pincodeLocation?.city,
                       taluk: pincodeLocation?.taluk,
                       district: pincodeLocation?.district,
+                      serviceAreas,
                       landmarks: [],
                       licenceCategory: form.licenceCategory,
                       licenceNumber: form.licenceNumber,

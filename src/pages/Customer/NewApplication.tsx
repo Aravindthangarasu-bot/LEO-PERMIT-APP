@@ -104,14 +104,14 @@ export default function NewApplication() {
   const normalizedPincode = form.pincode.trim();
   const exactProviders = activeProviders.filter(provider =>
     /^\d{6}$/.test(normalizedPincode) &&
-    (provider.pincode ?? '').trim() === normalizedPincode &&
-    (!provider.city && !provider.taluk && !provider.district ||
-      (!provider.city || normalizeLocation(provider.city) === normalizeLocation(pincodeLocation?.city) || normalizeLocation(provider.city) === normalizeLocation(pincodeLocation?.district)) &&
-      (!provider.taluk || normalizeLocation(provider.taluk) === normalizeLocation(pincodeLocation?.taluk)) &&
-      (!provider.district || normalizeLocation(provider.district) === normalizeLocation(pincodeLocation?.district)))
+    [{ pincode: provider.pincode, city: provider.city, taluk: provider.taluk, district: provider.district }, ...(provider.serviceAreas ?? [])]
+      .some(area => area.pincode === normalizedPincode &&
+        (!area.city || normalizeLocation(area.city) === normalizeLocation(pincodeLocation?.city) || normalizeLocation(area.city) === normalizeLocation(pincodeLocation?.district)) &&
+        (!area.taluk || normalizeLocation(area.taluk) === normalizeLocation(pincodeLocation?.taluk)) &&
+        (!area.district || normalizeLocation(area.district) === normalizeLocation(pincodeLocation?.district)))
   );
   const searchNeedle = normalizeLocation(providerSearch);
-  const searchedProviders = searchNeedle ? activeProviders.filter(provider => [provider.officeName, provider.city, provider.taluk, provider.district, provider.area, provider.pincode].some(value => normalizeLocation(value).includes(searchNeedle))) : [];
+  const searchedProviders = searchNeedle ? activeProviders.filter(provider => [provider.officeName, provider.city, provider.taluk, provider.district, provider.area, provider.pincode, ...(provider.serviceAreas ?? []).flatMap(area => [area.city, area.taluk, area.district, area.pincode])].some(value => normalizeLocation(value).includes(searchNeedle))) : [];
   const providerPool = searchNeedle ? searchedProviders : exactProviders;
   const displayProviders = providerPool.map(p => {
     const licence = getLicenceById(p.licenceCategory ?? '');

@@ -3,6 +3,7 @@ import { LayoutDashboard, FileText, CheckSquare, Star, Settings, Users, WalletCa
 import PortalLayout from '../../components/PortalLayout/PortalLayout';
 import ProviderDashboard from './ProviderDashboard';
 import AssignedApplications from './AssignedApplications';
+import ProviderProfile from './ProviderProfile';
 import StaffManagement from './StaffManagement';
 import DocumentWallet from '../../components/DocumentWallet';
 
@@ -26,7 +27,7 @@ export default function ProviderPortal() {
         <Route path="wallet"       element={<DocumentWallet />} />
         <Route path="approved"     element={<ComingSoon title="Approved Permits" />} />
         <Route path="reviews"      element={<ComingSoon title="Reviews" />} />
-        <Route path="profile"      element={<ComingSoon title="Profile & Documents" />} />
+        <Route path="profile"      element={<ProviderProfile />} />
         <Route path="*" element={<Navigate to="/provider" replace />} />
       </Routes>
     </PortalLayout>

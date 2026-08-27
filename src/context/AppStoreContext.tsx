@@ -30,6 +30,7 @@ interface AppStoreContextValue {
   updateApplication: (id: string, patch: Partial<PermitApplication>) => Promise<boolean>;
   providers: ServiceProvider[];
   addProvider: (p: ServiceProvider) => Promise<boolean>;
+  updateProviderProfile: (id: string, patch: Partial<ServiceProvider>) => Promise<boolean>;
   updateProviderStatus: (id: string, status: ServiceProvider['status']) => void;
   staff: StaffMember[];
   addStaff: (s: StaffMember) => Promise<{ ok: true } | { ok: false; error: string }>;
@@ -97,7 +98,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       const { data: providerData } = await supabase.from('service_providers').select('*');
       if (providerData) setProviders(providerData.map(p => ({
         id: p.id, ownerName: p.owner_name, officeName: p.office_name, phone: p.phone, email: p.email,
-        area: p.area, city: p.city, taluk: p.taluk, district: p.district, pincode: p.pincode, licenceCategory: p.licence_category, licenceNumber: p.licence_number,
+        area: p.area, city: p.city, taluk: p.taluk, district: p.district, pincode: p.pincode, serviceAreas: p.service_areas || [], licenceCategory: p.licence_category, licenceNumber: p.licence_number,
         licenceExpiry: p.licence_expiry, status: p.status, rating: p.rating, totalApprovals: p.total_approvals,
         name: p.office_name,
         documents: [
@@ -109,6 +110,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         joinedAt: p.created_at || new Date().toISOString(),
         specializations: [],
         licenceVerified: true,
+        logoUrl: p.logo_url,
         licenceVerificationStatus: 'verified'
       })) as ServiceProvider[]);
 
@@ -351,6 +353,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         city: p.city,
         taluk: p.taluk,
         district: p.district,
+        service_areas: p.serviceAreas ?? [],
+        logo_url: p.logoUrl,
         pincode: p.pincode,
         landmarks: p.landmarks,
         licence_category: p.licenceCategory,
@@ -402,6 +406,32 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     } else {
       setProviders(prev => prev.map(p => p.id === id ? { ...p, status } : p));
     }
+  };
+
+  const updateProviderProfile = async (id: string, patch: Partial<ServiceProvider>) => {
+    if (USE_SUPABASE) {
+      const updateData: Record<string, unknown> = {};
+      if (patch.ownerName !== undefined) updateData.owner_name = patch.ownerName;
+      if (patch.officeName !== undefined) updateData.office_name = patch.officeName;
+      if (patch.phone !== undefined) updateData.phone = patch.phone;
+      if (patch.email !== undefined) updateData.email = patch.email;
+      if (patch.officeAddress !== undefined) updateData.office_address = patch.officeAddress;
+      if (patch.area !== undefined) updateData.area = patch.area;
+      if (patch.pincode !== undefined) updateData.pincode = patch.pincode;
+      if (patch.city !== undefined) updateData.city = patch.city;
+      if (patch.taluk !== undefined) updateData.taluk = patch.taluk;
+      if (patch.district !== undefined) updateData.district = patch.district;
+      if (patch.serviceAreas !== undefined) updateData.service_areas = patch.serviceAreas;
+      if (patch.logoUrl !== undefined) updateData.logo_url = patch.logoUrl;
+      updateData.updated_at = new Date().toISOString();
+      const { error } = await supabase.from('service_providers').update(updateData).eq('id', id);
+      if (error) {
+        console.error('Error updating provider profile:', error);
+        return false;
+      }
+    }
+    setProviders(prev => prev.map(provider => provider.id === id ? { ...provider, ...patch } : provider));
+    return true;
   };
 
   const addStaff = async (s: StaffMember): Promise<{ ok: true } | { ok: false; error: string }> => {
@@ -566,7 +596,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   return (
     <AppStoreContext.Provider value={{
       applications, addApplication, updateApplication,
-      providers, addProvider, updateProviderStatus,
+      providers, addProvider, updateProviderProfile, updateProviderStatus,
       staff, addStaff, updateStaffStatus,
       notifications, addNotification, markNotificationRead,
       publishApplicationUpdate,

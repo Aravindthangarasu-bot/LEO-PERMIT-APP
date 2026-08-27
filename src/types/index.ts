@@ -136,6 +136,7 @@ export interface ServiceProvider {
   city?: string;
   taluk?: string;
   district?: string;
+  serviceAreas?: ServiceArea[];
   latitude?: number;
   longitude?: number;
   landmarks: string[];
@@ -149,6 +150,7 @@ export interface ServiceProvider {
   licenceVerificationNote?: string;
   // Optional
   photoUrl?: string;
+  logoUrl?: string;
   aboutUs?: string;
   projectsCompleted?: string;
   // System
@@ -159,6 +161,14 @@ export interface ServiceProvider {
   totalApprovals: number;
   documents: Document[];
   specializations: PermitType[];
+}
+
+export interface ServiceArea {
+  pincode: string;
+  city: string;
+  taluk: string;
+  district: string;
+  state?: string;
 }
 
 export interface DashboardStats {

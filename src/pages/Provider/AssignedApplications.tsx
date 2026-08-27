@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { Search, FileText, CheckCircle2, XCircle, X, Calendar, MessageSquare, AlertTriangle, Users, Upload } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { PERMIT_TYPES } from '../../data/mockData';
@@ -145,18 +145,28 @@ export default function AssignedApplications() {
           {filtered.map(a => {
             const sc = STATUS_CONFIG[a.status];
             return (
-              <button key={a.id} className={`${styles.appRow} ${selected === a.id ? styles.appRowActive : ''}`}
-                onClick={() => { setSelected(a.id); setActionDone(''); }}>
-                <div className={styles.appRowLeft}>
-                  <div className={styles.appId}>{a.id}</div>
-                  <div className={styles.appType}>{PERMIT_TYPES.find(p => p.value === a.type)?.label}</div>
-                  <div className={styles.appCustomer}>👤 {a.customerName} · {a.customerPhone}</div>
-                  <div className={styles.appDate}>{new Date(a.submittedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
-                </div>
-                <span className={styles.appBadge} style={{ background: sc.bg, color: sc.color }}>
-                  <span className={`status-dot ${sc.dot}`} /> {sc.label}
-                </span>
-              </button>
+              <Fragment key={a.id}>
+                <button className={`${styles.appRow} ${selected === a.id ? styles.appRowActive : ''}`}
+                  onClick={() => { setSelected(a.id); setActionDone(''); }}>
+                  <div className={styles.appRowLeft}>
+                    <div className={styles.appId}>{a.id}</div>
+                    <div className={styles.appType}>{PERMIT_TYPES.find(p => p.value === a.type)?.label}</div>
+                    <div className={styles.appCustomer}>👤 {a.customerName} · {a.customerPhone}</div>
+                    <div className={styles.appDate}>{new Date(a.submittedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                  </div>
+                  <span className={styles.appBadge} style={{ background: sc.bg, color: sc.color }}>
+                    <span className={`status-dot ${sc.dot}`} /> {sc.label}
+                  </span>
+                </button>
+                {selected === a.id && (
+                  <div className={styles.inlineCustomerExpansion}>
+                    <div><span>Customer</span><strong>{a.customerName} · {a.customerPhone}</strong></div>
+                    <div><span>Property</span><strong>{a.city || a.address}</strong></div>
+                    <div><span>Location</span><strong>{a.taluk || '-'} · {a.district || a.pincode || '-'}</strong></div>
+                    <div><span>Submitted</span><strong>{new Date(a.submittedAt).toLocaleString('en-IN')}</strong></div>
+                  </div>
+                )}
+              </Fragment>
             );
           })}
         </div>

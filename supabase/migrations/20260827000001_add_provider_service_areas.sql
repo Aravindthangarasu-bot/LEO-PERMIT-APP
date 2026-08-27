@@ -1,0 +1,3 @@
+ALTER TABLE service_providers
+ADD COLUMN IF NOT EXISTS service_areas JSONB NOT NULL DEFAULT '[]'::jsonb,
+ADD COLUMN IF NOT EXISTS logo_url TEXT;
