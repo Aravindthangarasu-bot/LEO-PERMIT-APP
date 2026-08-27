@@ -37,15 +37,16 @@
 .nav {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   margin-left: 32px;
 }
 
 .navItem {
   display: flex; align-items: center; gap: 8px;
-  padding: 8px 14px;
+  min-height: 40px;
+  padding: 8px 12px;
   border-radius: 8px;
-  font-size: 13px; font-weight: 600;
+  font-size: 13px; font-weight: 600; white-space: nowrap;
   color: var(--text-muted); text-decoration: none;
   transition: all 0.2s ease;
 }
