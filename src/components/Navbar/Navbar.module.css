@@ -10,7 +10,7 @@
 /* ---- 2. MAIN HEADER ---- */
 .mainHeader {
   background: white;
-  padding: 20px 0;
+  padding: 12px 0;
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 .mainHeaderInner {
@@ -24,7 +24,7 @@
   text-decoration: none;
 }
 .logoImg {
-  height: 56px;
+  height: 90px;
   width: auto;
   object-fit: contain;
 }
