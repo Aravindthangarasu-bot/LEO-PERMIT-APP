@@ -1,6 +1,6 @@
 import { useState, useEffect, Fragment } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, Calendar, ExternalLink, FileText, MapPin, Phone, UserRound } from 'lucide-react';
+import { Search, Calendar, ExternalLink, FileText, MapPin, Phone, UserRound, X } from 'lucide-react';
 import { useAppStore, isLicenceExpired } from '../../context/AppStoreContext';
 import { STATUS_CONFIG } from '../Customer/statusConfig';
 import { PERMIT_TYPES } from '../../data/mockData';
@@ -216,7 +216,19 @@ export default function AllApplications() {
                             if (!selectedApp) return null;
                             const status = STATUS_CONFIG[selectedApp.status];
                             return (
-                              <div style={{ textAlign: 'left' }}>
+                              <div style={{ textAlign: 'left', position: 'relative' }}>
+                                <button 
+                                  onClick={() => setSelected(null)}
+                                  style={{
+                                    position: 'absolute', top: '-12px', right: '-12px',
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    color: 'var(--text-muted)', padding: '8px',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                  }}
+                                  aria-label="Close details"
+                                >
+                                  <X size={20} />
+                                </button>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24 }}>
                                   <div className={styles.detailSection}>
                                     <h4><UserRound size={13} /> Customer</h4>
