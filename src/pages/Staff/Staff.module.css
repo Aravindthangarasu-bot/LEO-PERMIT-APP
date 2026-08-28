@@ -23,24 +23,24 @@
 .emptyState  { text-align: center; padding: 48px 24px; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 12px; }
 
 .filterRow { display: flex; gap: 16px; margin-bottom: 24px; }
-.searchBox { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: white; flex: 1; color: var(--text-muted); }
+.searchBox { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); flex: 1; color: var(--text-muted); }
 .searchBox:focus-within { border-color: var(--primary); }
 .searchInput { border: none; background: transparent; font-size: 14px; color: var(--text); flex: 1; }
 
 .filterBtns { display: flex; gap: 8px; flex-wrap: wrap; }
-.filterBtn { padding: 7px 14px; border-radius: var(--radius); border: 1px solid var(--border); background: white; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+.filterBtn { padding: 7px 14px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
 .filterBtn:hover { border-color: var(--primary); color: var(--primary); }
 .filterActive { border-color: var(--primary) !important; background: var(--primary-bg) !important; color: var(--primary) !important; }
 
 .appGrid { display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start; }
 .appListCard { padding: 0; overflow: hidden; }
-.appRow { display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); background: white; width: 100%; text-align: left; cursor: pointer; transition: background 0.15s; gap: 12px; }
+.appRow { display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--surface); width: 100%; text-align: left; cursor: pointer; transition: background 0.15s; gap: 12px; }
 .appRow:last-child  { border-bottom: none; }
 .appRow:hover       { background: var(--surface); }
 .appRowActive       { background: var(--primary-bg) !important; }
 .appRowLeft         { flex: 1; min-width: 0; }
 
-.detailCard { padding: 30px; border-radius: var(--radius); box-shadow: none; border: 1px solid var(--border); background: #ffffff; }
+.detailCard { padding: 30px; border-radius: var(--radius); box-shadow: none; border: 1px solid var(--border); background: var(--surface); }
 .detailHeader { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); gap: 12px; }
 .detailType   { font-size: 20px; font-weight: 800; margin-top: 6px; letter-spacing: -0.02em; }
 .detailSection { margin-bottom: 28px; }
@@ -48,17 +48,17 @@
 
 /* Premium Grid for Customer Details */
 .detailGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-.detailGridItem { background: #f5f5f5; padding: 16px; border-radius: var(--radius); border: 1px solid var(--border); }
+.detailGridItem { background: var(--bg-color); padding: 16px; border-radius: var(--radius); border: 1px solid var(--border); }
 .detailGridLabel { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
 .detailGridValue { font-size: 14px; font-weight: 600; color: var(--text); }
 .detailGridValueFull { grid-column: 1 / -1; }
 
-.actionPanel { background: #f5f5f5; border-radius: var(--radius); padding: 24px; border: 1px solid var(--border); margin-top: 32px; }
+.actionPanel { background: var(--bg-color); border-radius: var(--radius); padding: 24px; border: 1px solid var(--border); margin-top: 32px; }
 .actionPanel h4 { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
 
 /* Action Selector Cards */
 .actionSelector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
-.actionCardBtn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 12px; border-radius: var(--radius); border: 1px solid transparent; background: #ffffff; color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: none; border: 1px solid var(--border); }
+.actionCardBtn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 12px; border-radius: var(--radius); border: 1px solid transparent; background: var(--surface); color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: none; border: 1px solid var(--border); }
 .actionCardBtn:hover { transform: translateY(-2px); box-shadow: none; color: var(--primary); border-color: var(--primary); }
 .actionCardBtn svg { transition: transform 0.2s; }
 .actionCardBtn:hover svg { transform: scale(1.1); }
@@ -69,7 +69,7 @@
 .actionCardActive.reject { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
 
 /* Input Area sliding down */
-.actionInputArea { background: #ffffff; padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.actionInputArea { background: var(--surface); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
 .actionInputArea label { display: block; font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
