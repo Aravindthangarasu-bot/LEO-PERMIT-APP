@@ -58,59 +58,76 @@ export default function ActivityThread({ appId, activities = [] }: ActivityThrea
         <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', margin: 0 }}>Activity & Comments</h3>
       </div>
       
-      {/* Thread list */}
-      <div style={{ padding: 20, maxHeight: 400, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Thread list (Chat Style) */}
+      <div style={{ 
+        padding: '20px', 
+        maxHeight: 400, 
+        overflowY: 'auto', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: '12px',
+        background: '#efeae2', // subtle WA-like background
+      }}>
         {activities.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, margin: '20px 0' }}>
+          <p style={{ textAlign: 'center', color: '#6b7280', fontSize: 13, margin: '20px 0', background: 'white', padding: '8px 16px', borderRadius: 999, alignSelf: 'center' }}>
             No activity yet.
           </p>
         ) : (
-          activities.map((act, index) => {
+          activities.map((act) => {
             const roleStyle = ROLE_STYLES[act.userRole.toLowerCase()] ?? DEFAULT_ROLE_STYLE;
             const isComment = act.type === 'comment';
             const isOwnComment = isComment && act.userId === user?.id;
-            const eventBackground = act.type === 'document_upload' ? '#fffbeb' : '#f8fafc';
-            const eventBorder = act.type === 'document_upload' ? '#fde68a' : '#e2e8f0';
 
+            if (!isComment) {
+              // System events (centered pill)
+              return (
+                <div key={act.id} style={{ alignSelf: 'center', background: '#fff', border: '1px solid #e5e7eb', padding: '6px 12px', borderRadius: 999, fontSize: 11, color: '#4b5563', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                  {getIcon(act.type, roleStyle.color)}
+                  <span>
+                    {act.type === 'status_change' && <strong>Status changed: </strong>}
+                    {act.type === 'document_upload' && <strong>Uploaded document: </strong>}
+                    {act.content}
+                  </span>
+                  <span style={{ fontSize: 9, color: '#9ca3af', marginLeft: 4 }}>{new Date(act.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                </div>
+              );
+            }
+
+            // User comments (bubbles)
             return (
-            <div key={act.id} style={{ display: 'flex', gap: 12, position: 'relative' }}>
-              {index < activities.length - 1 && (
-                <div style={{ position: 'absolute', left: 15, top: 32, bottom: -20, width: 2, background: '#e2e8f0' }} />
-              )}
-              
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: isComment ? roleStyle.iconBackground : eventBackground, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${isComment ? roleStyle.border : eventBorder}`, zIndex: 1, flexShrink: 0 }}>
-                {getIcon(act.type, roleStyle.color)}
-              </div>
-              
-              <div style={{ flex: 1, paddingBottom: index === activities.length - 1 ? 0 : 4 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{act.userName}</span>
-                  <span style={{ fontSize: 10, lineHeight: 1, fontWeight: 700, color: roleStyle.color, background: roleStyle.background, border: `1px solid ${roleStyle.border}`, borderRadius: 999, padding: '4px 7px', textTransform: 'uppercase' }}>
-                    {act.userRole}{isOwnComment ? ' · You' : ''}
-                  </span>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
-                    {new Date(act.timestamp).toLocaleString('en-IN')}
-                  </span>
-                </div>
-                <div style={{ 
-                  fontSize: 13, 
-                  color: isComment ? roleStyle.color : 'var(--text-muted)',
-                  background: isComment ? roleStyle.background : eventBackground,
-                  padding: '10px 14px',
-                  borderRadius: 8,
-                  border: `1px solid ${isComment ? roleStyle.border : eventBorder}`,
-                  borderLeft: `4px solid ${isComment ? roleStyle.color : act.type === 'document_upload' ? '#f59e0b' : '#0ea5e9'}`,
-                  boxShadow: isOwnComment ? `0 0 0 2px ${roleStyle.iconBackground}` : 'none',
-                  lineHeight: 1.5,
-                  whiteSpace: 'pre-wrap'
+              <div key={act.id} style={{ 
+                alignSelf: isOwnComment ? 'flex-end' : 'flex-start',
+                maxWidth: '75%',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4
+              }}>
+                <div style={{
+                  background: isOwnComment ? '#dcf8c6' : '#ffffff', // WA light green or white
+                  padding: '8px 12px',
+                  borderRadius: isOwnComment ? '12px 12px 0 12px' : '12px 12px 12px 0',
+                  boxShadow: '0 1px 1px rgba(0,0,0,0.1)',
+                  position: 'relative'
                 }}>
-                  {act.type === 'status_change' && <strong>Status changed to: </strong>}
-                  {act.type === 'document_upload' && <strong>Uploaded document: </strong>}
-                  {act.content}
+                  {!isOwnComment && (
+                    <div style={{ fontSize: 12, fontWeight: 700, color: roleStyle.color, marginBottom: 4, display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                      {act.userName}
+                      <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-muted)' }}>{act.userRole}</span>
+                    </div>
+                  )}
+                  
+                  <div style={{ fontSize: 14, color: '#111827', lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>
+                    {act.content}
+                  </div>
+                  
+                  <div style={{ fontSize: 10, color: '#6b7280', textAlign: 'right', marginTop: 4, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 4 }}>
+                    {new Date(act.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    {/* Tick placeholder for own comments could go here */}
+                  </div>
                 </div>
               </div>
-            </div>
-          )})
+            );
+          })
         )}
       </div>
 
