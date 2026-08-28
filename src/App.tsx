@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { AppStoreProvider } from './context/AppStoreContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/Landing/LandingPage';
 import LoginPage from './pages/Login/LoginPage';
@@ -26,14 +27,15 @@ import ErrorBoundary from './components/ErrorBoundary';
 export default function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
-        <AuthProvider>
-          <LanguageProvider>
-            <AppStoreProvider>
-              <ApplicationNotificationToast />
-              <PageTransition>
-                <Routes>
-                  {/* Public */}
+      <ThemeProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <LanguageProvider>
+              <AppStoreProvider>
+                <ApplicationNotificationToast />
+                <PageTransition>
+                  <Routes>
+                    {/* Public */}
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/signup" element={<SignupPage />} />
@@ -92,7 +94,8 @@ export default function App() {
             </AppStoreProvider>
           </LanguageProvider>
         </AuthProvider>
-      </BrowserRouter>
+        </BrowserRouter>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

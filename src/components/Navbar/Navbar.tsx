@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Phone, LogOut, ChevronDown, User, Globe } from 'lucide-react';
+import { Phone, LogOut, ChevronDown, User, Globe, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useTheme } from '../../context/ThemeContext';
 import styles from './Navbar.module.css';
 
 interface NavItem {
@@ -19,6 +20,7 @@ interface NavbarProps {
 export default function Navbar({ variant = 'landing', navItems }: NavbarProps) {
   const { user, logout, isAuthenticated } = useAuth();
   const { language, setLanguage, t } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -41,6 +43,14 @@ export default function Navbar({ variant = 'landing', navItems }: NavbarProps) {
             </Link>
             
             <div className={styles.headerRight}>
+              <button 
+                className={styles.langToggle} 
+                onClick={toggleTheme}
+                title="Toggle Theme"
+              >
+                {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+              </button>
+
               <button 
                 className={styles.langToggle} 
                 onClick={() => setLanguage(language === 'en' ? 'ml' : 'en')}
