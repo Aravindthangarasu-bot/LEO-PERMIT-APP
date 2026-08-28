@@ -229,63 +229,65 @@ export default function AllApplications() {
                             const status = STATUS_CONFIG[selectedApp.status];
                             return (
                               <div style={{ textAlign: 'left' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24 }}>
-                                  <div className={styles.detailSection}>
-                                    <h4><UserRound size={13} /> Customer</h4>
-                                    <div className={styles.detailRows}>
-                                      <div className={styles.detailRow}><span>Name</span><strong>{selectedApp.customerName}</strong></div>
-                                      <div className={styles.detailRow}><span><Phone size={13} /> Phone</span><strong>{selectedApp.customerPhone}</strong></div>
-                                      <div className={styles.detailRow}><span><MapPin size={13} /> Address</span><strong>{selectedApp.address}</strong></div>
-                                      {selectedApp.landmark && <div className={styles.detailRow}><span>Landmark</span><strong>{selectedApp.landmark}</strong></div>}
-                                    </div>
+                                {/* Top Info Grid */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24, marginBottom: 24 }}>
+                                  
+                                  {/* Customer */}
+                                  <div>
+                                    <h4 style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}><UserRound size={13} /> Customer</h4>
+                                    <div style={{ fontSize: 13, marginBottom: 4 }}><strong>{selectedApp.customerName}</strong></div>
+                                    <div style={{ fontSize: 13, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}><Phone size={13} /> {selectedApp.customerPhone}</div>
+                                    <div style={{ fontSize: 13, color: 'var(--text-muted)' }}><MapPin size={13} style={{ display: 'inline', verticalAlign: 'text-bottom' }} /> {selectedApp.address}</div>
+                                    {selectedApp.landmark && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Landmark: {selectedApp.landmark}</div>}
                                   </div>
 
-                                  <div className={styles.detailSection}>
-                                    <h4><Calendar size={13} /> Service & Assignment</h4>
-                                    <div className={styles.detailRows}>
-                                      <div className={styles.detailRow}><span>Submitted</span><strong>{new Date(selectedApp.submittedAt).toLocaleString('en-IN')}</strong></div>
-                                      <div className={styles.detailRow}><span>Updated</span><strong>{new Date(selectedApp.updatedAt).toLocaleString('en-IN')}</strong></div>
-                                      <div className={styles.detailRow}><span>Provider</span><strong>{selectedApp.assignedProviderName ?? 'Unassigned'}</strong></div>
-                                      <div className={styles.detailRow}><span>Handler</span><strong>{selectedApp.servicedBy === 'staff' ? selectedApp.assignedStaffName ?? 'Staff assignment pending' : selectedApp.servicedBy === 'provider' ? 'Service provider' : 'Not selected'}</strong></div>
-                                    </div>
+                                  {/* Service & Assignment */}
+                                  <div>
+                                    <h4 style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}><Calendar size={13} /> Service & Assignment</h4>
+                                    <div style={{ fontSize: 12, marginBottom: 4 }}><span style={{ color: 'var(--text-muted)', width: 60, display: 'inline-block' }}>Submitted</span> <strong>{new Date(selectedApp.submittedAt).toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong></div>
+                                    <div style={{ fontSize: 12, marginBottom: 4 }}><span style={{ color: 'var(--text-muted)', width: 60, display: 'inline-block' }}>Updated</span> <strong>{new Date(selectedApp.updatedAt).toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong></div>
+                                    <div style={{ fontSize: 12, marginBottom: 4 }}><span style={{ color: 'var(--text-muted)', width: 60, display: 'inline-block' }}>Provider</span> <strong>{selectedApp.assignedProviderName ?? 'Unassigned'}</strong></div>
+                                    <div style={{ fontSize: 12, marginBottom: 4 }}><span style={{ color: 'var(--text-muted)', width: 60, display: 'inline-block' }}>Handler</span> <strong>{selectedApp.servicedBy === 'staff' ? selectedApp.assignedStaffName ?? 'Staff pending' : selectedApp.servicedBy === 'provider' ? 'Service provider' : 'Not selected'}</strong></div>
                                   </div>
+
+                                  {/* Workflow Details */}
+                                  {(selectedApp.planRevisions?.length || selectedApp.siteVisitDates?.length || selectedApp.approvalNumber || selectedApp.notes || selectedApp.clientComments) ? (
+                                    <div>
+                                      <h4 style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>Workflow Details</h4>
+                                      {selectedApp.selectedSiteVisitDate && <div style={{ fontSize: 12, marginBottom: 4 }}><span style={{ color: 'var(--text-muted)' }}>Confirmed visit:</span> <strong>{new Date(selectedApp.selectedSiteVisitDate).toLocaleDateString('en-IN')}</strong></div>}
+                                      {selectedApp.approvalNumber && <div style={{ fontSize: 12, marginBottom: 4 }}><span style={{ color: 'var(--text-muted)' }}>Approval #:</span> <strong>{selectedApp.approvalNumber}</strong></div>}
+                                      {selectedApp.planRevisions?.length && <div style={{ fontSize: 12, marginBottom: 4 }}><span style={{ color: 'var(--text-muted)' }}>Plan revisions:</span> <strong>{selectedApp.planRevisions.length}</strong></div>}
+                                    </div>
+                                  ) : <div />}
                                 </div>
 
-                                <div className={styles.detailSection}>
-                                  <h4>Description</h4>
-                                  <p style={{ margin: 0, color: 'var(--text)', lineHeight: 1.6 }}>{selectedApp.description || 'No description provided.'}</p>
-                                </div>
+                                {/* Description */}
+                                {selectedApp.description && (
+                                  <div style={{ marginBottom: 24, padding: '12px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                                    <h4 style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', margin: '0 0 4px' }}>Description</h4>
+                                    <p style={{ margin: 0, fontSize: 13, color: 'var(--text)', lineHeight: 1.5 }}>{selectedApp.description}</p>
+                                  </div>
+                                )}
 
-                                <div className={styles.detailSection}>
-                                  <h4><FileText size={13} /> Documents ({selectedApp.documents.length})</h4>
-                                  {selectedApp.documents.length === 0 ? <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 13 }}>No documents have been uploaded.</p> : (
-                                    <div className={styles.detailRows}>
+                                {/* Documents */}
+                                <div style={{ marginBottom: 24 }}>
+                                  <h4 style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}><FileText size={13} /> Documents ({selectedApp.documents.length})</h4>
+                                  {selectedApp.documents.length === 0 ? (
+                                    <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 13 }}>No documents uploaded.</p>
+                                  ) : (
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
                                       {selectedApp.documents.map(document => (
-                                        <div className={styles.detailRow} key={document.id}>
-                                          <span>{document.name}</span>
-                                          <strong>{document.status}</strong>
-                                          {document.url && <a href={document.url} target="_blank" rel="noreferrer" aria-label={`Open ${document.name}`} title="Open document" style={{ color: 'var(--primary)' }}><ExternalLink size={15} /></a>}
+                                        <div key={document.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 12 }}>
+                                          <span style={{ fontWeight: 600, color: 'var(--text)' }}>{document.name}</span>
+                                          <span style={{ color: document.status === 'verified' ? '#16a34a' : 'var(--text-muted)', textTransform: 'uppercase', fontSize: 10, fontWeight: 700 }}>{document.status}</span>
+                                          {document.url && <a href={document.url} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', display: 'flex' }}><ExternalLink size={14} /></a>}
                                         </div>
                                       ))}
                                     </div>
                                   )}
                                 </div>
-
-                                {(selectedApp.planRevisions?.length || selectedApp.siteVisitDates?.length || selectedApp.approvalNumber || selectedApp.notes || selectedApp.clientComments) && (
-                                  <div className={styles.detailSection}>
-                                    <h4>Workflow Details</h4>
-                                    <div className={styles.detailRows}>
-                                      {selectedApp.siteVisitDates?.length && <div className={styles.detailRow}><span>Proposed visits</span><strong>{selectedApp.siteVisitDates.map(date => new Date(date).toLocaleDateString('en-IN')).join(', ')}</strong></div>}
-                                      {selectedApp.selectedSiteVisitDate && <div className={styles.detailRow}><span>Confirmed visit</span><strong>{new Date(selectedApp.selectedSiteVisitDate).toLocaleDateString('en-IN')}</strong></div>}
-                                      {selectedApp.planRevisions?.length && <div className={styles.detailRow}><span>Plan revisions</span><strong>{selectedApp.planRevisions.length}</strong></div>}
-                                      {selectedApp.approvalNumber && <div className={styles.detailRow}><span>Approval number</span><strong>{selectedApp.approvalNumber}</strong></div>}
-                                      {selectedApp.notes && <div className={styles.detailRow}><span>Latest note</span><strong>{selectedApp.notes}</strong></div>}
-                                      {selectedApp.clientComments && <div className={styles.detailRow}><span>Customer comment</span><strong>{selectedApp.clientComments}</strong></div>}
-                                    </div>
-                                  </div>
-                                )}
                                 
-                                <div style={{ marginTop: 24, borderTop: '1px solid var(--border)', paddingTop: 24 }}>
+                                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 24 }}>
                                   <ActivityThread appId={selectedApp.id} activities={selectedApp.activityLog} />
                                 </div>
                               </div>
