@@ -31,6 +31,8 @@ export default function LandingPage() {
   const [availableRoles, setAvailableRoles] = useState<UserRole[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [modalService, setModalService] = useState('');
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,12 +93,22 @@ export default function LandingPage() {
     setLoading(false);
   };
 
-  const handleServiceClick = (e: React.MouseEvent<HTMLAnchorElement>, link: string) => {
+  const handleServiceClick = (e: React.MouseEvent<HTMLAnchorElement>, link: string, title: string) => {
     if (link === '/') {
       e.preventDefault();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      document.getElementById('mobile-login-input')?.focus();
+      setModalService(title);
+      setShowLoginModal(true);
+      setLoginStep('PHONE');
+      setErrorMsg('');
     }
+  };
+
+  const closeModal = () => {
+    setShowLoginModal(false);
+    setLoginStep('PHONE');
+    setOtp('');
+    setErrorMsg('');
+    setAvailableRoles([]);
   };
 
   return (
@@ -233,7 +245,7 @@ export default function LandingPage() {
                 to={service.link} 
                 key={idx} 
                 className={styles.serviceTile}
-                onClick={(e) => handleServiceClick(e, service.link)}
+                onClick={(e) => handleServiceClick(e, service.link, service.title)}
               >
                 <div className={styles.tileIcon}>
                   {service.icon}
@@ -281,6 +293,104 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+      {/* Login Modal Popup */}
+      {showLoginModal && (
+        <div className={styles.modalOverlay} onClick={closeModal}>
+          <div className={styles.modalBox} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h3 className={styles.modalTitle}>Login to Apply</h3>
+                {modalService && <p className={styles.modalSubtitle}>{modalService}</p>}
+              </div>
+              <button className={styles.modalClose} onClick={closeModal} aria-label="Close">✕</button>
+            </div>
+
+            {loginStep === 'PHONE' && (
+              <form className={styles.loginForm} onSubmit={handleSendOtp}>
+                <div className={styles.formGroup}>
+                  <label>{t('landing.login.mobileLabel')}</label>
+                  <input
+                    id="modal-login-input"
+                    type="tel"
+                    maxLength={10}
+                    placeholder={t('landing.login.mobilePlaceholder')}
+                    className={styles.input}
+                    value={loginPhone}
+                    onChange={(e) => setLoginPhone(e.target.value.replace(/\D/g, ''))}
+                    disabled={loading}
+                    autoFocus
+                  />
+                </div>
+                {errorMsg && <p className={styles.errorMsg}>{errorMsg}</p>}
+                <button type="submit" className={styles.loginBtn} disabled={loading}>
+                  {loading ? t('landing.login.btnSending') : t('landing.login.btnSendOtp')} <ArrowRight size={16} />
+                </button>
+                <div className={styles.loginLinks}>
+                  <Link to="/signup" onClick={closeModal}>{t('landing.login.linkNewUser')}</Link>
+                  <Link to="/provider-register" onClick={closeModal}>{t('landing.login.linkProvider')}</Link>
+                </div>
+              </form>
+            )}
+
+            {loginStep === 'OTP' && (
+              <form className={styles.loginForm} onSubmit={handleVerifyOtp}>
+                <div className={styles.formGroup}>
+                  <label>{t('landing.login.otpLabel')} {loginPhone}</label>
+                  <input
+                    type="text"
+                    maxLength={4}
+                    placeholder={t('landing.login.otpPlaceholder')}
+                    className={styles.input}
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                    disabled={loading}
+                    autoFocus
+                  />
+                </div>
+                {errorMsg && <p className={styles.errorMsg}>{errorMsg}</p>}
+                <button type="submit" className={styles.loginBtn} disabled={loading}>
+                  {loading ? t('landing.login.btnVerifying') : t('landing.login.btnVerify')} <ArrowRight size={16} />
+                </button>
+                <button type="button" className={styles.backBtn} onClick={() => { setLoginStep('PHONE'); setOtp(''); setErrorMsg(''); }}>
+                  {t('landing.login.btnChangeMobile')}
+                </button>
+              </form>
+            )}
+
+            {loginStep === 'ROLE_SELECT' && (
+              <div className={styles.roleSelectBox}>
+                <p className={styles.roleSelectText}>{t('landing.login.multipleAccounts')}</p>
+                {errorMsg && <p className={styles.errorMsg}>{errorMsg}</p>}
+                <div className={styles.roleButtons}>
+                  {availableRoles.includes('customer') && (
+                    <button className={styles.roleBtn} onClick={() => handleSelectRole('customer')} disabled={loading}>
+                      {t('landing.login.loginCitizen')}
+                    </button>
+                  )}
+                  {availableRoles.includes('provider') && (
+                    <button className={styles.roleBtn} onClick={() => handleSelectRole('provider')} disabled={loading}>
+                      {t('landing.login.loginProvider')}
+                    </button>
+                  )}
+                  {availableRoles.includes('staff') && (
+                    <button className={styles.roleBtn} onClick={() => handleSelectRole('staff')} disabled={loading}>
+                      {t('landing.login.loginStaff')}
+                    </button>
+                  )}
+                  {availableRoles.includes('admin') && (
+                    <button className={styles.roleBtn} onClick={() => handleSelectRole('admin')} disabled={loading}>
+                      {t('landing.login.loginAdmin')}
+                    </button>
+                  )}
+                </div>
+                <button type="button" className={styles.backBtn} onClick={() => { setLoginStep('PHONE'); setOtp(''); setErrorMsg(''); setAvailableRoles([]); }}>
+                  {t('landing.login.cancel')}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
