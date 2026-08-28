@@ -21,30 +21,12 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 16px;
   text-decoration: none;
 }
-.logo {
-  background: var(--primary);
-  width: 60px;
-  height: 60px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.brandText h1 {
-  font-size: 24px;
-  font-weight: 900;
-  color: #0f172a;
-  margin: 0 0 4px;
-  letter-spacing: -0.5px;
-}
-.brandText p {
-  font-size: 13px;
-  color: #64748b;
-  margin: 0;
-  font-weight: 500;
+.logoImg {
+  height: 56px;
+  width: auto;
+  object-fit: contain;
 }
 .headerRight {
   display: flex;

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams, Navigate } from 'react-router-dom';
-import { Building2, Phone, ArrowLeft, Shield, User, ChevronRight } from 'lucide-react';
+import { Phone, ArrowLeft, Shield, User, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import type { UserRole } from '../../types';
 import styles from './LoginPage.module.css';
@@ -95,11 +95,7 @@ export default function LoginPage() {
       <div className={styles.left}>
         <div className={styles.leftInner}>
           <Link to="/" className={styles.brand}>
-            <div className={styles.logoBox}><Building2 size={22} /></div>
-            <div>
-              <div className={styles.brandName}>LEO</div>
-              <div className={styles.brandSub}>Licensed Engineering Online</div>
-            </div>
+            <img src="/logo.png" alt="LEO - Licensed Engineering Online" className={styles.logoImg} />
           </Link>
 
           <div className={styles.leftContent}>

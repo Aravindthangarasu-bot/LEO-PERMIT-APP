@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Building2, Phone, LogOut, ChevronDown, User, Globe } from 'lucide-react';
+import { Phone, LogOut, ChevronDown, User, Globe } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import styles from './Navbar.module.css';
@@ -37,13 +37,7 @@ export default function Navbar({ variant = 'landing', navItems }: NavbarProps) {
         <div className="container">
           <div className={styles.mainHeaderInner}>
             <Link to="/" className={styles.brand}>
-              <div className={styles.logo}>
-                <Building2 size={32} color="white" />
-              </div>
-              <div className={styles.brandText}>
-                <h1>{t('navbar.title')}</h1>
-                <p>{t('navbar.subtitle')}</p>
-              </div>
+              <img src="/logo.png" alt="LEO - Licensed Engineering Online" className={styles.logoImg} />
             </Link>
             
             <div className={styles.headerRight}>
