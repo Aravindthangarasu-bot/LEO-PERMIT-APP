@@ -135,48 +135,7 @@ input, select, textarea { font-family: inherit; outline: none; }
 .status-dot.red    { background: var(--error); }
 .status-dot.blue   { background: #3b82f6; }
 
-@keyframes pageIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes pageOut {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-.page-enter { animation: pageIn 0.25s ease forwards; }
-.page-exit { animation: pageOut 0.15s ease forwards; }
-.page-transition.fadeIn { animation: pageIn 0.25s ease forwards; }
-.page-transition.fadeOut { animation: pageOut 0.15s ease forwards; }
-.animate-wrapper { min-width: 0; }
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-.fade-in { animation: fadeIn 0.5s ease forwards; }
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.slide-up { animation: slideUp 0.35s ease-out forwards; }
-
-@keyframes scaleIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-.scale-in { animation: scaleIn 0.3s ease-out forwards; }
-
-/* Staggered animation delays */
-.delay-50  { animation-delay: 50ms; opacity: 0; }
-.delay-100 { animation-delay: 100ms; opacity: 0; }
-.delay-150 { animation-delay: 150ms; opacity: 0; }
-.delay-200 { animation-delay: 200ms; opacity: 0; }
-.delay-250 { animation-delay: 250ms; opacity: 0; }
-.delay-300 { animation-delay: 300ms; opacity: 0; }
-.delay-400 { animation-delay: 400ms; opacity: 0; }
-.delay-500 { animation-delay: 500ms; opacity: 0; }
-
+/* All animations removed completely */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
