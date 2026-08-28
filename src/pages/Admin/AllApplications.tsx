@@ -209,12 +209,76 @@ export default function AllApplications() {
                   {selected === app.id && (
                     <tr className={styles.inlineExpansionRow}>
                       <td colSpan={7}>
-                        <div className={styles.inlineExpansion}>
-                          <div><span>Customer</span><strong>{app.customerName} · {app.customerPhone}</strong></div>
-                          <div><span>Property</span><strong>{app.city || app.address}</strong></div>
-                          <div><span>Location</span><strong>{app.taluk || '-'} · {app.district || app.pincode || '-'}</strong></div>
-                          <div><span>Submitted</span><strong>{new Date(app.submittedAt).toLocaleString('en-IN')}</strong></div>
-                          <div><span>Assignment</span><strong>{app.assignedProviderName || 'Awaiting provider assignment'}</strong></div>
+                        <div className={styles.inlineExpansion} style={{ display: 'block', padding: '24px 32px' }}>
+                          {/* We reuse the detail logic here inline */}
+                          {(() => {
+                            const selectedApp = applications.find(a => a.id === selected);
+                            if (!selectedApp) return null;
+                            const status = STATUS_CONFIG[selectedApp.status];
+                            return (
+                              <div style={{ textAlign: 'left' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24 }}>
+                                  <div className={styles.detailSection}>
+                                    <h4><UserRound size={13} /> Customer</h4>
+                                    <div className={styles.detailRows}>
+                                      <div className={styles.detailRow}><span>Name</span><strong>{selectedApp.customerName}</strong></div>
+                                      <div className={styles.detailRow}><span><Phone size={13} /> Phone</span><strong>{selectedApp.customerPhone}</strong></div>
+                                      <div className={styles.detailRow}><span><MapPin size={13} /> Address</span><strong>{selectedApp.address}</strong></div>
+                                      {selectedApp.landmark && <div className={styles.detailRow}><span>Landmark</span><strong>{selectedApp.landmark}</strong></div>}
+                                    </div>
+                                  </div>
+
+                                  <div className={styles.detailSection}>
+                                    <h4><Calendar size={13} /> Service & Assignment</h4>
+                                    <div className={styles.detailRows}>
+                                      <div className={styles.detailRow}><span>Submitted</span><strong>{new Date(selectedApp.submittedAt).toLocaleString('en-IN')}</strong></div>
+                                      <div className={styles.detailRow}><span>Updated</span><strong>{new Date(selectedApp.updatedAt).toLocaleString('en-IN')}</strong></div>
+                                      <div className={styles.detailRow}><span>Provider</span><strong>{selectedApp.assignedProviderName ?? 'Unassigned'}</strong></div>
+                                      <div className={styles.detailRow}><span>Handler</span><strong>{selectedApp.servicedBy === 'staff' ? selectedApp.assignedStaffName ?? 'Staff assignment pending' : selectedApp.servicedBy === 'provider' ? 'Service provider' : 'Not selected'}</strong></div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className={styles.detailSection}>
+                                  <h4>Description</h4>
+                                  <p style={{ margin: 0, color: 'var(--text)', lineHeight: 1.6 }}>{selectedApp.description || 'No description provided.'}</p>
+                                </div>
+
+                                <div className={styles.detailSection}>
+                                  <h4><FileText size={13} /> Documents ({selectedApp.documents.length})</h4>
+                                  {selectedApp.documents.length === 0 ? <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 13 }}>No documents have been uploaded.</p> : (
+                                    <div className={styles.detailRows}>
+                                      {selectedApp.documents.map(document => (
+                                        <div className={styles.detailRow} key={document.id}>
+                                          <span>{document.name}</span>
+                                          <strong>{document.status}</strong>
+                                          {document.url && <a href={document.url} target="_blank" rel="noreferrer" aria-label={`Open ${document.name}`} title="Open document" style={{ color: 'var(--primary)' }}><ExternalLink size={15} /></a>}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {(selectedApp.planRevisions?.length || selectedApp.siteVisitDates?.length || selectedApp.approvalNumber || selectedApp.notes || selectedApp.clientComments) && (
+                                  <div className={styles.detailSection}>
+                                    <h4>Workflow Details</h4>
+                                    <div className={styles.detailRows}>
+                                      {selectedApp.siteVisitDates?.length && <div className={styles.detailRow}><span>Proposed visits</span><strong>{selectedApp.siteVisitDates.map(date => new Date(date).toLocaleDateString('en-IN')).join(', ')}</strong></div>}
+                                      {selectedApp.selectedSiteVisitDate && <div className={styles.detailRow}><span>Confirmed visit</span><strong>{new Date(selectedApp.selectedSiteVisitDate).toLocaleDateString('en-IN')}</strong></div>}
+                                      {selectedApp.planRevisions?.length && <div className={styles.detailRow}><span>Plan revisions</span><strong>{selectedApp.planRevisions.length}</strong></div>}
+                                      {selectedApp.approvalNumber && <div className={styles.detailRow}><span>Approval number</span><strong>{selectedApp.approvalNumber}</strong></div>}
+                                      {selectedApp.notes && <div className={styles.detailRow}><span>Latest note</span><strong>{selectedApp.notes}</strong></div>}
+                                      {selectedApp.clientComments && <div className={styles.detailRow}><span>Customer comment</span><strong>{selectedApp.clientComments}</strong></div>}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                <div style={{ marginTop: 24, borderTop: '1px solid var(--border)', paddingTop: 24 }}>
+                                  <ActivityThread appId={selectedApp.id} activities={selectedApp.activityLog} />
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </td>
                     </tr>
@@ -234,79 +298,7 @@ export default function AllApplications() {
         <PaginationControls page={page} pageCount={pageCount} total={filtered.length} onPageChange={setPage} />
       </div>
 
-      {selectedApp && (() => {
-        const status = STATUS_CONFIG[selectedApp.status];
-        const permitLabel = PERMIT_TYPES.find(type => type.value === selectedApp.type)?.label ?? selectedApp.type;
-        return (
-          <section className={`card ${styles.detailCard}`} style={{ marginTop: 24 }} aria-label={`Application details for ${selectedApp.id}`}>
-            <div className={styles.detailHeader}>
-              <div style={{ flex: 1 }}>
-                <div className={styles.appId}>{selectedApp.id}</div>
-                <h2 style={{ margin: '4px 0 0', fontSize: 20 }}>{permitLabel}</h2>
-              </div>
-              <span className={styles.statusBadge} style={{ background: status.bg, color: status.color }}>{status.label}</span>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24 }}>
-              <div className={styles.detailSection}>
-                <h4><UserRound size={13} /> Customer</h4>
-                <div className={styles.detailRows}>
-                  <div className={styles.detailRow}><span>Name</span><strong>{selectedApp.customerName}</strong></div>
-                  <div className={styles.detailRow}><span><Phone size={13} /> Phone</span><strong>{selectedApp.customerPhone}</strong></div>
-                  <div className={styles.detailRow}><span><MapPin size={13} /> Address</span><strong>{selectedApp.address}</strong></div>
-                  {selectedApp.landmark && <div className={styles.detailRow}><span>Landmark</span><strong>{selectedApp.landmark}</strong></div>}
-                </div>
-              </div>
-
-              <div className={styles.detailSection}>
-                <h4><Calendar size={13} /> Service & Assignment</h4>
-                <div className={styles.detailRows}>
-                  <div className={styles.detailRow}><span>Submitted</span><strong>{new Date(selectedApp.submittedAt).toLocaleString('en-IN')}</strong></div>
-                  <div className={styles.detailRow}><span>Updated</span><strong>{new Date(selectedApp.updatedAt).toLocaleString('en-IN')}</strong></div>
-                  <div className={styles.detailRow}><span>Provider</span><strong>{selectedApp.assignedProviderName ?? 'Unassigned'}</strong></div>
-                  <div className={styles.detailRow}><span>Handler</span><strong>{selectedApp.servicedBy === 'staff' ? selectedApp.assignedStaffName ?? 'Staff assignment pending' : selectedApp.servicedBy === 'provider' ? 'Service provider' : 'Not selected'}</strong></div>
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.detailSection}>
-              <h4>Description</h4>
-              <p style={{ margin: 0, color: 'var(--text)', lineHeight: 1.6 }}>{selectedApp.description || 'No description provided.'}</p>
-            </div>
-
-            <div className={styles.detailSection}>
-              <h4><FileText size={13} /> Documents ({selectedApp.documents.length})</h4>
-              {selectedApp.documents.length === 0 ? <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 13 }}>No documents have been uploaded.</p> : (
-                <div className={styles.detailRows}>
-                  {selectedApp.documents.map(document => (
-                    <div className={styles.detailRow} key={document.id}>
-                      <span>{document.name}</span>
-                      <strong>{document.status}</strong>
-                      {document.url && <a href={document.url} target="_blank" rel="noreferrer" aria-label={`Open ${document.name}`} title="Open document" style={{ color: 'var(--primary)' }}><ExternalLink size={15} /></a>}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {(selectedApp.planRevisions?.length || selectedApp.siteVisitDates?.length || selectedApp.approvalNumber || selectedApp.notes || selectedApp.clientComments) && (
-              <div className={styles.detailSection}>
-                <h4>Workflow Details</h4>
-                <div className={styles.detailRows}>
-                  {selectedApp.siteVisitDates?.length && <div className={styles.detailRow}><span>Proposed visits</span><strong>{selectedApp.siteVisitDates.map(date => new Date(date).toLocaleDateString('en-IN')).join(', ')}</strong></div>}
-                  {selectedApp.selectedSiteVisitDate && <div className={styles.detailRow}><span>Confirmed visit</span><strong>{new Date(selectedApp.selectedSiteVisitDate).toLocaleDateString('en-IN')}</strong></div>}
-                  {selectedApp.planRevisions?.length && <div className={styles.detailRow}><span>Plan revisions</span><strong>{selectedApp.planRevisions.length}</strong></div>}
-                  {selectedApp.approvalNumber && <div className={styles.detailRow}><span>Approval number</span><strong>{selectedApp.approvalNumber}</strong></div>}
-                  {selectedApp.notes && <div className={styles.detailRow}><span>Latest note</span><strong>{selectedApp.notes}</strong></div>}
-                  {selectedApp.clientComments && <div className={styles.detailRow}><span>Customer comment</span><strong>{selectedApp.clientComments}</strong></div>}
-                </div>
-              </div>
-            )}
-
-            <ActivityThread appId={selectedApp.id} activities={selectedApp.activityLog} />
-          </section>
-        );
-      })()}
+      {/* Detail card has been moved inside the inline expansion row above */}
     </div>
   );
 }

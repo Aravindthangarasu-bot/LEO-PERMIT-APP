@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, FileText, UserPlus, Settings, BarChart3,
 } from 'lucide-react';
-import PortalLayout from '../../components/PortalLayout/PortalLayout';
+import AdminLayout from './AdminLayout';
 import AdminDashboard from './AdminDashboard';
 import ManageProviders from './ManageProviders';
 import AddProvider from './AddProvider';
@@ -22,7 +22,7 @@ export default function AdminPortal() {
     { path: '/admin/settings',      icon: <Settings size={18} />,        label: 'Settings' },
   ];
   return (
-    <PortalLayout navItems={NAV_ITEMS} portalName={t('portal.admin')} accentColor="#1d4ed8">
+    <AdminLayout navItems={NAV_ITEMS}>
       <Routes>
         <Route index element={<AdminDashboard />} />
         <Route path="providers"    element={<ManageProviders />} />
@@ -32,7 +32,7 @@ export default function AdminPortal() {
         <Route path="settings"  element={<ComingSoon title="System Settings" />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
-    </PortalLayout>
+    </AdminLayout>
   );
 }
 
