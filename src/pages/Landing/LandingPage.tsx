@@ -272,10 +272,10 @@ export default function LandingPage() {
             <div className={styles.footerCol}>
               <h4>{t('landing.footer.quickLinks')}</h4>
               <ul>
-                <li><Link to="/">{t('landing.footer.buildingRules')}</Link></li>
-                <li><Link to="/">{t('landing.footer.feeCalc')}</Link></li>
-                <li><Link to="/">{t('landing.footer.manuals')}</Link></li>
-                <li><Link to="/">{t('landing.footer.orders')}</Link></li>
+                <li><Link to="/building-rules">{t('landing.footer.buildingRules')}</Link></li>
+                <li><Link to="/fee-calculator">{t('landing.footer.feeCalc')}</Link></li>
+                <li><Link to="/user-manuals">{t('landing.footer.manuals')}</Link></li>
+                <li><Link to="/govt-orders">{t('landing.footer.orders')}</Link></li>
               </ul>
             </div>
             <div className={styles.footerCol}>

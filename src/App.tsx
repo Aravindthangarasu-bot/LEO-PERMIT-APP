@@ -14,6 +14,10 @@ import AdminPortal from './pages/Admin/AdminPortal';
 import StaffPortal from './pages/Staff/StaffPortal';
 import ApplicationNotificationToast from './components/ApplicationNotificationToast';
 import PageTransition from './components/PageTransition';
+import BuildingRulesPage from './pages/Resources/BuildingRulesPage';
+import GovtOrdersPage from './pages/Resources/GovtOrdersPage';
+import FeeCalculatorPage from './pages/Resources/FeeCalculatorPage';
+import UserManualsPage from './pages/Resources/UserManualsPage';
 
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -35,6 +39,12 @@ export default function App() {
                   <Route path="/signup" element={<SignupPage />} />
                   <Route path="/get-started" element={<GetStartedPage />} />
                   <Route path="/provider-register" element={<ProviderRegisterPage />} />
+
+                  {/* Resource pages */}
+                  <Route path="/building-rules" element={<BuildingRulesPage />} />
+                  <Route path="/govt-orders" element={<GovtOrdersPage />} />
+                  <Route path="/fee-calculator" element={<FeeCalculatorPage />} />
+                  <Route path="/user-manuals" element={<UserManualsPage />} />
 
                   {/* Customer Portal */}
                   <Route
