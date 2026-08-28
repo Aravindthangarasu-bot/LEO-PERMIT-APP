@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Globe, User, ChevronDown, LogOut, Phone } from 'lucide-react';
+import { Phone, LogOut, ChevronDown, User, Globe } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import NotificationsDropdown from '../NotificationsDropdown';
 import styles from './Navbar.module.css';
 
 interface NavItem {
@@ -61,9 +60,7 @@ export default function Navbar({ variant = 'landing', navItems }: NavbarProps) {
               ) : (
                 <div className={styles.portalControls}>
                   {isAuthenticated && user && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <NotificationsDropdown />
-                      <div className={styles.userMenu}>
+                    <div className={styles.userMenu}>
                       <button 
                         className={styles.userBtn}
                         onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -86,7 +83,6 @@ export default function Navbar({ variant = 'landing', navItems }: NavbarProps) {
                           </button>
                         </div>
                       )}
-                    </div>
                     </div>
                   )}
                 </div>
