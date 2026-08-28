@@ -81,23 +81,26 @@ export default function ActivityThread({ appId, activities = [] }: ActivityThrea
               return (
                 <div key={act.id} style={{ 
                   display: 'flex', 
-                  alignItems: 'center', 
-                  gap: 8, 
+                  flexDirection: 'column',
+                  gap: 4, 
                   padding: '12px 12px 12px 48px', 
                   borderBottom: index < activities.length - 1 ? '1px solid #f1f5f9' : 'none',
                   fontSize: 12, 
-                  color: '#64748b' 
+                  color: '#64748b',
+                  position: 'relative'
                 }}>
-                  {getIcon(act.type, '#94a3b8')}
+                  <div style={{ position: 'absolute', left: 16, top: 14 }}>
+                    {getIcon(act.type, '#94a3b8')}
+                  </div>
                   <span>
                     <strong>{act.userName}</strong>
                     {act.type === 'status_change' && ' changed the status: '}
                     {act.type === 'document_upload' && ' uploaded a document: '}
                     <span style={{ color: '#0f172a' }}>{act.content}</span>
                   </span>
-                  <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 'auto' }}>
+                  <div style={{ fontSize: 11, color: '#94a3b8' }}>
                     {new Date(act.timestamp).toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                  </span>
+                  </div>
                 </div>
               );
             }
@@ -120,21 +123,22 @@ export default function ActivityThread({ appId, activities = [] }: ActivityThrea
                 </div>
                 
                 {/* Content */}
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
                       {act.userName}
                     </span>
                     <span style={{ fontSize: 12, color: '#64748b', background: '#f1f5f9', padding: '2px 6px', borderRadius: 4 }}>
                       {act.userRole}{isOwnComment ? ' (You)' : ''}
                     </span>
-                    <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 'auto' }}>
-                      {new Date(act.timestamp).toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                    </span>
                   </div>
                   
-                  <div style={{ fontSize: 14, color: '#334155', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                  <div style={{ fontSize: 14, color: '#334155', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                     {act.content}
+                  </div>
+                  
+                  <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 8 }}>
+                    {new Date(act.timestamp).toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
               </div>
