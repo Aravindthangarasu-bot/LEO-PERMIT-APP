@@ -110,12 +110,13 @@ export default function Navbar({ variant = 'landing', navItems }: NavbarProps) {
                 <li><Link to="/">{t('navbar.home')}</Link></li>
                 {!isPortal ? (
                   <>
-                    <li><Link to="/">{t('navbar.about')}</Link></li>
-                    <li><Link to="/">{t('navbar.services')}</Link></li>
-                    <li><Link to="/">{t('navbar.track')}</Link></li>
-                    <li><Link to="/">{t('navbar.downloads')}</Link></li>
-                    <li><Link to="/">{t('navbar.contact')}</Link></li>
+                    <li><a href="/#about">{t('navbar.about')}</a></li>
+                    <li><a href="/#services">{t('navbar.services')}</a></li>
+                    <li><a href="/#track">{t('navbar.track')}</a></li>
+                    <li><Link to="/user-manuals">{t('navbar.downloads')}</Link></li>
+                    <li><a href="/#contact">{t('navbar.contact')}</a></li>
                   </>
+
                 ) : (
                   <>
                     <li><Link to={`/${user?.role || 'customer'}`}>{t('navbar.dashboard')}</Link></li>

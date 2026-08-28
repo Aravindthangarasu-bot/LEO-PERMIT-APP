@@ -232,7 +232,7 @@ export default function LandingPage() {
       </section>
 
       {/* 5. Online Services Grid */}
-      <section className={styles.servicesSection}>
+      <section id="services" className={styles.servicesSection}>
         <div className="container">
           <div className={styles.sectionHeader}>
             <h2>{t('landing.services.title')}</h2>
@@ -265,7 +265,7 @@ export default function LandingPage() {
       <footer className={styles.portalFooter}>
         <div className="container">
           <div className={styles.footerGrid}>
-            <div className={styles.footerCol}>
+            <div id="about" className={styles.footerCol}>
               <h4>{t('landing.footer.aboutTitle')}</h4>
               <p>{t('landing.footer.aboutDesc')}</p>
             </div>
@@ -278,7 +278,7 @@ export default function LandingPage() {
                 <li><Link to="/govt-orders">{t('landing.footer.orders')}</Link></li>
               </ul>
             </div>
-            <div className={styles.footerCol}>
+            <div id="contact" className={styles.footerCol}>
               <h4>{t('landing.footer.helpSupport')}</h4>
               <ul>
                 <li><Link to="/">{t('landing.footer.faq')}</Link></li>
