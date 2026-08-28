@@ -43,7 +43,7 @@ const VALIDATORS = {
 
 export default function SignupPage() {
   const [step, setStep]       = useState<Step>('details');
-  const [form, setForm]       = useState({ name: '', phone: '', email: '', address: '', pincode: '', city: '', taluk: '', district: '', state: '' });
+  const [form, setForm]       = useState({ name: '', phone: '', email: '', address: '', pincode: '', city: '', taluk: '', district: '', state: '', lsg: '' });
   const [pincodeOptions, setPincodeOptions] = useState<PincodeLocation[]>([]);
   const [pincodeStatus, setPincodeStatus] = useState<'idle' | 'loading' | 'error' | 'not_found'>('idle');
   const [errors, setErrors]   = useState<FieldErrors>({});
@@ -96,16 +96,12 @@ export default function SignupPage() {
               district: res.options[0].district,
               state: res.options[0].state
             }));
-          } else {
-            // Reset and let them choose from dropdown
-            setForm(prev => ({ ...prev, city: '', taluk: '', district: '', state: '' }));
           }
         }
       });
     } else {
       setPincodeOptions([]);
       setPincodeStatus('idle');
-      setForm(prev => ({ ...prev, city: '', taluk: '', district: '', state: '' }));
     }
   }, [form.pincode]);
 
@@ -239,40 +235,47 @@ export default function SignupPage() {
                     </div>
                   </div>
 
-                  {pincodeOptions.length > 1 && (
+                  <div className={styles.grid2}>
                     <div className="form-group">
-                      <label className="form-label">Select Your Location *</label>
-                      <div className={styles.inputWrap}>
-                        <select
-                          className="form-input"
-                          value={`${form.city}|${form.taluk}|${form.district}`}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            if (val) {
-                              const [city, taluk, district] = val.split('|');
-                              const opt = pincodeOptions.find(o => o.city === city && o.taluk === taluk && o.district === district);
-                              if (opt) {
-                                setForm(prev => ({ ...prev, city: opt.city, taluk: opt.taluk, district: opt.district, state: opt.state }));
-                              }
-                            }
-                          }}
-                        >
-                          <option value="|">-- Select Location --</option>
-                          {pincodeOptions.map((opt, i) => (
-                            <option key={i} value={`${opt.city}|${opt.taluk}|${opt.district}`}>
-                              {opt.office}, {opt.city} (Taluk: {opt.taluk}, Dist: {opt.district})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      <label className="form-label">District *</label>
+                      <select className="form-input" value={form.district} onChange={e => setForm(f => ({ ...f, district: e.target.value }))}>
+                        <option value="">Select District</option>
+                        {pincodeOptions.length > 0 
+                          ? Array.from(new Set(pincodeOptions.map(o => o.district))).map(d => <option key={d} value={d}>{d}</option>)
+                          : form.district ? <option value={form.district}>{form.district}</option> : null}
+                        <option value="Thiruvananthapuram">Thiruvananthapuram</option>
+                        <option value="Ernakulam">Ernakulam</option>
+                        <option value="Kozhikode">Kozhikode</option>
+                        <option value="Other">Other</option>
+                      </select>
                     </div>
-                  )}
+                    <div className="form-group">
+                      <label className="form-label">Taluka *</label>
+                      <select className="form-input" value={form.taluk} onChange={e => setForm(f => ({ ...f, taluk: e.target.value }))}>
+                        <option value="">Select Taluka</option>
+                        {pincodeOptions.length > 0 
+                          ? Array.from(new Set(pincodeOptions.filter(o => !form.district || o.district === form.district).map(o => o.taluk))).map(t => <option key={t} value={t}>{t}</option>)
+                          : form.taluk ? <option value={form.taluk}>{form.taluk}</option> : null}
+                        <option value="Trivandrum">Trivandrum</option>
+                        <option value="Kochi">Kochi</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                  </div>
 
-                  {form.city && form.district && pincodeOptions.length <= 1 && (
-                    <div style={{ marginBottom: 16, fontSize: 13, color: 'var(--text-muted)', display: 'flex', gap: 6, alignItems: 'center' }}>
-                      <MapPin size={14} /> {form.city}, {form.taluk}, {form.district}, {form.state}
-                    </div>
-                  )}
+                  <div className="form-group">
+                    <label className="form-label">Local Body (Panchayat / Municipality) *</label>
+                    <select className="form-input" value={form.lsg} onChange={e => setForm(f => ({ ...f, lsg: e.target.value }))}>
+                      <option value="">Select Local Body</option>
+                      <option value="Trivandrum Corporation">Trivandrum Corporation</option>
+                      <option value="Kochi Corporation">Kochi Corporation</option>
+                      <option value="Kozhikode Corporation">Kozhikode Corporation</option>
+                      <option value="Kollam Corporation">Kollam Corporation</option>
+                      <option value="Thrissur Corporation">Thrissur Corporation</option>
+                      <option value="Kannur Corporation">Kannur Corporation</option>
+                      <option value="Other">Other (Grama Panchayat)</option>
+                    </select>
+                  </div>
 
                   <div className="form-group">
                     <label className="form-label">Address *</label>

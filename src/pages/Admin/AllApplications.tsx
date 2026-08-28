@@ -86,12 +86,25 @@ export default function AllApplications() {
         userId: prov.id,
         type: 'assigned',
         title: 'Application assigned to you',
-        message: `${selectedApp?.customerName ?? 'A customer'}'s application ${selected} has been assigned to ${prov.officeName ?? prov.name}. Review it to begin service.`,
+        message: `${selectedApp?.customerName ?? 'A customer'}'s application ${selected} has been assigned to you. Review it to begin service.`,
         contactName: selectedApp?.customerName,
         contactPhone: selectedApp?.customerPhone,
         timestamp: new Date().toISOString(),
         read: false,
       });
+      if (selectedApp?.customerId) {
+        await addNotification({
+          applicationId: selected,
+          userId: selectedApp.customerId,
+          type: 'assigned',
+          title: 'Provider Assigned',
+          message: `Your application ${selected} has been assigned to service provider ${prov.officeName ?? prov.name}. They will review your documents shortly.`,
+          contactName: prov.officeName ?? prov.name,
+          contactPhone: prov.phone,
+          timestamp: new Date().toISOString(),
+          read: false,
+        });
+      }
     }
     setAssignProvider('');
   };

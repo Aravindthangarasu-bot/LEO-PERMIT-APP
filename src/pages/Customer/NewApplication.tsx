@@ -41,6 +41,8 @@ export default function NewApplication() {
   const [pincodeLookupState, setPincodeLookupState] = useState<'idle' | 'loading' | 'not_found' | 'error'>('idle');
   const [providerPage, setProviderPage] = useState(1);
   const [providerSearch, setProviderSearch] = useState('');
+  const [searchDistrict, setSearchDistrict] = useState('');
+  const [searchTaluk, setSearchTaluk] = useState('');
 
   const [uploadedDocs, setUploadedDocs] = useState<Record<string, UploadedFile | null>>(
     () => Object.fromEntries(REQUIRED_DOCS.map(d => [d, null]))
@@ -112,8 +114,16 @@ export default function NewApplication() {
         (!area.district || normalizeLocation(area.district) === normalizeLocation(pincodeLocation?.district)))
   );
   const searchNeedle = normalizeLocation(providerSearch);
-  const searchedProviders = searchNeedle ? activeProviders.filter(provider => [provider.officeName, provider.city, provider.taluk, provider.district, provider.area, provider.pincode, ...(provider.serviceAreas ?? []).flatMap(area => [area.city, area.taluk, area.district, area.pincode])].some(value => normalizeLocation(value).includes(searchNeedle))) : [];
-  const providerPool = searchNeedle ? searchedProviders : exactProviders;
+  const searchDist = normalizeLocation(searchDistrict);
+  const searchTal = normalizeLocation(searchTaluk);
+  
+  const searchedProviders = (searchNeedle || searchDist || searchTal) ? activeProviders.filter(provider => {
+    const matchesSearch = searchNeedle ? [provider.officeName, provider.city, provider.taluk, provider.district, provider.area, provider.pincode, ...(provider.serviceAreas ?? []).flatMap(area => [area.city, area.taluk, area.district, area.pincode])].some(value => normalizeLocation(value).includes(searchNeedle)) : true;
+    const matchesDistrict = searchDist ? [provider.district, ...(provider.serviceAreas ?? []).map(a => a.district)].some(value => normalizeLocation(value) === searchDist) : true;
+    const matchesTaluk = searchTal ? [provider.taluk, ...(provider.serviceAreas ?? []).map(a => a.taluk)].some(value => normalizeLocation(value) === searchTal) : true;
+    return matchesSearch && matchesDistrict && matchesTaluk;
+  }) : [];
+  const providerPool = (searchNeedle || searchDist || searchTal) ? searchedProviders : exactProviders;
   const displayProviders = providerPool.map(p => {
     const licence = getLicenceById(p.licenceCategory ?? '');
     const eligible = licence ? canHandleBuilding(licence, buildingArea, floors, heightM) : true;
@@ -420,9 +430,26 @@ export default function NewApplication() {
             {errors.submission && <p className={styles.fieldError}><AlertCircle size={13} /> {errors.submission}</p>}
 
             <div className="form-group" style={{ marginTop: 16 }}>
-              <label className="form-label">Search providers by name, pincode, city, taluk, or district</label>
-              <input className="form-input" type="search" placeholder="Search wider area when no local provider is available" value={providerSearch} onChange={e => setProviderSearch(e.target.value)} />
-              {providerSearch && <p className={styles.hintText}>Showing active providers matching “{providerSearch}”. Verify the selected provider's service area before submitting.</p>}
+              <label className="form-label">Search wider area for providers</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 8 }}>
+                <input className="form-input" type="search" placeholder="Search by name, pincode..." value={providerSearch} onChange={e => setProviderSearch(e.target.value)} />
+                <select className="form-input" value={searchDistrict} onChange={e => { setSearchDistrict(e.target.value); setSearchTaluk(''); }}>
+                  <option value="">All Districts</option>
+                  {Array.from(new Set(activeProviders.flatMap(p => [p.district, ...(p.serviceAreas || []).map(a => a.district)]).filter(Boolean))).map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+                <select className="form-input" value={searchTaluk} onChange={e => setSearchTaluk(e.target.value)} disabled={!searchDistrict}>
+                  <option value="">All Talukas</option>
+                  {Array.from(new Set(activeProviders.flatMap(p => [
+                    { t: p.taluk, d: p.district },
+                    ...(p.serviceAreas || []).map(a => ({ t: a.taluk, d: a.district }))
+                  ]).filter(x => x.t && normalizeLocation(x.d) === normalizeLocation(searchDistrict)).map(x => x.t))).map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              {(providerSearch || searchDistrict || searchTaluk) && <p className={styles.hintText}>Showing providers matching your search. Verify the selected provider's service area before submitting.</p>}
             </div>
 
             {/* Eligible providers */}
