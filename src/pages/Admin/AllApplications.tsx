@@ -5,6 +5,7 @@ import { useAppStore, isLicenceExpired } from '../../context/AppStoreContext';
 import { STATUS_CONFIG } from '../Customer/statusConfig';
 import { PERMIT_TYPES } from '../../data/mockData';
 import ActivityThread from '../../components/ActivityThread';
+import { DocumentViewer } from '../../components/DocumentViewer/DocumentViewer';
 import { sortByNewest } from '../../utils/sorting';
 import PaginationControls from '../../components/PaginationControls';
 import styles from './Admin.module.css';
@@ -17,6 +18,7 @@ export default function AllApplications() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState(initialFilter);
   const [page, setPage] = useState(1);
+  const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string } | null>(null);
 
   useEffect(() => {
     const status = searchParams.get('status') || 'all';
@@ -282,7 +284,7 @@ export default function AllApplications() {
                                           <div key={document.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 12 }}>
                                             <span style={{ fontWeight: 600, color: 'var(--text)' }}>{document.name}</span>
                                             <span style={{ color: document.status === 'verified' ? '#16a34a' : 'var(--text-muted)', textTransform: 'uppercase', fontSize: 10, fontWeight: 700 }}>{document.status}</span>
-                                            {document.url && <a href={document.url} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', display: 'flex' }}><ExternalLink size={14} /></a>}
+                                            {document.url && <button type="button" onClick={() => setViewingDoc({ url: document.url!, name: document.name })} style={{ color: 'var(--primary)', display: 'flex', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><ExternalLink size={14} /></button>}
                                           </div>
                                         ))}
                                       </div>
@@ -317,6 +319,13 @@ export default function AllApplications() {
       </div>
 
       {/* Detail card removed; details are now shown inline inside the table row. */}
+      {viewingDoc && (
+        <DocumentViewer
+          url={viewingDoc.url}
+          title={viewingDoc.name}
+          onClose={() => setViewingDoc(null)}
+        />
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, BookOpen, MapPin, Loader2, CheckCircle2 } from 'lucide-react';
 import Navbar from '../../components/Navbar/Navbar';
+import { DocumentViewer } from '../../components/DocumentViewer/DocumentViewer';
 import { detectUserRegion } from '../../utils/regionDetection';
 import { getStateResource, ALL_STATES } from '../../data/stateResources';
 import styles from './Resources.module.css';
@@ -11,6 +12,7 @@ export default function BuildingRulesPage() {
   const [detectedState, setDetectedState] = useState('');
   const [detecting, setDetecting] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All');
+  const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string } | null>(null);
 
   useEffect(() => {
     detectUserRegion().then(region => {
@@ -94,9 +96,9 @@ export default function BuildingRulesPage() {
               <h3 className={styles.docTitle}>{doc.title}</h3>
               <p className={styles.docDesc}>{doc.description}</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <a href={doc.url} target="_blank" rel="noopener noreferrer" className={styles.docLink}>
-                  <ExternalLink size={13} /> View on Government Portal
-                </a>
+                <button type="button" onClick={() => setViewingDoc({ url: doc.url, name: doc.title })} className={styles.docLink} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                  <ExternalLink size={13} /> View Document
+                </button>
                 {doc.isOfficial && (
                   <span className={styles.officialBadge}><CheckCircle2 size={10} /> Official</span>
                 )}
@@ -113,6 +115,14 @@ export default function BuildingRulesPage() {
           </span>
         </div>
       </div>
+
+      {viewingDoc && (
+        <DocumentViewer
+          url={viewingDoc.url}
+          title={viewingDoc.name}
+          onClose={() => setViewingDoc(null)}
+        />
+      )}
     </div>
   );
 }

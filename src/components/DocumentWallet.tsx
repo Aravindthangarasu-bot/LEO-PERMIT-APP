@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { FileText, FolderOpen, Image, ShieldCheck, ExternalLink } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { DocumentViewer } from './DocumentViewer/DocumentViewer';
 import { useAppStore } from '../context/AppStoreContext';
 import { PERMIT_TYPES } from '../data/mockData';
 import type { Document, PermitApplication } from '../types';
@@ -44,6 +46,7 @@ function getWalletDocuments(apps: PermitApplication[]): WalletDocument[] {
 }
 
 export default function DocumentWallet() {
+  const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string } | null>(null);
   const { user } = useAuth();
   const { getAppsForUser } = useAppStore();
   const documents = getWalletDocuments(user ? getAppsForUser(user) : []);
@@ -87,7 +90,7 @@ export default function DocumentWallet() {
                   </div>
                   <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, fontSize: 12, color: '#64748b' }}>
                     <span>{document.applicationId}</span>
-                    {document.url && <a href={document.url} target="_blank" rel="noreferrer" aria-label={`Open ${document.name}`} title="Open document" style={{ color: '#2563eb', display: 'inline-flex' }}><ExternalLink size={16} /></a>}
+                    {document.url && <button type="button" onClick={() => setViewingDoc({ url: document.url!, name: document.name })} aria-label={`Open ${document.name}`} title="Open document" style={{ color: '#2563eb', display: 'inline-flex', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><ExternalLink size={16} /></button>}
                   </div>
                 </article>
               ))}
@@ -95,6 +98,13 @@ export default function DocumentWallet() {
           </section>
         );
       })}
+      {viewingDoc && (
+        <DocumentViewer
+          url={viewingDoc.url}
+          title={viewingDoc.name}
+          onClose={() => setViewingDoc(null)}
+        />
+      )}
     </div>
   );
 }

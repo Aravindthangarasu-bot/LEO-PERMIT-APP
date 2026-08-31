@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, FileText, MapPin, Loader2, CheckCircle2 } from 'lucide-react';
 import Navbar from '../../components/Navbar/Navbar';
+import { DocumentViewer } from '../../components/DocumentViewer/DocumentViewer';
 import { detectUserRegion } from '../../utils/regionDetection';
 import { getStateResource, ALL_STATES } from '../../data/stateResources';
 import styles from './Resources.module.css';
@@ -20,6 +21,7 @@ export default function GovtOrdersPage() {
   const [detectedState, setDetectedState] = useState('');
   const [detecting, setDetecting] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All');
+  const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string } | null>(null);
 
   useEffect(() => {
     detectUserRegion().then(region => {
@@ -126,9 +128,9 @@ export default function GovtOrdersPage() {
                     </span>
                   </td>
                   <td>
-                    <a href={go.url} target="_blank" rel="noopener noreferrer" className={styles.docLink}>
+                    <button type="button" onClick={() => setViewingDoc({ url: go.url, name: go.subject })} className={styles.docLink} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                       <ExternalLink size={12} /> View
-                    </a>
+                    </button>
                   </td>
                 </tr>
               ))
@@ -144,6 +146,14 @@ export default function GovtOrdersPage() {
           </span>
         </div>
       </div>
+
+      {viewingDoc && (
+        <DocumentViewer
+          url={viewingDoc.url}
+          title={viewingDoc.name}
+          onClose={() => setViewingDoc(null)}
+        />
+      )}
     </div>
   );
 }

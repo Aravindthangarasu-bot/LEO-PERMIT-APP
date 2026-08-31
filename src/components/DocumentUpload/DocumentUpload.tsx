@@ -8,6 +8,7 @@ import type { DragEvent, ChangeEvent } from 'react';
 import { Upload, X, FileText, CheckCircle2, AlertCircle, Eye, Loader2 } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import { USE_SUPABASE } from '../../context/AppStoreContext';
+import { DocumentViewer } from '../DocumentViewer/DocumentViewer';
 import styles from './DocumentUpload.module.css';
 
 export interface UploadedFile {
@@ -44,6 +45,7 @@ export default function DocumentUpload({ label, accept = '.pdf,.jpg,.jpeg,.png',
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string } | null>(null);
 
   const process = async (file: File) => {
     setError('');
@@ -144,9 +146,9 @@ export default function DocumentUpload({ label, accept = '.pdf,.jpg,.jpeg,.png',
             <span className={styles.fileSize}>{formatBytes(value.sizeBytes)}</span>
             <span className={styles.uploadedBadge}><CheckCircle2 size={11} /> Uploaded</span>
           </div>
-          <a href={value.url} target="_blank" rel="noreferrer" className={styles.viewBtn} title="View file">
+          <button type="button" onClick={() => setViewingDoc({ url: value.url, name: value.name })} className={styles.viewBtn} title="View file">
             <Eye size={15} />
-          </a>
+          </button>
           <button className={styles.removeBtn} onClick={removeFile} title="Remove">
             <X size={15} />
           </button>
@@ -182,6 +184,14 @@ export default function DocumentUpload({ label, accept = '.pdf,.jpg,.jpeg,.png',
 
       {error && (
         <div className={styles.errorMsg}><AlertCircle size={13} />{error}</div>
+      )}
+
+      {viewingDoc && (
+        <DocumentViewer
+          url={viewingDoc.url}
+          title={viewingDoc.name}
+          onClose={() => setViewingDoc(null)}
+        />
       )}
     </div>
   );

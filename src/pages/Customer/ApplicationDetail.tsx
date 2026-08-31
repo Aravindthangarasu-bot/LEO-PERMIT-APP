@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, FileText, CheckCircle2, XCircle, Calendar, Download, MessageSquare, AlertTriangle } from 'lucide-react';
 import DocumentUpload, { type UploadedFile } from '../../components/DocumentUpload/DocumentUpload';
 import ActivityThread from '../../components/ActivityThread';
+import { DocumentViewer } from '../../components/DocumentViewer/DocumentViewer';
 import { useAppStore } from '../../context/AppStoreContext';
 import { useAuth } from '../../context/AuthContext';
 import { canCustomerAccessApp } from '../../utils/security';
@@ -30,6 +31,7 @@ export default function ApplicationDetail() {
   
   const [uploadFile, setUploadFile] = useState<UploadedFile | null>(null);
   const [uploadName, setUploadName] = useState('');
+  const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string } | null>(null);
 
   const app = applications.find(a => a.id === id);
 
@@ -366,9 +368,9 @@ export default function ApplicationDetail() {
                   <span className={styles.docName}>{doc.name}</span>
                   <span className={`badge ${doc.status === 'verified' ? 'badge-success' : doc.status === 'rejected' ? 'badge-error' : 'badge-warning'}`}>{doc.status}</span>
                   {doc.url && (
-                    <a href={doc.url} target="_blank" rel="noreferrer" style={{ marginLeft: 'auto', fontSize: 12, color: '#1d4ed8', fontWeight: 600 }}>
+                    <button type="button" onClick={() => setViewingDoc({ url: doc.url!, name: doc.name })} style={{ marginLeft: 'auto', fontSize: 12, color: '#1d4ed8', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                       View
-                    </a>
+                    </button>
                   )}
                 </div>
               ))
@@ -381,6 +383,14 @@ export default function ApplicationDetail() {
           <ActivityThread appId={app.id} activities={app.activityLog} />
         </div>
       </div>
+      
+      {viewingDoc && (
+        <DocumentViewer
+          url={viewingDoc.url}
+          title={viewingDoc.name}
+          onClose={() => setViewingDoc(null)}
+        />
+      )}
     </div>
   );
 }
