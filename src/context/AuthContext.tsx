@@ -19,7 +19,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 // Demo users map (simulates a backend for local dev)
-const DEMO_USERS: Record<string, User> = {
+export const DEMO_USERS: Record<string, User> = {
   '9999900000': { id: 'c1', name: 'Ravi Kumar',           phone: '9999900000', role: 'customer'  },
   '9999900001': { id: 'c2', name: 'Priya Sharma',         phone: '9999900001', role: 'customer'  },
   '8888800000': { id: 'p1', name: 'Arjun Constructions',  phone: '8888800000', role: 'provider'  },

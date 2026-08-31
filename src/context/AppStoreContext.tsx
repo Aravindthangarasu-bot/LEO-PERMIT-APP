@@ -12,6 +12,7 @@ import {
 
 // Supabase Client
 import { supabase } from '../supabaseClient';
+import { DEMO_USERS } from './AuthContext';
 
 // ============================================================================
 // FEATURE FLAG: Toggle between Mock Data (false) and Supabase (true)
@@ -25,6 +26,7 @@ const MOCK_STAFF: StaffMember[] = [
 ];
 
 interface AppStoreContextValue {
+  users: User[];
   applications: PermitApplication[];
   addApplication: (app: PermitApplication) => Promise<boolean>;
   updateApplication: (id: string, patch: Partial<PermitApplication>) => Promise<boolean>;
@@ -57,6 +59,7 @@ export function isLicenceExpired(provider: ServiceProvider): boolean {
 
 export function AppStoreProvider({ children }: { children: ReactNode }) {
   // State
+  const [users, setUsers] = useState<User[]>(USE_SUPABASE ? [] : Object.values(DEMO_USERS));
   const [applications, setApplications] = useState<PermitApplication[]>([]);
   const [providers, setProviders]       = useState<ServiceProvider[]>(USE_SUPABASE ? [] : mockProviders);
   const [staff, setStaff]               = useState<StaffMember[]>(USE_SUPABASE ? [] : MOCK_STAFF);
@@ -89,6 +92,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     const fetchAllData = async () => {
       // 1. Fetch Users & Staff
       const { data: usersData } = await supabase.from('users').select('*');
+      if (usersData) setUsers(usersData as User[]);
       const { data: staffData } = await supabase.from('staff_members').select('*');
       if (staffData) setStaff(staffData.map(s => ({
         id: s.id, name: s.name, phone: s.phone, email: s.email, role: s.role, providerId: s.provider_id, status: s.status
@@ -595,6 +599,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppStoreContext.Provider value={{
+      users,
       applications, addApplication, updateApplication,
       providers, addProvider, updateProviderProfile, updateProviderStatus,
       staff, addStaff, updateStaffStatus,

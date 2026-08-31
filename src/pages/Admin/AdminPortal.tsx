@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Users, FileText, UserPlus, Settings, BarChart3,
+  LayoutDashboard, Users, FileText, UserPlus, Settings, BarChart3, UserCog
 } from 'lucide-react';
 import PortalLayout from '../../components/PortalLayout/PortalLayout';
 import AdminDashboard from './AdminDashboard';
@@ -8,6 +8,7 @@ import ManageProviders from './ManageProviders';
 import AddProvider from './AddProvider';
 import AllApplications from './AllApplications';
 import ReportsDashboard from './ReportsDashboard';
+import ManageUsers from './ManageUsers';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function AdminPortal() {
@@ -19,6 +20,7 @@ export default function AdminPortal() {
     { path: '/admin/add-provider',  icon: <UserPlus size={18} />,        label: 'Add Provider' },
     { path: '/admin/applications',  icon: <FileText size={18} />,        label: t('portal.nav.allApplications') },
     { path: '/admin/reports',       icon: <BarChart3 size={18} />,       label: t('portal.nav.reports') },
+    { path: '/admin/users',         icon: <UserCog size={18} />,         label: 'Manage Users' },
     { path: '/admin/settings',      icon: <Settings size={18} />,        label: 'Settings' },
   ];
   return (
@@ -29,6 +31,7 @@ export default function AdminPortal() {
         <Route path="add-provider" element={<AddProvider />} />
         <Route path="applications" element={<AllApplications />} />
         <Route path="reports"   element={<ReportsDashboard />} />
+        <Route path="users"     element={<ManageUsers />} />
         <Route path="settings"  element={<ComingSoon title="System Settings" />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
