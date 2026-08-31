@@ -74,27 +74,21 @@ export default function ManageUsers() {
                 className={`${styles.providerRow} ${selected === user.id ? styles.providerRowActive : ''}`}
                 onClick={() => setSelected(user.id)}
               >
-                <div className={styles.providerAvatar}>{initials}</div>
-                <div className={styles.providerMain}>
-                  <h4>{user.name}</h4>
-                  <p style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Phone size={14} /> {user.phone}
-                  </p>
-                  {user.email && (
-                    <p style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Mail size={14} /> {user.email}
-                    </p>
-                  )}
+                <div className={styles.providerRowAvatar}>{initials}</div>
+                <div className={styles.providerRowInfo}>
+                  <div className={styles.providerName}>{user.name}</div>
+                  <div className={styles.providerMeta}>👤 Customer</div>
+                  <div className={styles.providerMeta}>📞 {user.phone}{user.email ? ` · ✉️ ${user.email}` : ''}</div>
                   {(user.city || user.district) && (
-                    <p style={{ display: 'flex', alignItems: 'center', gap: 6, opacity: 0.8 }}>
-                      <MapPin size={14} /> {user.city || user.district} {user.pincode ? `(${user.pincode})` : ''}
-                    </p>
+                    <div className={styles.providerMeta}>
+                      📍 {user.city || user.district} {user.pincode ? `(${user.pincode})` : ''}
+                    </div>
                   )}
                 </div>
-                <div className={styles.providerMeta}>
-                  <div className={`${styles.statusBadge} ${styles['status' + status]}`}>
+                <div className={styles.providerRowRight}>
+                  <span className={`badge ${status === 'active' ? 'badge-success' : status === 'pending' ? 'badge-warning' : 'badge-error'}`}>
                     {getStatusLabel(status)}
-                  </div>
+                  </span>
                 </div>
               </button>
             );
