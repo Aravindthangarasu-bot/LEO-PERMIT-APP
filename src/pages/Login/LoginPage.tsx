@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams, Navigate } from 'react-router-dom';
-import { Phone, ArrowLeft, Shield, User, ChevronRight } from 'lucide-react';
+import { Phone, ArrowLeft, Shield, User, ChevronRight, Building2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import type { UserRole } from '../../types';
 import styles from './LoginPage.module.css';

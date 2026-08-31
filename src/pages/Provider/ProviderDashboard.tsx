@@ -28,8 +28,8 @@ export default function ProviderDashboard() {
     completed: assignedApps.filter(a => ['approved', 'panchayat_approved'].includes(a.status)).length,
   };
 
-  const processingApps = assignedApps.filter(a => a.status === 'processing');
-  const reviewApps = assignedApps.filter(a => a.status === 'document_verification');
+  const processingApps = assignedApps.filter(a => ['under_review', 'plan_preparation'].includes(a.status));
+  const reviewApps = assignedApps.filter(a => a.status === 'documents_required');
 
   const handleSearch = () => {
     if (!searchTerm.trim()) return;
@@ -128,7 +128,7 @@ export default function ProviderDashboard() {
               ))}
               {processingApps.length === 0 && <li><span style={{ color: 'var(--text-muted)' }}>No pending tasks</span></li>}
             </ul>
-            <Link to="/provider/applications?status=processing" className={`btn btn-primary ${styles.ctaBtn}`}>
+            <Link to="/provider/applications?status=under_review" className={`btn btn-primary ${styles.ctaBtn}`}>
               Work on Applications <ArrowRight size={16} />
             </Link>
           </div>
@@ -149,7 +149,7 @@ export default function ProviderDashboard() {
               ))}
               {reviewApps.length === 0 && <li><span style={{ color: 'rgba(255,255,255,0.5)' }}>No applications in review</span></li>}
             </ul>
-            <Link to="/provider/applications?status=document_verification" className={styles.ctaBtnWhite}>
+            <Link to="/provider/applications?status=documents_required" className={`btn ${styles.ctaBtnOutline}`}>
               View Status <ArrowRight size={16} />
             </Link>
           </div>

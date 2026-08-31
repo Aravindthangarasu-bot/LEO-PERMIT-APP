@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate, Navigate } from 'react-router-dom';
-import { Building2, Phone, ArrowLeft, User, CheckCircle2, ChevronRight, MapPin } from 'lucide-react';
+import { Link, Navigate } from 'react-router-dom';
+import { Phone, ArrowLeft, CheckCircle2, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/Navbar/Navbar';
 import styles from './SignupPage.module.css';
@@ -55,7 +55,7 @@ export default function SignupPage() {
 
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
   const { registerCustomer, isAuthenticated, user } = useAuth();
-  const navigate = useNavigate();
+
 
   // Already logged in
   if (isAuthenticated && user) {

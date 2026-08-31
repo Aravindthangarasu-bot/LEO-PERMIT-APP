@@ -55,8 +55,8 @@ export default function CustomerNotifications() {
               role="button"
               tabIndex={0}
               className={`card ${styles.notifCard} ${!n.read ? styles.notifUnread : ''}`}
-              onClick={() => { if (!user) return; markNotificationRead(n.id); navigate(getApplicationNotificationPath(user.role, n.applicationId)); }}
-              onKeyDown={event => { if ((event.key === 'Enter' || event.key === ' ') && user) { markNotificationRead(n.id); navigate(getApplicationNotificationPath(user.role, n.applicationId)); } }}
+              onClick={() => { if (!user) return; markNotificationRead(n.id); navigate(getApplicationNotificationPath(user.role, n.applicationId!)); }}
+              onKeyDown={event => { if ((event.key === 'Enter' || event.key === ' ') && user) { markNotificationRead(n.id); navigate(getApplicationNotificationPath(user.role, n.applicationId!)); } }}
               style={{ borderLeft: `4px solid ${statusConfig.color}`, background: !n.read ? statusConfig.bg : undefined, cursor: 'pointer' }}
             >
               <div className={styles.notifIcon} style={{ background: statusConfig.bg, color: statusConfig.color }}>

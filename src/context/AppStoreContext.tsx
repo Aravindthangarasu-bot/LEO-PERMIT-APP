@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { mockProviders } from '../data/mockData';
-import type { PermitApplication, ServiceProvider, Document, AppNotification, DashboardStats, StaffMember, ActivityLogEntry, User, ApplicationUpdate } from '../types';
+import type { PermitApplication, ServiceProvider, AppNotification, StaffMember, ActivityLogEntry, User, ApplicationUpdate } from '../types';
 import {
   filterAppsForCustomer,
   filterAppsForProvider,
@@ -382,6 +382,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
           console.error('Error finding admins for provider registration:', adminError);
         } else {
           await Promise.all((admins ?? []).map(admin => addNotification({
+            id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substring(2,9),
             userId: admin.id,
             type: 'provider_registration',
             title: 'New provider registration request',

@@ -21,7 +21,7 @@ export default function ProtectedRoute({ children, allowedRoles, redirectTo = '/
   const currentUser = user || storedUser;
   
   // Failsafe for older sessions that might have saved 'manager' or 'associate' instead of 'staff'
-  if (currentUser && (currentUser.role === 'manager' || currentUser.role === 'associate')) {
+  if (currentUser && ((currentUser.role as string) === 'manager' || (currentUser.role as string) === 'associate')) {
     currentUser.role = 'staff';
   }
 

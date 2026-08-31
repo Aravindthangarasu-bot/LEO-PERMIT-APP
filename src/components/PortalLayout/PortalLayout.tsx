@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import Navbar from '../Navbar/Navbar';
 import styles from './PortalLayout.module.css';
 

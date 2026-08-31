@@ -49,9 +49,9 @@ export default function StaffManagement() {
     return Object.keys(e).length === 0;
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!validate()) return;
-    const result = addStaff({
+    const result = await addStaff({
       id: `s_${Date.now()}`,
       name: form.name,
       phone: form.phone,

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Search, ArrowRight, Shield, Clock, FileCheck2, HardHat
+  Search, ArrowRight, Shield, Clock
 } from 'lucide-react';
 import { useAppStore, isLicenceExpired } from '../../context/AppStoreContext';
 import AnimateIn from '../../components/AnimateIn';

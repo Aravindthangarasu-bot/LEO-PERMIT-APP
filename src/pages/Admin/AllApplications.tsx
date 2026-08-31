@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { Search, Calendar, ExternalLink, FileText, MapPin, Phone, UserRound, X } from 'lucide-react';
 import { useAppStore, isLicenceExpired } from '../../context/AppStoreContext';
 import { STATUS_CONFIG } from '../Customer/statusConfig';
-import { PERMIT_TYPES } from '../../data/mockData';
 import ActivityThread from '../../components/ActivityThread';
 import { DocumentViewer } from '../../components/DocumentViewer/DocumentViewer';
 import { sortByNewest } from '../../utils/sorting';
@@ -84,6 +83,7 @@ export default function AllApplications() {
     const saved = await updateApplication(selected, { assignedProviderId: prov.id, assignedProviderName: prov.officeName ?? prov.name, status: 'under_review' });
     if (saved) {
       await addNotification({
+        id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substring(2,9),
         applicationId: selected,
         userId: prov.id,
         type: 'assigned',
@@ -96,6 +96,7 @@ export default function AllApplications() {
       });
       if (selectedApp?.customerId) {
         await addNotification({
+          id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substring(2,9),
           applicationId: selected,
           userId: selectedApp.customerId,
           type: 'assigned',
@@ -228,7 +229,6 @@ export default function AllApplications() {
                           {(() => {
                             const selectedApp = applications.find(a => a.id === selected);
                             if (!selectedApp) return null;
-                            const status = STATUS_CONFIG[selectedApp.status];
                             return (
                               <div style={{ textAlign: 'left', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 400px', gap: 32 }}>
                                 {/* Left Column: Details */}

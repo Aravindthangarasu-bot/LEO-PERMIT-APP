@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ArrowRight, FileCheck2, Clock, Plus, Bell, X } from 'lucide-react';
+import { Search, ArrowRight, FileCheck2, Plus, Bell } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAppStore } from '../../context/AppStoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import AnimateIn from '../../components/AnimateIn';
-import { STATUS_CONFIG, LIFECYCLE_STAGES, COMMON_STATUS_FILTERS } from './statusConfig';
+import { STATUS_CONFIG, COMMON_STATUS_FILTERS } from './statusConfig';
 import sharedStyles from '../../components/DashboardShared.module.css';
 import customerStyles from './Customer.module.css';
 

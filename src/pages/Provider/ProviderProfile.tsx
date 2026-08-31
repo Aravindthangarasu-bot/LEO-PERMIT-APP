@@ -20,7 +20,7 @@ export default function ProviderProfile() {
   useEffect(() => {
     if (!provider) return;
     setForm({ ownerName: provider.ownerName, officeName: provider.officeName, phone: provider.phone, email: provider.email, officeAddress: provider.officeAddress, pincode: provider.pincode ?? '', city: provider.city ?? '', taluk: provider.taluk ?? '', district: provider.district ?? '' });
-    setAreas(provider.serviceAreas ?? []);
+    setAreas((provider.serviceAreas ?? []).map(a => ({ ...a, office: a.city ?? '', state: a.state ?? '' })));
   }, [provider]);
 
   useEffect(() => {

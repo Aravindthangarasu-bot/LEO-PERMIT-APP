@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Phone, Mail, MapPin } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useAppStore } from '../../context/AppStoreContext';
 import styles from './Admin.module.css';
 import PaginationControls from '../../components/PaginationControls';

@@ -1,6 +1,6 @@
 import { useState, Fragment, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, Phone, Mail, MapPin, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MapPin, CheckCircle2, AlertCircle } from 'lucide-react';
 import { KPBR_LICENCE_CATEGORIES } from '../../data/licenceData';
 import { useAppStore } from '../../context/AppStoreContext';
 import DocumentUpload from '../../components/DocumentUpload/DocumentUpload';
@@ -51,8 +51,7 @@ export default function ProviderRegisterPage() {
   const [additionalPincode, setAdditionalPincode] = useState('');
   const [additionalLocation, setAdditionalLocation] = useState<PincodeLocation | null>(null);
 
-  const selectedLicence = KPBR_LICENCE_CATEGORIES.find(l => l.id === form.licenceCategory);
-
+  
   useEffect(() => {
     if (form.pincode.length === 6) {
       setPincodeStatus('loading');
@@ -369,11 +368,12 @@ export default function ProviderRegisterPage() {
                       licenceImageUrl: form.licenceImageName,
                       licenceVerified: false,
                       licenceVerificationStatus: 'pending',
-                      staff: [],
-                      applicationsAssigned: 0,
+                      joinedAt: new Date().toISOString(),
+                      status: 'pending',
                       rating: 0,
-                      reviews: 0,
-                      createdAt: new Date().toISOString()
+                      totalApprovals: 0,
+                      documents: [],
+                      specializations: []
                     });
                     setSubmitting(false);
                     setSuccess(true);

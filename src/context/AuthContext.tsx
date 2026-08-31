@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return Array.from(roles);
   };
 
-  const login = async (phone: string, role: UserRole, password?: string) => {
+  const login = async (phone: string, role: UserRole, _password?: string) => {
     if (USE_SUPABASE) {
       try {
         let authUser: User | null = null;
