@@ -19,8 +19,8 @@ export default function AdminPortal() {
     { path: '/admin/providers',     icon: <Users size={18} />,           label: t('portal.nav.manageProviders') },
     { path: '/admin/add-provider',  icon: <UserPlus size={18} />,        label: 'Add Provider' },
     { path: '/admin/applications',  icon: <FileText size={18} />,        label: t('portal.nav.allApplications') },
-    { path: '/admin/reports',       icon: <BarChart3 size={18} />,       label: t('portal.nav.reports') },
     { path: '/admin/users',         icon: <UserCog size={18} />,         label: 'Manage Users' },
+    { path: '/admin/reports',       icon: <BarChart3 size={18} />,       label: t('portal.nav.reports') },
     { path: '/admin/settings',      icon: <Settings size={18} />,        label: 'Settings' },
   ];
   return (

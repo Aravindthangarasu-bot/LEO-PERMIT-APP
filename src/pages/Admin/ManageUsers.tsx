@@ -94,6 +94,39 @@ export default function ManageUsers() {
             );
           })}
         </div>
+
+        {selected && (() => {
+          const detail = filteredUsers.find(u => u.id === selected);
+          if (!detail) return null;
+          const status = getStatus(detail.id);
+          
+          return (
+            <div className={`card ${styles.detailCard}`}>
+              <div className={styles.detailHeader}>
+                <div className={styles.detailAvatar}>{detail.name ? detail.name.charAt(0).toUpperCase() : '?'}</div>
+                <div>
+                  <div className={styles.detailName}>{detail.name}</div>
+                  <div className={styles.detailMeta}>👤 Customer</div>
+                  <div className={styles.detailMeta}>{detail.phone} {detail.email ? `· ${detail.email}` : ''}</div>
+                </div>
+                <span className={`badge ${status === 'active' ? 'badge-success' : status === 'pending' ? 'badge-warning' : 'badge-error'}`}>
+                  {getStatusLabel(status)}
+                </span>
+              </div>
+
+              <div className={styles.detailSection}>
+                <h4>User Information</h4>
+                <div className={styles.detailRows}>
+                  <div className={styles.detailRow}><span>Phone Number</span><span>{detail.phone}</span></div>
+                  <div className={styles.detailRow}><span>Email Address</span><span>{detail.email || '-'}</span></div>
+                  <div className={styles.detailRow}><span>Location / City</span><span>{detail.city || detail.district || '-'}</span></div>
+                  <div className={styles.detailRow}><span>Pincode</span><span>{detail.pincode || '-'}</span></div>
+                  <div className={styles.detailRow}><span>Address</span><span>{detail.address || '-'}</span></div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
