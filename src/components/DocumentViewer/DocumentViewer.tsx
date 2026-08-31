@@ -10,6 +10,7 @@ interface DocumentViewerProps {
 
 export const DocumentViewer: React.FC<DocumentViewerProps> = ({ url, onClose, title = "Document View" }) => {
     const [viewerUrl, setViewerUrl] = useState<string>(url);
+    const [downloadUrl, setDownloadUrl] = useState<string>(url);
     const [loading, setLoading] = useState(true);
     const [isImage, setIsImage] = useState(false);
     const [error, setError] = useState(false);
@@ -35,21 +36,13 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ url, onClose, ti
         let isMounted = true;
         let objectUrl = '';
 
-        // Helper to check if URL is explicitly an image
-        const urlIsImage = url.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp|bmp|svg)($|\?)/);
-        
-        if (urlIsImage) {
-            setIsImage(true);
-            setLoading(false);
-            return;
-        }
-
         const loadDocument = async () => {
             try {
                 // For data URIs or object URLs, use directly
                 if (url.startsWith('data:') || url.startsWith('blob:')) {
                     if (url.startsWith('data:image/')) setIsImage(true);
                     setViewerUrl(url);
+                    setDownloadUrl(url);
                     setLoading(false);
                     return;
                 }
@@ -63,6 +56,8 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ url, onClose, ti
 
                 if (blob.type.startsWith('image/')) {
                     setIsImage(true);
+                } else if (url.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp|bmp|svg)($|\?)/)) {
+                    setIsImage(true);
                 }
                 
                 // Chrome iframe doesn't like application/octet-stream for PDFs
@@ -72,12 +67,16 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ url, onClose, ti
 
                 objectUrl = URL.createObjectURL(blob);
                 setViewerUrl(objectUrl);
+                setDownloadUrl(objectUrl);
             } catch (err) {
                 console.warn('Could not fetch document for preview, falling back.', err);
                 if (!isMounted) return;
                 
                 // Fallback strategies if fetch fails (e.g. CORS issues)
-                if (url.toLowerCase().includes('.pdf')) {
+                if (url.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp|bmp|svg)($|\?)/)) {
+                    setIsImage(true);
+                    setViewerUrl(url);
+                } else if (url.toLowerCase().includes('.pdf')) {
                     setViewerUrl(`https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`);
                 } else {
                     setViewerUrl(url); // Hope for the best
@@ -102,8 +101,8 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ url, onClose, ti
                     <h3 className={styles.title}>{title}</h3>
                     <div className={styles.actions}>
                         <a 
-                            href={url} 
-                            download 
+                            href={downloadUrl} 
+                            download={title || "document"} 
                             target="_blank" 
                             rel="noopener noreferrer" 
                             className={styles.downloadBtn}
