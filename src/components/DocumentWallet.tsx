@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { FileText, FolderOpen, Image, ShieldCheck, ExternalLink } from 'lucide-react';
+import { FileText, FolderOpen, Image, ShieldCheck, ExternalLink, Search } from 'lucide-react';
+import PaginationControls from './PaginationControls';
 import { useAuth } from '../context/AuthContext';
 import { DocumentViewer } from './DocumentViewer/DocumentViewer';
 import { useAppStore } from '../context/AppStoreContext';
@@ -49,9 +50,29 @@ export default function DocumentWallet() {
   const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string } | null>(null);
   const { user } = useAuth();
   const { getAppsForUser } = useAppStore();
-  const documents = getWalletDocuments(user ? getAppsForUser(user) : []);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+
+  const apps = user ? getAppsForUser(user) : [];
+  
+  const filteredApps = apps.filter(app => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      app.customerName?.toLowerCase().includes(q) ||
+      app.customerPhone?.toLowerCase().includes(q) ||
+      app.id.toLowerCase().includes(q) ||
+      app.type.toLowerCase().includes(q)
+    );
+  });
+
+  const documents = getWalletDocuments(filteredApps);
   // Group documents by application ID
   const appGroups = [...new Set(documents.map(d => d.applicationId))];
+  
+  const ITEMS_PER_PAGE = 3;
+  const pageCount = Math.ceil(appGroups.length / ITEMS_PER_PAGE);
+  const paginatedGroups = appGroups.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   return (
     <div className="page-enter" style={{ maxWidth: 1120, margin: '0 auto' }}>
@@ -60,8 +81,27 @@ export default function DocumentWallet() {
           <h1 style={{ margin: 0, fontSize: 28, color: 'var(--text)' }}>Document Wallet</h1>
           <p style={{ margin: '8px 0 0', color: 'var(--text-muted)' }}>Your securely stored application documents, organized by customer application.</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#166534', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>
-          <ShieldCheck size={18} /> {documents.length} secured documents
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#166534', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>
+            <ShieldCheck size={18} /> {documents.length} secured documents
+          </div>
+          <div style={{ position: 'relative', width: '300px' }}>
+            <Search size={18} style={{ position: 'absolute', left: 12, top: 10, color: 'var(--text-muted)' }} />
+            <input
+              type="text"
+              placeholder="Search by name, phone, App ID..."
+              value={searchQuery}
+              onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
+              style={{
+                width: '100%',
+                padding: '10px 12px 10px 36px',
+                borderRadius: '8px',
+                border: '1px solid var(--border)',
+                outline: 'none',
+                fontSize: '14px'
+              }}
+            />
+          </div>
         </div>
       </header>
 
@@ -70,7 +110,7 @@ export default function DocumentWallet() {
           <FolderOpen size={42} color="#64748b" />
           <p style={{ margin: '14px 0 0', color: '#475569' }}>Documents you upload or receive through an application will appear here automatically.</p>
         </div>
-      ) : appGroups.map(appId => {
+      ) : paginatedGroups.map(appId => {
         const appDocs = documents.filter(d => d.applicationId === appId);
         const ownerName = appDocs[0]?.ownerLabel || 'Unknown Customer';
         const serviceName = appDocs[0]?.serviceLabel || 'Service';
@@ -124,6 +164,17 @@ export default function DocumentWallet() {
           </section>
         );
       })}
+
+      {appGroups.length > ITEMS_PER_PAGE && (
+        <div style={{ marginTop: 32, display: 'flex', justifyContent: 'center' }}>
+          <PaginationControls 
+            page={page} 
+            pageCount={pageCount} 
+            total={appGroups.length} 
+            onPageChange={setPage} 
+          />
+        </div>
+      )}
       {viewingDoc && (
         <DocumentViewer
           url={viewingDoc.url}
