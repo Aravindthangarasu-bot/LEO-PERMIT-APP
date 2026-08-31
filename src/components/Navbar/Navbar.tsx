@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Phone, LogOut, ChevronDown, User, Globe, Moon, Sun, Bell } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -27,6 +27,21 @@ export default function Navbar({ variant = 'landing', navItems }: NavbarProps) {
   const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setNotifOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
 
   const getApplicationPath = (role: UserRole, appId?: string) => {
@@ -101,7 +116,7 @@ export default function Navbar({ variant = 'landing', navItems }: NavbarProps) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
                   {isAuthenticated && user && (
                     <>
-                      <div className={styles.userMenu}>
+                      <div className={styles.userMenu} ref={notifRef}>
                         <button 
                           className={styles.userBtn}
                           onClick={() => { setNotifOpen(!notifOpen); setDropdownOpen(false); }}
@@ -142,7 +157,7 @@ export default function Navbar({ variant = 'landing', navItems }: NavbarProps) {
                         )}
                       </div>
 
-                      <div className={styles.userMenu}>
+                      <div className={styles.userMenu} ref={userMenuRef}>
 
                       <button 
                         className={styles.userBtn}
