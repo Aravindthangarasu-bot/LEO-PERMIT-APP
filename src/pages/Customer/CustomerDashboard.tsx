@@ -100,32 +100,22 @@ export default function CustomerDashboard() {
         </section>
 
         <section className={styles.statsSection} style={{ marginTop: 0 }}>
-          <div className={styles.statCard}>
-            <div className={styles.statIcon}><FileCheck2 size={20} /></div>
-            <div className={styles.statInfo}>
-              <h3>{stats.total}</h3>
-              <p>{t('portal.dashboard.stats.total')}</p>
+          <div className={styles.statsGrid}>
+            <div>
+              <div className={styles.statValue}>{stats.total}</div>
+              <div className={styles.statLabel}>{t('portal.dashboard.stats.total')}</div>
             </div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statIcon} style={{ background: '#dcfce7', color: '#166534' }}><FileCheck2 size={20} /></div>
-            <div className={styles.statInfo}>
-              <h3>{stats.approved}</h3>
-              <p>{t('portal.dashboard.stats.approved')}</p>
+            <div>
+              <div className={styles.statValue}>{stats.approved}</div>
+              <div className={styles.statLabel}>{t('portal.dashboard.stats.approved')}</div>
             </div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statIcon} style={{ background: '#fef3c7', color: '#b45309' }}><Clock size={20} /></div>
-            <div className={styles.statInfo}>
-              <h3>{stats.inProgress}</h3>
-              <p>{t('portal.dashboard.stats.inProgress')}</p>
+            <div>
+              <div className={styles.statValue}>{stats.inProgress}</div>
+              <div className={styles.statLabel}>{t('portal.dashboard.stats.inProgress')}</div>
             </div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statIcon} style={{ background: '#fee2e2', color: '#991b1b' }}><X size={20} /></div>
-            <div className={styles.statInfo}>
-              <h3>{stats.rejected}</h3>
-              <p>{t('portal.dashboard.stats.rejected')}</p>
+            <div>
+              <div className={styles.statValue}>{stats.rejected}</div>
+              <div className={styles.statLabel}>{t('portal.dashboard.stats.rejected')}</div>
             </div>
           </div>
         </section>
