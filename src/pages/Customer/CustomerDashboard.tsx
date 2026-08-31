@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useAppStore } from '../../context/AppStoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import AnimateIn from '../../components/AnimateIn';
+import PaginationControls from '../../components/PaginationControls';
 import { STATUS_CONFIG, COMMON_STATUS_FILTERS } from './statusConfig';
 import sharedStyles from '../../components/DashboardShared.module.css';
 import customerStyles from './Customer.module.css';
@@ -33,7 +34,15 @@ export default function CustomerDashboard() {
     rejected: myApps.filter(a => ['rejected', 'panchayat_rejected'].includes(a.status)).length,
   };
 
-  const activeApps = myApps.filter(a => ['pending', 'processing', 'document_verification'].includes(a.status));
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const filteredApps = myApps.filter(a => {
+    if (filter === 'all') return true;
+    return a.status === filter;
+  });
+
+  const paginatedApps = filteredApps.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   const handleSearch = () => {
     if (!searchTerm.trim()) return;
@@ -92,9 +101,9 @@ export default function CustomerDashboard() {
           </div>
           <div className={customerStyles.filterRow} style={{ justifyContent: 'center', marginTop: '24px' }}>
             <div className={customerStyles.filterBtns}>
-              <button className={`${customerStyles.filterBtn} ${filter === 'all' ? customerStyles.filterActive : ''}`} onClick={() => setFilter('all')}>{t('portal.dashboard.filterAll')}</button>
+              <button className={`${customerStyles.filterBtn} ${filter === 'all' ? customerStyles.filterActive : ''}`} onClick={() => { setFilter('all'); setPage(1); }}>{t('portal.dashboard.filterAll')}</button>
               {COMMON_STATUS_FILTERS.map(f => (
-                <button key={f} className={`${customerStyles.filterBtn} ${filter === f ? customerStyles.filterActive : ''}`} onClick={() => setFilter(f)}>
+                <button key={f} className={`${customerStyles.filterBtn} ${filter === f ? customerStyles.filterActive : ''}`} onClick={() => { setFilter(f); setPage(1); }}>
                   {STATUS_CONFIG[f as keyof typeof STATUS_CONFIG].label}
                 </button>
               ))}
@@ -136,20 +145,27 @@ export default function CustomerDashboard() {
                 </Link>
               </div>
 
-              {activeApps.length > 0 ? (
-                <div className={customerStyles.appList}>
-                  {activeApps.map(app => (
-                    <Link to={`/customer/application/${app.id}`} key={app.id} className={customerStyles.appItem}>
-                      <div className={customerStyles.appLeft}>
-                        <div className={customerStyles.appType}>{app.type.replace(/_/g, ' ')}</div>
-                        <div className={customerStyles.appId}>ID: {app.id}</div>
-                      </div>
-                      <span className={`status-badge ${app.status}`} style={{ margin: 0 }}>
-                        {STATUS_CONFIG[app.status as keyof typeof STATUS_CONFIG]?.label || app.status}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
+              {filteredApps.length > 0 ? (
+                <>
+                  <div className={customerStyles.appList}>
+                    {paginatedApps.map(app => (
+                      <Link to={`/customer/application/${app.id}`} key={app.id} className={customerStyles.appItem}>
+                        <div className={customerStyles.appLeft}>
+                          <div className={customerStyles.appType}>{app.type.replace(/_/g, ' ')}</div>
+                          <div className={customerStyles.appId}>ID: {app.id}</div>
+                        </div>
+                        <span className={`status-badge ${app.status}`} style={{ margin: 0 }}>
+                          {STATUS_CONFIG[app.status as keyof typeof STATUS_CONFIG]?.label || app.status}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                  {filteredApps.length > itemsPerPage && (
+                    <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center' }}>
+                      <PaginationControls page={page} pageCount={Math.ceil(filteredApps.length / itemsPerPage)} total={filteredApps.length} onPageChange={setPage} />
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className={customerStyles.emptyState}>
                   <FileCheck2 size={32} />
