@@ -3,6 +3,7 @@ import { LayoutDashboard, FileText, Bell, WalletCards } from 'lucide-react';
 import PortalLayout from '../../components/PortalLayout/PortalLayout';
 import StaffDashboard from './StaffDashboard';
 import StaffApplications from './StaffApplications';
+import StaffNotifications from './StaffNotifications';
 import DocumentWallet from '../../components/DocumentWallet';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -21,7 +22,7 @@ export default function StaffPortal() {
         <Route index element={<StaffDashboard />} />
         <Route path="applications" element={<StaffApplications />} />
         <Route path="wallet" element={<DocumentWallet />} />
-        <Route path="notifications" element={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Notifications coming soon.</div>} />
+        <Route path="notifications" element={<StaffNotifications />} />
         <Route path="*" element={<Navigate to="/staff" replace />} />
       </Routes>
     </PortalLayout>

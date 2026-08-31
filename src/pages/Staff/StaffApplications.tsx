@@ -1,15 +1,13 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, Fragment } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, FileText, CheckCircle2, XCircle, Upload } from 'lucide-react';
+import { Search, FileText, CheckCircle2, XCircle, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAppStore } from '../../context/AppStoreContext';
-import DocumentUpload from '../../components/DocumentUpload/DocumentUpload';
-import type { UploadedFile } from '../../components/DocumentUpload/DocumentUpload';
 import ActivityThread from '../../components/ActivityThread';
 import ActionConsole from '../../components/ActionConsole';
-import { STATUS_CONFIG, ALL_STATUS_FILTERS, COMMON_STATUS_FILTERS } from '../Customer/statusConfig';
+import { STATUS_CONFIG, COMMON_STATUS_FILTERS } from '../Customer/statusConfig';
 import { PERMIT_TYPES } from '../../data/mockData';
-import type { ApplicationStatus, PermitApplication } from '../../types';
+import type { PermitApplication } from '../../types';
 import styles from './Staff.module.css';
 import PaginationControls from '../../components/PaginationControls';
 import { DocumentViewer } from '../../components/DocumentViewer/DocumentViewer';
@@ -28,8 +26,6 @@ export default function StaffApplications() {
   const [page, setPage] = useState(1);
   const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string } | null>(null);
   
-  const [selectedAction, setSelectedAction] = useState<ApplicationStatus | null>(null);
-  const [notes, setNotes] = useState('');
   const [actionDone, setActionDone] = useState('');
 
   useEffect(() => {
@@ -83,13 +79,6 @@ export default function StaffApplications() {
     }
   };
 
-  const update = (id: string, updates: any, msg: string) => {
-    updateApplication(id, { ...updates, notes: notes.trim() });
-    setActionDone(msg);
-    setNotes('');
-    setSelectedAction(null);
-    setTimeout(() => setActionDone(''), 3000);
-  };
 
   return (
     <div className={`page-enter ${styles.page}`}>
@@ -117,23 +106,34 @@ export default function StaffApplications() {
       </div>
 
       <div className={styles.appGrid}>
-        <div className={`card ${styles.appListCard}`}>
+        <div className={`card ${styles.appListCard}`} style={{ gridColumn: '1 / -1', width: '100%' }}>
           {filtered.length === 0
             ? <div className={styles.emptyState}><FileText size={36} /><p>No assignments yet</p></div>
             : filtered.slice((page - 1) * 10, page * 10).map(a => {
                 const sc = STATUS_CONFIG[a.status];
                 return (
-                  <button key={a.id} className={`${styles.appRow} ${selected === a.id ? styles.appRowActive : ''}`}
-                    onClick={() => { setSelected(a.id); setNotes(''); setSelectedAction(null); setActionDone(''); }}>
-                    <div className={styles.appRowLeft}>
-                      <div className={styles.appId}>{a.id}</div>
-                      <div className={styles.appType}>{PERMIT_TYPES.find(p => p.value === a.type)?.label}</div>
-                      <div className={styles.appCustomer}>👤 {a.customerName} · {a.customerPhone}</div>
-                    </div>
-                    <span className={styles.appBadge} style={{ background: sc.bg, color: sc.color }}>
-                      <span className={`status-dot ${sc.dot}`} /> {sc.label}
-                    </span>
-                  </button>
+                  <Fragment key={a.id}>
+                    <button className={`${styles.appRow} ${selected === a.id ? styles.appRowActive : ''}`}
+                      onClick={() => { setSelected(a.id); setActionDone(''); }}>
+                      <div className={styles.appRowLeft}>
+                        <div className={styles.appId}>{a.id}</div>
+                        <div className={styles.appType}>{PERMIT_TYPES.find(p => p.value === a.type)?.label}</div>
+                        <div className={styles.appCustomer}>👤 {a.customerName} · {a.customerPhone}</div>
+                        <div className={styles.appDate}>{new Date(a.submittedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                      </div>
+                      <span className={styles.appBadge} style={{ background: sc.bg, color: sc.color }}>
+                        <span className={`status-dot ${sc.dot}`} /> {sc.label}
+                      </span>
+                    </button>
+                    {selected === a.id && (
+                      <div className={styles.inlineCustomerExpansion}>
+                        <div><span>Customer</span><strong>{a.customerName} · {a.customerPhone}</strong></div>
+                        <div><span>Property</span><strong>{a.city || a.address}</strong></div>
+                        <div><span>Location</span><strong>{a.taluk || '-'} · {a.district || a.pincode || '-'}</strong></div>
+                        <div><span>Submitted</span><strong>{new Date(a.submittedAt).toLocaleString('en-IN')}</strong></div>
+                      </div>
+                    )}
+                  </Fragment>
                 );
               })
           }
@@ -141,7 +141,7 @@ export default function StaffApplications() {
         </div>
 
         {app && (
-          <div className={`card ${styles.detailCard}`}>
+          <div className={`card ${styles.reviewCard}`} style={{ gridColumn: '1 / -1', width: '100%' }}>
             {actionDone && <div className={styles.actionSuccess}><CheckCircle2 size={16} /> {actionDone}</div>}
 
             <div className={styles.detailHeader}>
@@ -149,9 +149,14 @@ export default function StaffApplications() {
                 <div className={styles.appId}>{app.id}</div>
                 <div className={styles.detailType}>{PERMIT_TYPES.find(p => p.value === app.type)?.label}</div>
               </div>
-              <span className={styles.appBadge} style={{ background: STATUS_CONFIG[app.status].bg, color: STATUS_CONFIG[app.status].color }}>
-                {STATUS_CONFIG[app.status].label}
-              </span>
+              <div className={styles.detailHeaderActions}>
+                <span className={styles.appBadge} style={{ background: STATUS_CONFIG[app.status].bg, color: STATUS_CONFIG[app.status].color }}>
+                  {STATUS_CONFIG[app.status].label}
+                </span>
+                <button type="button" className={styles.closeDetailBtn} onClick={() => setSelected(null)} aria-label="Close details" title="Close application details">
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
             <div className={styles.detailSection}>
