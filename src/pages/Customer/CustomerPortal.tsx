@@ -19,7 +19,6 @@ export default function CustomerPortal() {
     { path: '/customer/applications', icon: <FileText size={18} />, label: t('portal.nav.myApplications') },
     { path: '/customer/new', icon: <PlusCircle size={18} />, label: t('portal.nav.newApplication') },
     { path: '/customer/wallet', icon: <WalletCards size={18} />, label: t('portal.nav.documentWallet') },
-    { path: '/customer/notifications', icon: <Bell size={18} />, label: t('portal.nav.notifications') },
     { path: '/customer/help', icon: <HelpCircle size={18} />, label: t('portal.nav.helpSupport') },
   ];
   return (
@@ -30,7 +29,6 @@ export default function CustomerPortal() {
         <Route path="new" element={<NewApplication />} />
         <Route path="wallet" element={<DocumentWallet />} />
         <Route path="application/:id" element={<ApplicationDetail />} />
-        <Route path="notifications" element={<CustomerNotifications />} />
         <Route path="help" element={<ComingSoon title={t('portal.nav.helpSupport')} desc={t('portal.comingSoon.desc')} />} />
         <Route path="*" element={<Navigate to="/customer" replace />} />
       </Routes>

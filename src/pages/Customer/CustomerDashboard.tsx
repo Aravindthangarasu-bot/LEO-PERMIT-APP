@@ -186,9 +186,6 @@ export default function CustomerDashboard() {
                   )}
                 </div>
                 
-                <Link to="/customer/notifications" className={customerStyles.viewAll} style={{ justifyContent: 'center', marginTop: '16px' }}>
-                  {t('portal.dashboard.viewAll')}
-                </Link>
               </div>
 
             </div>

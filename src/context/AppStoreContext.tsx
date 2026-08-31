@@ -40,6 +40,7 @@ interface AppStoreContextValue {
   notifications: AppNotification[];
   addNotification: (n: AppNotification) => void;
   markNotificationRead: (id: string) => void;
+  deleteNotification: (id: string) => void;
   publishApplicationUpdate: (update: ApplicationUpdate) => void;
   
   addApplicationActivity: (appId: string, entry: Omit<ActivityLogEntry, 'id' | 'timestamp'>) => void;
@@ -517,6 +518,19 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       }
     } else {
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    }
+  };
+
+  const deleteNotification = async (id: string) => {
+    if (USE_SUPABASE) {
+      const { error } = await supabase.from('notifications').delete().eq('id', id);
+      if (error) {
+        console.error('Error deleting notification:', error);
+      } else {
+        setNotifications(prev => prev.filter(n => n.id !== id));
+      }
+    } else {
+      setNotifications(prev => prev.filter(n => n.id !== id));
     }
   };
 

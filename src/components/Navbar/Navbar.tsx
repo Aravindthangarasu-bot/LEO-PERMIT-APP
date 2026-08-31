@@ -4,6 +4,7 @@ import { Phone, LogOut, ChevronDown, User, Globe, Moon, Sun } from 'lucide-react
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useAppStore } from '../../context/AppStoreContext';
 import styles from './Navbar.module.css';
 
 interface NavItem {
@@ -24,6 +25,22 @@ export default function Navbar({ variant = 'landing', navItems }: NavbarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  
+  // Safe useAppStore
+  let appStore = null;
+  try {
+    appStore = useAppStore();
+  } catch (e) {
+    // If used outside AppStoreProvider (e.g. landing page)
+  }
+
+  const { notifications, markNotificationRead, deleteNotification } = appStore || { notifications: [], markNotificationRead: () => {}, deleteNotification: () => {} };
+
+  const myNotifications = notifications
+    .filter(n => n.userId === user?.id)
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  const unreadCount = myNotifications.filter(n => !n.read).length;
 
   const handleLogout = () => {
     logout();
@@ -70,7 +87,50 @@ export default function Navbar({ variant = 'landing', navItems }: NavbarProps) {
               ) : (
                 <div className={styles.portalControls}>
                   {isAuthenticated && user && (
-                    <div className={styles.userMenu}>
+                    <>
+                      <div className={styles.userMenu}>
+                        <button 
+                          className={styles.userBtn}
+                          onClick={() => { setNotifOpen(!notifOpen); setDropdownOpen(false); }}
+                          style={{ position: 'relative', padding: '8px' }}
+                        >
+                          <Bell size={20} />
+                          {unreadCount > 0 && (
+                            <span style={{ position: 'absolute', top: 0, right: 0, background: '#ef4444', color: 'white', fontSize: '10px', fontWeight: 'bold', width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              {unreadCount}
+                            </span>
+                          )}
+                        </button>
+
+                        {notifOpen && (
+                          <div className={styles.dropdown} style={{ width: '320px', right: 0, overflow: 'hidden' }}>
+                            <div className={styles.dropdownHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <strong>Notifications</strong>
+                              <span style={{ margin: 0, background: 'var(--primary-bg)', color: 'var(--primary)', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>{unreadCount} New</span>
+                            </div>
+                            <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                              {myNotifications.length > 0 ? myNotifications.map(n => (
+                                <div key={n.id} onClick={() => markNotificationRead(n.id)} style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0', background: n.read ? 'white' : '#f8fafc', cursor: 'pointer', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontSize: '13px', color: '#0f172a', fontWeight: n.read ? 400 : 600, marginBottom: '4px', lineHeight: 1.4 }}>{n.message}</div>
+                                    <div style={{ fontSize: '11px', color: '#64748b' }}>{new Date(n.timestamp).toLocaleString()}</div>
+                                  </div>
+                                  <button onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); }} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}>
+                                    <span style={{ fontSize: '16px', lineHeight: 1 }}>&times;</span>
+                                  </button>
+                                </div>
+                              )) : (
+                                <div style={{ padding: '24px', textAlign: 'center', color: '#64748b', fontSize: '13px' }}>
+                                  No notifications yet
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className={styles.userMenu}>
+
                       <button 
                         className={styles.userBtn}
                         onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -94,6 +154,7 @@ export default function Navbar({ variant = 'landing', navItems }: NavbarProps) {
                         </div>
                       )}
                     </div>
+                    </>
                   )}
                 </div>
               )}
