@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAppStore } from '../../context/AppStoreContext';
+import type { UserRole } from '../../types';
 import styles from './Navbar.module.css';
 
 interface NavItem {
@@ -26,6 +27,18 @@ export default function Navbar({ variant = 'landing', navItems }: NavbarProps) {
   const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+
+
+  const getApplicationPath = (role: UserRole, appId?: string) => {
+    if (!appId) return `/${role}`;
+    switch (role) {
+      case 'customer': return `/customer/applications/${appId}`;
+      case 'provider': return `/provider/applications?application=${appId}`;
+      case 'staff': return `/staff/applications?application=${appId}`;
+      case 'admin': return `/admin/applications?application=${appId}`;
+      default: return `/${role}`;
+    }
+  };
   
   // Safe useAppStore
   let appStore = null;
@@ -85,7 +98,7 @@ export default function Navbar({ variant = 'landing', navItems }: NavbarProps) {
                   </div>
                 </div>
               ) : (
-                <div className={styles.portalControls}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
                   {isAuthenticated && user && (
                     <>
                       <div className={styles.userMenu}>
@@ -110,7 +123,7 @@ export default function Navbar({ variant = 'landing', navItems }: NavbarProps) {
                             </div>
                             <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
                               {myNotifications.length > 0 ? myNotifications.map(n => (
-                                <div key={n.id} onClick={() => markNotificationRead(n.id)} style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0', background: n.read ? 'white' : '#f8fafc', cursor: 'pointer', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                                <div key={n.id} onClick={() => { markNotificationRead(n.id); navigate(getApplicationPath(user.role, n.applicationId)); setNotifOpen(false); }} style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0', background: n.read ? 'white' : '#f8fafc', cursor: 'pointer', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                                   <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{ fontSize: '13px', color: '#0f172a', fontWeight: n.read ? 400 : 600, marginBottom: '4px', lineHeight: 1.4 }}>{n.message}</div>
                                     <div style={{ fontSize: '11px', color: '#64748b' }}>{new Date(n.timestamp).toLocaleString()}</div>
