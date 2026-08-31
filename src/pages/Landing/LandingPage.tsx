@@ -13,7 +13,7 @@ import type { UserRole } from '../../types';
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { verifyPhone, login } = useAuth();
+  const { verifyPhone, login, isAuthenticated, user } = useAuth();
   const { t } = useLanguage();
 
   const SERVICES = [
@@ -138,10 +138,23 @@ export default function LandingPage() {
 
               {/* Login Box Overlapping Banner */}
               <div className={styles.loginBox}>
-                <div className={styles.loginHeader}>
-                  <User size={20} />
-                  <h3>{loginStep === 'ROLE_SELECT' ? t('landing.login.selectAccount') : t('landing.login.title')}</h3>
-                </div>
+                {isAuthenticated && user ? (
+                  <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                    <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--primary-bg)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                      <User size={32} />
+                    </div>
+                    <h3 style={{ marginBottom: '8px', fontSize: '20px' }}>Welcome back, {user.name}</h3>
+                    <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>You are currently logged in.</p>
+                    <Link to={`/${user.role}`} className={styles.loginBtn} style={{ display: 'flex', justifyContent: 'center', textDecoration: 'none', alignItems: 'center', gap: '8px' }}>
+                      Go to Dashboard <ArrowRight size={16} />
+                    </Link>
+                  </div>
+                ) : (
+                  <>
+                    <div className={styles.loginHeader}>
+                      <User size={20} />
+                      <h3>{loginStep === 'ROLE_SELECT' ? t('landing.login.selectAccount') : t('landing.login.title')}</h3>
+                    </div>
 
                 {loginStep === 'PHONE' && (
                   <form className={styles.loginForm} onSubmit={handleSendOtp}>
@@ -224,6 +237,8 @@ export default function LandingPage() {
                       {t('landing.login.cancel')}
                     </button>
                   </div>
+                )}
+                  </>
                 )}
               </div>
             </div>
