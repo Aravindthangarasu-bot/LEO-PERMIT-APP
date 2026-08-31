@@ -617,7 +617,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       applications, addApplication, updateApplication,
       providers, addProvider, updateProviderProfile, updateProviderStatus,
       staff, addStaff, updateStaffStatus,
-      notifications, addNotification, markNotificationRead,
+      notifications, addNotification, markNotificationRead, deleteNotification,
       publishApplicationUpdate,
       addApplicationActivity,
       getAppsForUser, getStaffForProvider, getMyProviderProfile, getMyStaffProfile,

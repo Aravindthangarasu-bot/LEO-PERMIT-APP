@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Phone, LogOut, ChevronDown, User, Globe, Moon, Sun } from 'lucide-react';
+import { Phone, LogOut, ChevronDown, User, Globe, Moon, Sun, Bell } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';

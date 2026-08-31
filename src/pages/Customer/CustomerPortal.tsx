@@ -1,13 +1,12 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import {
-  LayoutDashboard, FileText, PlusCircle, Bell, HelpCircle, WalletCards,
+  LayoutDashboard, FileText, PlusCircle, HelpCircle, WalletCards,
 } from 'lucide-react';
 import PortalLayout from '../../components/PortalLayout/PortalLayout';
 import CustomerDashboard from './CustomerDashboard';
 import MyApplications from './MyApplications';
 import NewApplication from './NewApplication';
 import ApplicationDetail from './ApplicationDetail';
-import CustomerNotifications from './CustomerNotifications';
 import DocumentWallet from '../../components/DocumentWallet';
 import { useLanguage } from '../../context/LanguageContext';
 

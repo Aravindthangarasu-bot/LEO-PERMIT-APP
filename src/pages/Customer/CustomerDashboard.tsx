@@ -177,7 +177,7 @@ export default function CustomerDashboard() {
                       <div key={n.id} className={customerStyles.notifCard} onClick={() => markNotificationRead(n.id)} style={{ padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', background: n.read ? 'transparent' : 'var(--primary-bg)' }}>
                         <div className={customerStyles.notifBody}>
                           <div className={customerStyles.notifMessage}>{n.message}</div>
-                          <div className={customerStyles.notifTime}>{new Date(n.createdAt).toLocaleDateString()}</div>
+                          <div className={customerStyles.notifTime}>{new Date(n.timestamp).toLocaleDateString()}</div>
                         </div>
                       </div>
                     ))
