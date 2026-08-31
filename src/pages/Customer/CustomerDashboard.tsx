@@ -199,7 +199,12 @@ export default function CustomerDashboard() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {notifications.filter(n => n.userId === user?.id).length > 0 ? (
                     notifications.filter(n => n.userId === user?.id).slice(0,3).map(n => (
-                      <div key={n.id} className={customerStyles.notifCard} onClick={() => markNotificationRead(n.id)} style={{ padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', background: n.read ? 'transparent' : 'var(--primary-bg)' }}>
+                      <div key={n.id} className={customerStyles.notifCard} onClick={() => {
+                        markNotificationRead(n.id);
+                        if (n.applicationId) {
+                          navigate(`/customer/application/${n.applicationId}`);
+                        }
+                      }} style={{ padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', background: n.read ? 'transparent' : 'var(--primary-bg)', cursor: 'pointer' }}>
                         <div className={customerStyles.notifBody}>
                           <div className={customerStyles.notifMessage}>{n.message}</div>
                           <div className={customerStyles.notifTime}>{new Date(n.timestamp).toLocaleDateString()}</div>
