@@ -6,7 +6,6 @@ import { useAppStore } from '../../context/AppStoreContext';
 import ActivityThread from '../../components/ActivityThread';
 import ActionConsole from '../../components/ActionConsole';
 import { STATUS_CONFIG, COMMON_STATUS_FILTERS } from '../Customer/statusConfig';
-import { PERMIT_TYPES } from '../../data/mockData';
 import type { PermitApplication } from '../../types';
 import styles from './Staff.module.css';
 import PaginationControls from '../../components/PaginationControls';
@@ -38,7 +37,6 @@ export default function StaffApplications() {
   }, [searchParams]);
 
   // Security: find the app only within the staff's allowed apps (already filtered by getAppsForUser)
-  const app = myApps.find(a => a.id === selected) ?? null;
 
   const filtered = useMemo(() => {
     let result = myApps;
@@ -106,121 +104,139 @@ export default function StaffApplications() {
       </div>
 
       <div className={styles.appGrid}>
-        <div className={`card ${styles.appListCard}`} style={{ gridColumn: '1 / -1', width: '100%' }}>
-          {filtered.length === 0
-            ? <div className={styles.emptyState}><FileText size={36} /><p>No assignments yet</p></div>
-            : filtered.slice((page - 1) * 10, page * 10).map(a => {
-                const sc = STATUS_CONFIG[a.status];
-                return (
-                  <Fragment key={a.id}>
-                    <button className={`${styles.appRow} ${selected === a.id ? styles.appRowActive : ''}`}
-                      onClick={() => { setSelected(a.id); setActionDone(''); }}>
-                      <div className={styles.appRowLeft}>
-                        <div className={styles.appId}>{a.id}</div>
-                        <div className={styles.appType}>{PERMIT_TYPES.find(p => p.value === a.type)?.label}</div>
-                        <div className={styles.appCustomer}>👤 {a.customerName} · {a.customerPhone}</div>
-                        <div className={styles.appDate}>{new Date(a.submittedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
-                      </div>
-                      <span className={styles.appBadge} style={{ background: sc.bg, color: sc.color }}>
-                        <span className={`status-dot ${sc.dot}`} /> {sc.label}
-                      </span>
-                    </button>
-                    {selected === a.id && (
-                      <div className={styles.inlineCustomerExpansion}>
-                        <div><span>Customer</span><strong>{a.customerName} · {a.customerPhone}</strong></div>
-                        <div><span>Property</span><strong>{a.city || a.address}</strong></div>
-                        <div><span>Location</span><strong>{a.taluk || '-'} · {a.district || a.pincode || '-'}</strong></div>
-                        <div><span>Submitted</span><strong>{new Date(a.submittedAt).toLocaleString('en-IN')}</strong></div>
-                      </div>
-                    )}
-                  </Fragment>
-                );
-              })
-          }
+        <div className={`card ${styles.card}`} style={{ padding: 0, overflow: 'hidden', gridColumn: '1 / -1', width: '100%' }}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>App ID</th>
+                <th>Customer</th>
+                <th>Permit Type</th>
+                <th>Submitted</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={5} style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <div className={styles.emptyState}><FileText size={36} /><p>No assignments yet</p></div>
+                  </td>
+                </tr>
+              ) : filtered.slice((page - 1) * 10, page * 10).map(a => {
+                  const sc = STATUS_CONFIG[a.status];
+                  return (
+                    <Fragment key={a.id}>
+                      <tr
+                        className={selected === a.id ? styles.tableRowActive : ''}
+                        onClick={() => { setSelected(a.id); setActionDone(''); }}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <td className={styles.appId}>{a.id}</td>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{a.customerName}</div>
+                          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{a.customerPhone}</div>
+                        </td>
+                        <td>{a.type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</td>
+                        <td style={{ fontSize: 12 }}>{new Date(a.submittedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                        <td>
+                          <span className={styles.appBadge} style={{ background: sc.bg, color: sc.color }}>
+                            {sc.label}
+                          </span>
+                        </td>
+                      </tr>
+                      {selected === a.id && (
+                        <tr className={styles.inlineExpansionRow}>
+                          <td colSpan={5}>
+                            <div className={styles.inlineExpansion} style={{ margin: '16px 24px', position: 'relative' }}>
+                              <button 
+                                onClick={() => setSelected(null)}
+                                style={{
+                                  position: 'absolute', top: '8px', right: '8px',
+                                  background: 'none', border: 'none', cursor: 'pointer',
+                                  color: 'var(--text-muted)', padding: '8px',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}
+                                aria-label="Close details"
+                              >
+                                <X size={20} />
+                              </button>
+                              
+                              <div style={{ padding: '24px 32px' }}>
+                                {actionDone && <div className={styles.actionSuccess}><CheckCircle2 size={16} /> {actionDone}</div>}
+                                
+                                <div className={styles.detailSection}>
+                                  <h4>Customer Details</h4>
+                                  <div className={styles.detailGrid}>
+                                    <div className={styles.detailGridItem}>
+                                      <div className={styles.detailGridLabel}>Name</div>
+                                      <div className={styles.detailGridValue}>{a.customerName}</div>
+                                    </div>
+                                    <div className={styles.detailGridItem}>
+                                      <div className={styles.detailGridLabel}>Phone</div>
+                                      <div className={styles.detailGridValue}>{a.customerPhone}</div>
+                                    </div>
+                                    <div className={`${styles.detailGridItem} ${styles.detailGridValueFull}`}>
+                                      <div className={styles.detailGridLabel}>Address</div>
+                                      <div className={styles.detailGridValue}>{a.address}</div>
+                                    </div>
+                                    <div className={`${styles.detailGridItem} ${styles.detailGridValueFull}`}>
+                                      <div className={styles.detailGridLabel}>Description</div>
+                                      <div className={styles.detailGridValue}>{a.description}</div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className={styles.detailSection}>
+                                  <h4>Documents ({a.documents.length})</h4>
+                                  {a.documents.map(doc => (
+                                    <div key={doc.id} className={styles.docRow}>
+                                      <FileText size={14} />
+                                      <span className={styles.docName}>{doc.name}</span>
+                                      <span className={`badge ${doc.status === 'verified' ? 'badge-success' : doc.status === 'rejected' ? 'badge-error' : 'badge-warning'}`}>{doc.status}</span>
+                                      {doc.url && (
+                                        <button type="button" onClick={() => setViewingDoc({ url: doc.url!, name: doc.name })} style={{ marginLeft: 'auto', fontSize: 12, color: '#1d4ed8', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                                          View
+                                        </button>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {!['terminated','rejected','approved','panchayat_approved'].includes(a.status) && (
+                                  <div className={styles.actionPanel} style={{ borderTop: '1px solid #fca5a5', paddingTop: 16 }}>
+                                    <button className={styles.rejectBtn} onClick={async () => {
+                                      if (!await updateApplication(a.id, { status: 'terminated', terminatedBy: 'provider', terminationReason: 'Declined by staff' })) return;
+                                      publishApplicationUpdate({ applicationId: a.id, actor: user!, title: 'Application terminated', summary: 'The assigned staff member terminated this application.', type: 'status_change' });
+                                      setActionDone('Project declined and terminated.');
+                                      setTimeout(() => setActionDone(''), 3000);
+                                    }}>
+                                      <XCircle size={16} /> Decline / Terminate Project
+                                    </button>
+                                  </div>
+                                )}
+                                
+                                <div style={{ marginTop: 24 }}>
+                                  <ActivityThread appId={a.id} activities={a.activityLog} />
+                                </div>
+
+                                <ActionConsole 
+                                  app={a}
+                                  uploaderRole="staff"
+                                  onUpdate={(updates, msg, notifyType, notifyMsg) => handleActionConsoleUpdate(a.id, updates, msg, notifyType, notifyMsg)}
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })
+              }
+            </tbody>
+          </table>
           <PaginationControls page={page} pageCount={Math.max(1, Math.ceil(filtered.length / 10))} total={filtered.length} onPageChange={setPage} />
         </div>
-
-        {app && (
-          <div className={`card ${styles.reviewCard}`} style={{ gridColumn: '1 / -1', width: '100%' }}>
-            {actionDone && <div className={styles.actionSuccess}><CheckCircle2 size={16} /> {actionDone}</div>}
-
-            <div className={styles.detailHeader}>
-              <div>
-                <div className={styles.appId}>{app.id}</div>
-                <div className={styles.detailType}>{PERMIT_TYPES.find(p => p.value === app.type)?.label}</div>
-              </div>
-              <div className={styles.detailHeaderActions}>
-                <span className={styles.appBadge} style={{ background: STATUS_CONFIG[app.status].bg, color: STATUS_CONFIG[app.status].color }}>
-                  {STATUS_CONFIG[app.status].label}
-                </span>
-                <button type="button" className={styles.closeDetailBtn} onClick={() => setSelected(null)} aria-label="Close details" title="Close application details">
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-
-            <div className={styles.detailSection}>
-              <h4>Customer Details</h4>
-              <div className={styles.detailGrid}>
-                <div className={styles.detailGridItem}>
-                  <div className={styles.detailGridLabel}>Name</div>
-                  <div className={styles.detailGridValue}>{app.customerName}</div>
-                </div>
-                <div className={styles.detailGridItem}>
-                  <div className={styles.detailGridLabel}>Phone</div>
-                  <div className={styles.detailGridValue}>{app.customerPhone}</div>
-                </div>
-                <div className={`${styles.detailGridItem} ${styles.detailGridValueFull}`}>
-                  <div className={styles.detailGridLabel}>Address</div>
-                  <div className={styles.detailGridValue}>{app.address}</div>
-                </div>
-                <div className={`${styles.detailGridItem} ${styles.detailGridValueFull}`}>
-                  <div className={styles.detailGridLabel}>Description</div>
-                  <div className={styles.detailGridValue}>{app.description}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.detailSection}>
-              <h4>Documents ({app.documents.length})</h4>
-              {app.documents.map(doc => (
-                <div key={doc.id} className={styles.docRow}>
-                  <FileText size={14} />
-                  <span className={styles.docName}>{doc.name}</span>
-                  <span className={`badge ${doc.status === 'verified' ? 'badge-success' : doc.status === 'rejected' ? 'badge-error' : 'badge-warning'}`}>{doc.status}</span>
-                  {doc.url && (
-                    <button type="button" onClick={() => setViewingDoc({ url: doc.url!, name: doc.name })} style={{ marginLeft: 'auto', fontSize: 12, color: '#1d4ed8', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                      View
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {!['terminated','rejected','approved','panchayat_approved'].includes(app.status) && (
-              <div className={styles.actionPanel} style={{ borderTop: '1px solid #fca5a5', paddingTop: 16 }}>
-                <button className={styles.rejectBtn} onClick={async () => {
-                  if (!await updateApplication(app.id, { status: 'terminated', terminatedBy: 'provider', terminationReason: 'Declined by staff' })) return;
-                  publishApplicationUpdate({ applicationId: app.id, actor: user!, title: 'Application terminated', summary: 'The assigned staff member terminated this application.', type: 'status_change' });
-                  setActionDone('Project declined and terminated.');
-                  setTimeout(() => setActionDone(''), 3000);
-                }}>
-                  <XCircle size={16} /> Decline / Terminate Project
-                </button>
-              </div>
-            )}
-            
-            <div style={{ marginTop: 24 }}>
-              <ActivityThread appId={app.id} activities={app.activityLog} />
-            </div>
-
-            <ActionConsole 
-              app={app}
-              uploaderRole="staff"
-              onUpdate={(updates, msg, notifyType, notifyMsg) => handleActionConsoleUpdate(app.id, updates, msg, notifyType, notifyMsg)}
-            />
-          </div>
-        )}
       </div>
 
       {viewingDoc && (
