@@ -6,6 +6,7 @@ import { useAppStore, isLicenceExpired } from '../../context/AppStoreContext';
 import styles from './Admin.module.css';
 import { sortByNewest } from '../../utils/sorting';
 import PaginationControls from '../../components/PaginationControls';
+import { DocumentViewer } from '../../components/DocumentViewer/DocumentViewer';
 
 export default function ManageProviders() {
   const { providers, updateProviderStatus } = useAppStore();
@@ -14,6 +15,7 @@ export default function ManageProviders() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState(initialFilter);
   const [page, setPage] = useState(1);
+  const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string } | null>(null);
 
   useEffect(() => {
     const status = searchParams.get('status') || 'all';
@@ -175,7 +177,7 @@ export default function ManageProviders() {
                   <button 
                     className={styles.viewDocBtn}
                     onClick={() => {
-                      if (doc.url && doc.url !== '#') window.open(doc.url, '_blank');
+                      if (doc.url && doc.url !== '#') setViewingDoc({ url: doc.url, name: doc.name });
                       else alert(`Document preview for ${doc.name} is not available in the demo environment.`);
                     }}
                     title="View Document"
@@ -206,6 +208,14 @@ export default function ManageProviders() {
           </div>
         )}
       </div>
+
+      {viewingDoc && (
+        <DocumentViewer
+          url={viewingDoc.url}
+          title={viewingDoc.name}
+          onClose={() => setViewingDoc(null)}
+        />
+      )}
     </div>
   );
 }

@@ -234,7 +234,7 @@ export default function ApplicationDetail() {
               <div className={styles.planFile}>
                 <FileText size={18} />
                 <span>{app.planUrl}</span>
-                <button className={styles.downloadBtn}><Download size={14} /> Download</button>
+                <button type="button" className={styles.downloadBtn} onClick={() => setViewingDoc({ url: app.planUrl!, name: 'Architectural Plan' })}><FileText size={14} /> View Plan</button>
               </div>
               {app.planRevisions && app.planRevisions.length > 0 && (
                 <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>

@@ -13,6 +13,7 @@ import type { ApplicationStatus, PermitApplication } from '../../types';
 import styles from './Provider.module.css';
 import { sortByNewest } from '../../utils/sorting';
 import PaginationControls from '../../components/PaginationControls';
+import { DocumentViewer } from '../../components/DocumentViewer/DocumentViewer';
 
 export default function AssignedApplications() {
   const { user } = useAuth();
@@ -25,6 +26,7 @@ export default function AssignedApplications() {
   const [filter, setFilter] = useState(searchParams.get('status') || 'all');
   const [selected, setSelected] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string } | null>(null);
 
   useEffect(() => {
     if (searchParams.get('search')) setSearch(searchParams.get('search') || '');
@@ -231,6 +233,11 @@ export default function AssignedApplications() {
                   <FileText size={14} />
                   <span className={styles.docName}>{doc.name}</span>
                   <span className={`badge ${doc.status === 'verified' ? 'badge-success' : doc.status === 'rejected' ? 'badge-error' : 'badge-warning'}`}>{doc.status}</span>
+                  {doc.url && (
+                    <button type="button" onClick={() => setViewingDoc({ url: doc.url!, name: doc.name })} style={{ marginLeft: 'auto', fontSize: 12, color: '#1d4ed8', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                      View
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -386,6 +393,14 @@ export default function AssignedApplications() {
           </div>
         )}
       </div>
+
+      {viewingDoc && (
+        <DocumentViewer
+          url={viewingDoc.url}
+          title={viewingDoc.name}
+          onClose={() => setViewingDoc(null)}
+        />
+      )}
     </div>
   );
 }

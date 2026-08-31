@@ -12,6 +12,7 @@ import { PERMIT_TYPES } from '../../data/mockData';
 import type { ApplicationStatus, PermitApplication } from '../../types';
 import styles from './Staff.module.css';
 import PaginationControls from '../../components/PaginationControls';
+import { DocumentViewer } from '../../components/DocumentViewer/DocumentViewer';
 
 export default function StaffApplications() {
   const { user } = useAuth();
@@ -25,6 +26,7 @@ export default function StaffApplications() {
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string } | null>(null);
   
   const [selectedAction, setSelectedAction] = useState<ApplicationStatus | null>(null);
   const [notes, setNotes] = useState('');
@@ -174,6 +176,22 @@ export default function StaffApplications() {
               </div>
             </div>
 
+            <div className={styles.detailSection}>
+              <h4>Documents ({app.documents.length})</h4>
+              {app.documents.map(doc => (
+                <div key={doc.id} className={styles.docRow}>
+                  <FileText size={14} />
+                  <span className={styles.docName}>{doc.name}</span>
+                  <span className={`badge ${doc.status === 'verified' ? 'badge-success' : doc.status === 'rejected' ? 'badge-error' : 'badge-warning'}`}>{doc.status}</span>
+                  {doc.url && (
+                    <button type="button" onClick={() => setViewingDoc({ url: doc.url!, name: doc.name })} style={{ marginLeft: 'auto', fontSize: 12, color: '#1d4ed8', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                      View
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
             {!['terminated','rejected','approved','panchayat_approved'].includes(app.status) && (
               <div className={styles.actionPanel} style={{ borderTop: '1px solid #fca5a5', paddingTop: 16 }}>
                 <button className={styles.rejectBtn} onClick={async () => {
@@ -199,6 +217,14 @@ export default function StaffApplications() {
           </div>
         )}
       </div>
+
+      {viewingDoc && (
+        <DocumentViewer
+          url={viewingDoc.url}
+          title={viewingDoc.name}
+          onClose={() => setViewingDoc(null)}
+        />
+      )}
     </div>
   );
 }
