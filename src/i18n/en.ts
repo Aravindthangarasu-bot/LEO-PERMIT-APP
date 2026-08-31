@@ -13,8 +13,8 @@ export const en = {
     logout: 'Logout'
   },
   landing: {
-    welcome: 'Welcome to Local Self Government Services',
-    description: 'A unified portal for digital approvals, permits, and certificates.',
+    welcome: 'Welcome to Leo Permit',
+    description: 'Your smart portal for digital building permits, approvals, and certificates.',
     stats: {
       approved: 'Permits Approved',
       providers: 'Licensed Providers'
