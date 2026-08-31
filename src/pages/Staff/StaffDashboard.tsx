@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FileText, Clock, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -5,6 +6,7 @@ import { useAppStore } from '../../context/AppStoreContext';
 import { STATUS_CONFIG } from '../Customer/statusConfig';
 import { PERMIT_TYPES } from '../../data/mockData';
 import AnimateIn from '../../components/AnimateIn';
+import PaginationControls from '../../components/PaginationControls';
 import styles from './Staff.module.css';
 
 export default function StaffDashboard() {
@@ -18,6 +20,10 @@ export default function StaffDashboard() {
 
   const active   = myApps.filter(a => !['approved','panchayat_approved','rejected','terminated'].includes(a.status));
   const approved = myApps.filter(a => ['approved','panchayat_approved'].includes(a.status));
+
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 5;
+  const paginatedActive = active.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   // Security: block inactive staff from accessing portal
   if (me?.status === 'inactive') {
@@ -68,7 +74,7 @@ export default function StaffDashboard() {
           <div className={styles.emptyState}><FileText size={36} /><p>No active assignments</p></div>
         ) : (
           <div className={styles.appList}>
-            {active.slice(0, 5).map(app => {
+            {paginatedActive.map(app => {
               const sc = STATUS_CONFIG[app.status];
               return (
                 <div key={app.id} className={styles.appItem}>
@@ -83,6 +89,11 @@ export default function StaffDashboard() {
                 </div>
               );
             })}
+          </div>
+        )}
+        {active.length > itemsPerPage && (
+          <div style={{ marginTop: 24, padding: '0 24px 24px', display: 'flex', justifyContent: 'center' }}>
+            <PaginationControls page={page} pageCount={Math.ceil(active.length / itemsPerPage)} total={active.length} onPageChange={setPage} />
           </div>
         )}
       </div>

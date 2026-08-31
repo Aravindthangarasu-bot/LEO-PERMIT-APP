@@ -6,6 +6,7 @@ import AssignedApplications from './AssignedApplications';
 import ProviderProfile from './ProviderProfile';
 import StaffManagement from './StaffManagement';
 import DocumentWallet from '../../components/DocumentWallet';
+import ApprovedPermits from './ApprovedPermits';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function ProviderPortal() {
@@ -27,7 +28,7 @@ export default function ProviderPortal() {
         <Route path="applications" element={<AssignedApplications />} />
         <Route path="staff"        element={<StaffManagement />} />
         <Route path="wallet"       element={<DocumentWallet />} />
-        <Route path="approved"     element={<ComingSoon title="Approved Permits" />} />
+        <Route path="approved"     element={<ApprovedPermits />} />
         <Route path="reviews"      element={<ComingSoon title="Reviews" />} />
         <Route path="profile"      element={<ProviderProfile />} />
         <Route path="*" element={<Navigate to="/provider" replace />} />
