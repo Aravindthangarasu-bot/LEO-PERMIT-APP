@@ -6,7 +6,7 @@ import { useAppStore } from '../../context/AppStoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import AnimateIn from '../../components/AnimateIn';
 import PaginationControls from '../../components/PaginationControls';
-import { STATUS_CONFIG, COMMON_STATUS_FILTERS } from './statusConfig';
+import { STATUS_CONFIG } from './statusConfig';
 import sharedStyles from '../../components/DashboardShared.module.css';
 import customerStyles from './Customer.module.css';
 
@@ -39,6 +39,9 @@ export default function CustomerDashboard() {
 
   const filteredApps = myApps.filter(a => {
     if (filter === 'all') return true;
+    if (filter === 'approved_all') return ['approved', 'panchayat_approved'].includes(a.status);
+    if (filter === 'in_progress') return !['pending', 'approved', 'panchayat_approved', 'terminated', 'rejected', 'panchayat_rejected'].includes(a.status);
+    if (filter === 'rejected_all') return ['rejected', 'panchayat_rejected'].includes(a.status);
     return a.status === filter;
   });
 
@@ -99,36 +102,42 @@ export default function CustomerDashboard() {
               {t('portal.dashboard.searchBtn')}
             </button>
           </div>
-          <div className={customerStyles.filterRow} style={{ justifyContent: 'center', marginTop: '24px' }}>
-            <div className={customerStyles.filterBtns}>
-              <button className={`${customerStyles.filterBtn} ${filter === 'all' ? customerStyles.filterActive : ''}`} onClick={() => { setFilter('all'); setPage(1); }}>{t('portal.dashboard.filterAll')}</button>
-              {COMMON_STATUS_FILTERS.map(f => (
-                <button key={f} className={`${customerStyles.filterBtn} ${filter === f ? customerStyles.filterActive : ''}`} onClick={() => { setFilter(f); setPage(1); }}>
-                  {STATUS_CONFIG[f as keyof typeof STATUS_CONFIG].label}
-                </button>
-              ))}
-            </div>
-          </div>
         </section>
 
         <section className={sharedStyles.statsSection} style={{ marginTop: 0 }}>
           <div className={sharedStyles.statsGrid}>
-            <div>
+            <button 
+              className={sharedStyles.statBlock} 
+              style={{ background: 'none', border: filter === 'all' ? '2px solid var(--primary)' : 'none', cursor: 'pointer', textAlign: 'center', width: '100%' }}
+              onClick={() => { setFilter('all'); setPage(1); }}
+            >
               <div className={sharedStyles.statValue}>{stats.total}</div>
               <div className={sharedStyles.statLabel}>{t('portal.dashboard.stats.total')}</div>
-            </div>
-            <div>
+            </button>
+            <button 
+              className={sharedStyles.statBlock} 
+              style={{ background: 'none', border: filter === 'approved_all' ? '2px solid var(--primary)' : 'none', cursor: 'pointer', textAlign: 'center', width: '100%' }}
+              onClick={() => { setFilter('approved_all'); setPage(1); }}
+            >
               <div className={sharedStyles.statValue}>{stats.approved}</div>
               <div className={sharedStyles.statLabel}>{t('portal.dashboard.stats.approved')}</div>
-            </div>
-            <div>
+            </button>
+            <button 
+              className={sharedStyles.statBlock} 
+              style={{ background: 'none', border: filter === 'in_progress' ? '2px solid var(--primary)' : 'none', cursor: 'pointer', textAlign: 'center', width: '100%' }}
+              onClick={() => { setFilter('in_progress'); setPage(1); }}
+            >
               <div className={sharedStyles.statValue}>{stats.inProgress}</div>
               <div className={sharedStyles.statLabel}>{t('portal.dashboard.stats.inProgress')}</div>
-            </div>
-            <div>
+            </button>
+            <button 
+              className={sharedStyles.statBlock} 
+              style={{ background: 'none', border: filter === 'rejected_all' ? '2px solid var(--primary)' : 'none', cursor: 'pointer', textAlign: 'center', width: '100%' }}
+              onClick={() => { setFilter('rejected_all'); setPage(1); }}
+            >
               <div className={sharedStyles.statValue}>{stats.rejected}</div>
               <div className={sharedStyles.statLabel}>{t('portal.dashboard.stats.rejected')}</div>
-            </div>
+            </button>
           </div>
         </section>
 
