@@ -1,31 +1,28 @@
 import { useState } from 'react';
-import { Search, Users, Shield, UserRound, Phone, MapPin, Building, Briefcase } from 'lucide-react';
+import { Search, Users, Phone, MapPin, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { useAppStore } from '../../context/AppStoreContext';
 
 export default function ManageUsers() {
   const { users } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
 
   const filteredUsers = users.filter(user => {
+    if (user.role !== 'customer') return false;
     const matchesSearch = 
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       user.phone.includes(searchTerm) ||
       (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-
-    return matchesSearch && matchesRole;
+    return matchesSearch;
   });
 
-  const getRoleBadge = (role: string) => {
-    switch(role) {
-      case 'admin': return <span className="badge bg-danger rounded-pill px-3 py-2"><Shield size={14} className="me-1" /> Super Admin</span>;
-      case 'provider': return <span className="badge bg-primary rounded-pill px-3 py-2"><Building size={14} className="me-1" /> Provider</span>;
-      case 'staff': return <span className="badge bg-info text-dark rounded-pill px-3 py-2"><Briefcase size={14} className="me-1" /> Staff</span>;
-      case 'customer': return <span className="badge bg-success rounded-pill px-3 py-2"><UserRound size={14} className="me-1" /> Customer</span>;
-      default: return <span className="badge bg-secondary rounded-pill px-3 py-2">{role}</span>;
-    }
+  const getStatusBadge = (id: string) => {
+    // Generate mock status based on user ID for demonstration
+    const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const remainder = hash % 3;
+    if (remainder === 0) return <span className="badge bg-success rounded-pill px-3 py-2"><CheckCircle2 size={14} className="me-1" /> Active</span>;
+    if (remainder === 1) return <span className="badge bg-secondary rounded-pill px-3 py-2"><XCircle size={14} className="me-1" /> Inactive</span>;
+    return <span className="badge bg-warning text-dark rounded-pill px-3 py-2"><AlertCircle size={14} className="me-1" /> Barely Active</span>;
   };
 
   return (
@@ -33,7 +30,7 @@ export default function ManageUsers() {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1 className="h3 fw-bold mb-1 text-dark">Manage Users</h1>
-          <p className="text-muted small mb-0">View all {users.length} registered users in the system</p>
+          <p className="text-muted small mb-0">View all {filteredUsers.length} registered customers in the system</p>
         </div>
       </div>
 
@@ -54,36 +51,7 @@ export default function ManageUsers() {
               </div>
             </div>
             <div className="col-12 col-md-7 d-flex gap-2 flex-wrap justify-content-md-end">
-              <button 
-                className={`btn ${roleFilter === 'all' ? 'btn-dark' : 'btn-light border'} px-4 rounded-pill fw-semibold shadow-sm`}
-                onClick={() => setRoleFilter('all')}
-              >
-                All Users
-              </button>
-              <button 
-                className={`btn ${roleFilter === 'customer' ? 'btn-dark' : 'btn-light border'} px-4 rounded-pill fw-semibold shadow-sm`}
-                onClick={() => setRoleFilter('customer')}
-              >
-                Customers
-              </button>
-              <button 
-                className={`btn ${roleFilter === 'provider' ? 'btn-dark' : 'btn-light border'} px-4 rounded-pill fw-semibold shadow-sm`}
-                onClick={() => setRoleFilter('provider')}
-              >
-                Providers
-              </button>
-              <button 
-                className={`btn ${roleFilter === 'staff' ? 'btn-dark' : 'btn-light border'} px-4 rounded-pill fw-semibold shadow-sm`}
-                onClick={() => setRoleFilter('staff')}
-              >
-                Staff
-              </button>
-              <button 
-                className={`btn ${roleFilter === 'admin' ? 'btn-dark' : 'btn-light border'} px-4 rounded-pill fw-semibold shadow-sm`}
-                onClick={() => setRoleFilter('admin')}
-              >
-                Admins
-              </button>
+              {/* Filter pills removed since we only show customers now */}
             </div>
           </div>
         </div>
@@ -95,7 +63,7 @@ export default function ManageUsers() {
                 <th className="py-3 px-4 text-uppercase small fw-bold text-muted" style={{ letterSpacing: '0.5px' }}>User Details</th>
                 <th className="py-3 px-4 text-uppercase small fw-bold text-muted" style={{ letterSpacing: '0.5px' }}>Contact</th>
                 <th className="py-3 px-4 text-uppercase small fw-bold text-muted" style={{ letterSpacing: '0.5px' }}>Location</th>
-                <th className="py-3 px-4 text-uppercase small fw-bold text-muted" style={{ letterSpacing: '0.5px' }}>Role</th>
+                <th className="py-3 px-4 text-uppercase small fw-bold text-muted" style={{ letterSpacing: '0.5px' }}>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -131,7 +99,7 @@ export default function ManageUsers() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    {getRoleBadge(user.role)}
+                    {getStatusBadge(user.id)}
                   </td>
                 </tr>
               ))}
