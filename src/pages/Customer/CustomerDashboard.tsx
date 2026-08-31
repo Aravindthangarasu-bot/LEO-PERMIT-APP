@@ -6,7 +6,8 @@ import { useAppStore } from '../../context/AppStoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import AnimateIn from '../../components/AnimateIn';
 import { STATUS_CONFIG, LIFECYCLE_STAGES, COMMON_STATUS_FILTERS } from './statusConfig';
-import styles from '../../components/DashboardShared.module.css';
+import sharedStyles from '../../components/DashboardShared.module.css';
+import customerStyles from './Customer.module.css';
 
 export default function CustomerDashboard() {
   const { user } = useAuth();
@@ -41,25 +42,25 @@ export default function CustomerDashboard() {
 
   return (
     <AnimateIn animationClass="fade-in">
-      <div className={`page-enter ${styles.page}`}>
+      <div className={`page-enter ${sharedStyles.page}`}>
         
         {/* 1. HERO & SEARCH */}
-        <section className={styles.hero}>
+        <section className={sharedStyles.hero}>
           
-          <h1 className={styles.heroHeading}>
-            {t('portal.dashboard.welcome')} <span className={styles.heroHighlight}>{user?.name?.split(' ')[0]}</span>.
+          <h1 className={sharedStyles.heroHeading}>
+            {t('portal.dashboard.welcome')} <span className={sharedStyles.heroHighlight}>{user?.name?.split(' ')[0]}</span>.
           </h1>
-          <p className={styles.heroSub}>
+          <p className={sharedStyles.heroSub}>
             {t('portal.dashboard.trackDesc')}
           </p>
 
-          <div className={styles.searchBox}>
-            <div className={styles.searchInner}>
-              <Search size={18} className={styles.searchIcon} />
+          <div className={sharedStyles.searchBox}>
+            <div className={sharedStyles.searchInner}>
+              <Search size={18} className={sharedStyles.searchIcon} />
               <input
                 type="text"
                 placeholder={t('portal.dashboard.searchPlaceholder')}
-                className={styles.searchInput}
+                className={sharedStyles.searchInput}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
@@ -67,15 +68,15 @@ export default function CustomerDashboard() {
                 onKeyDown={e => e.key === 'Enter' && handleSearch()}
               />
               {searchFocused && searchSuggestions.length > 0 && (
-                <div className={styles.searchSuggestions}>
+                <div className={sharedStyles.searchSuggestions}>
                   {searchSuggestions.map(app => (
                     <button 
                       key={app.id} 
-                      className={styles.searchSuggestion} 
+                      className={sharedStyles.searchSuggestion} 
                       onMouseDown={() => navigate(`/customer/application/${app.id}`)}
                     >
                       <FileCheck2 size={15} />
-                      <span className={styles.suggestionText}>
+                      <span className={sharedStyles.suggestionText}>
                         <strong>{app.type.replace(/_/g, ' ')}</strong>
                         <small>ID: {app.id}</small>
                       </span>
@@ -85,114 +86,113 @@ export default function CustomerDashboard() {
                 </div>
               )}
             </div>
-            <button className={`btn btn-primary ${styles.searchBtn}`} onClick={handleSearch}>
+            <button className={`btn btn-primary ${sharedStyles.searchBtn}`} onClick={handleSearch}>
               {t('portal.dashboard.searchBtn')}
             </button>
           </div>
-          <div className={styles.filterContainer}>
-            <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''}`} onClick={() => setFilter('all')}>{t('portal.dashboard.filterAll')}</button>
-            {COMMON_STATUS_FILTERS.map(f => (
-              <button key={f} className={`${styles.filterBtn} ${filter === f ? styles.filterActive : ''}`} onClick={() => setFilter(f)}>
-                {STATUS_CONFIG[f as keyof typeof STATUS_CONFIG].label}
-              </button>
-            ))}
+          <div className={customerStyles.filterRow} style={{ justifyContent: 'center', marginTop: '24px' }}>
+            <div className={customerStyles.filterBtns}>
+              <button className={`${customerStyles.filterBtn} ${filter === 'all' ? customerStyles.filterActive : ''}`} onClick={() => setFilter('all')}>{t('portal.dashboard.filterAll')}</button>
+              {COMMON_STATUS_FILTERS.map(f => (
+                <button key={f} className={`${customerStyles.filterBtn} ${filter === f ? customerStyles.filterActive : ''}`} onClick={() => setFilter(f)}>
+                  {STATUS_CONFIG[f as keyof typeof STATUS_CONFIG].label}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 
-        <section className={styles.statsSection} style={{ marginTop: 0 }}>
-          <div className={styles.statsGrid}>
+        <section className={sharedStyles.statsSection} style={{ marginTop: 0 }}>
+          <div className={sharedStyles.statsGrid}>
             <div>
-              <div className={styles.statValue}>{stats.total}</div>
-              <div className={styles.statLabel}>{t('portal.dashboard.stats.total')}</div>
+              <div className={sharedStyles.statValue}>{stats.total}</div>
+              <div className={sharedStyles.statLabel}>{t('portal.dashboard.stats.total')}</div>
             </div>
             <div>
-              <div className={styles.statValue}>{stats.approved}</div>
-              <div className={styles.statLabel}>{t('portal.dashboard.stats.approved')}</div>
+              <div className={sharedStyles.statValue}>{stats.approved}</div>
+              <div className={sharedStyles.statLabel}>{t('portal.dashboard.stats.approved')}</div>
             </div>
             <div>
-              <div className={styles.statValue}>{stats.inProgress}</div>
-              <div className={styles.statLabel}>{t('portal.dashboard.stats.inProgress')}</div>
+              <div className={sharedStyles.statValue}>{stats.inProgress}</div>
+              <div className={sharedStyles.statLabel}>{t('portal.dashboard.stats.inProgress')}</div>
             </div>
             <div>
-              <div className={styles.statValue}>{stats.rejected}</div>
-              <div className={styles.statLabel}>{t('portal.dashboard.stats.rejected')}</div>
+              <div className={sharedStyles.statValue}>{stats.rejected}</div>
+              <div className={sharedStyles.statLabel}>{t('portal.dashboard.stats.rejected')}</div>
             </div>
           </div>
         </section>
 
         {/* 2. CTA / ACTION CARDS */}
-        <section className={styles.actionSection}>
-        <div className={styles.gridContainer}>
-          <div className={styles.mainCol}>
-            <div className={styles.sectionHeader}>
-              <h2>{t('portal.dashboard.activeApps')}</h2>
-              <Link to="/customer/applications" className={styles.viewAllLink}>{t('portal.dashboard.viewAll')} <ArrowRight size={16} /></Link>
-            </div>
-
-            {activeApps.length > 0 ? (
-              <div className={styles.appList}>
-                {activeApps.map(app => (
-                  <Link to={`/customer/application/${app.id}`} key={app.id} className={styles.appCard}>
-                    <div className={styles.appHeader}>
-                      <div>
-                        <h3>{app.type.replace(/_/g, ' ')}</h3>
-                        <span className={styles.appId}>ID: {app.id}</span>
-                      </div>
-                      <span className={`status-badge ${app.status}`}>
-                        {STATUS_CONFIG[app.status as keyof typeof STATUS_CONFIG]?.label || app.status}
-                      </span>
-                    </div>
-                    <div className={styles.appProgress}>
-                      <div className={styles.progressBar}>
-                        <div 
-                          className={styles.progressFill}
-                          style={{ width: `${STATUS_CONFIG[app.status as keyof typeof STATUS_CONFIG]?.progress || 0}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className={styles.emptyState}>
-                <FileCheck2 size={40} className={styles.emptyIcon} />
-                <p>{t('portal.dashboard.noActiveApps')}</p>
-                <Link to="/customer/new" className="btn btn-primary" style={{ marginTop: '16px' }}>
-                  <Plus size={18} /> {t('portal.dashboard.applyNew')}
+        <section style={{ padding: '40px 20px', maxWidth: '1200px', margin: '0 auto' }}>
+          <div className={customerStyles.detailLayout}>
+            
+            {/* Left Col: Active Applications */}
+            <div className={`card ${customerStyles.recentCard}`}>
+              <div className={customerStyles.cardHeader}>
+                <h2>{t('portal.dashboard.activeApps')}</h2>
+                <Link to="/customer/applications" className={customerStyles.viewAll}>
+                  {t('portal.dashboard.viewAll')} <ArrowRight size={14} />
                 </Link>
               </div>
-            )}
-          </div>
 
-          <div className={styles.sideCol}>
-            <Link to="/customer/new" className={styles.actionCardPrimary}>
-              <div className={styles.actionIcon}><Plus size={24} /></div>
-              <h3>{t('portal.dashboard.applyNew')}</h3>
-              <ArrowRight size={20} className={styles.actionArrow} />
-            </Link>
+              {activeApps.length > 0 ? (
+                <div className={customerStyles.appList}>
+                  {activeApps.map(app => (
+                    <Link to={`/customer/application/${app.id}`} key={app.id} className={customerStyles.appItem}>
+                      <div className={customerStyles.appLeft}>
+                        <div className={customerStyles.appType}>{app.type.replace(/_/g, ' ')}</div>
+                        <div className={customerStyles.appId}>ID: {app.id}</div>
+                      </div>
+                      <span className={`status-badge ${app.status}`} style={{ margin: 0 }}>
+                        {STATUS_CONFIG[app.status as keyof typeof STATUS_CONFIG]?.label || app.status}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className={customerStyles.emptyState}>
+                  <FileCheck2 size={32} />
+                  <p>{t('portal.dashboard.noActiveApps')}</p>
+                </div>
+              )}
+            </div>
 
-            <div className={styles.notifCard}>
-              <div className={styles.notifHeader}>
-                <h3><Bell size={18} /> {t('portal.dashboard.recentNotifications')}</h3>
-              </div>
-              <div className={styles.notifList}>
-                {notifications.filter(n => n.userId === user?.id).length > 0 ? (
-                  notifications.filter(n => n.userId === user?.id).slice(0,3).map(n => (
-                    <div key={n.id} className={`${styles.notifItem} ${!n.read ? styles.unread : ''}`} onClick={() => markNotificationRead(n.id)}>
-                      <p>{n.message}</p>
-                      <span>{new Date(n.createdAt).toLocaleDateString()}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className={styles.emptyText}>{t('portal.dashboard.noNotifications')}</p>
-                )}
-              </div>
-              <Link to="/customer/notifications" className={styles.viewAllLink} style={{ display: 'block', textAlign: 'center', marginTop: '12px' }}>
-                {t('portal.dashboard.viewAll')}
+            {/* Right Col: Actions & Notifications */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              
+              <Link to="/customer/new" className="btn btn-primary" style={{ padding: '20px', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', borderRadius: '12px' }}>
+                <Plus size={22} />
+                {t('portal.dashboard.applyNew')}
               </Link>
+
+              <div className={`card ${customerStyles.recentCard}`}>
+                <div className={customerStyles.cardHeader}>
+                  <h2><Bell size={16} style={{ display: 'inline', verticalAlign: 'text-bottom' }} /> {t('portal.dashboard.recentNotifications')}</h2>
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {notifications.filter(n => n.userId === user?.id).length > 0 ? (
+                    notifications.filter(n => n.userId === user?.id).slice(0,3).map(n => (
+                      <div key={n.id} className={customerStyles.notifCard} onClick={() => markNotificationRead(n.id)} style={{ padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', background: n.read ? 'transparent' : 'var(--primary-bg)' }}>
+                        <div className={customerStyles.notifBody}>
+                          <div className={customerStyles.notifMessage}>{n.message}</div>
+                          <div className={customerStyles.notifTime}>{new Date(n.createdAt).toLocaleDateString()}</div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', textAlign: 'center', padding: '20px 0' }}>{t('portal.dashboard.noNotifications')}</p>
+                  )}
+                </div>
+                
+                <Link to="/customer/notifications" className={customerStyles.viewAll} style={{ justifyContent: 'center', marginTop: '16px' }}>
+                  {t('portal.dashboard.viewAll')}
+                </Link>
+              </div>
+
             </div>
           </div>
-        </div>
         </section>
 
       </div>
