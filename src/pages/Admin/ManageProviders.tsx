@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { Search, CheckCircle2, XCircle, Eye, FileText, Bell } from 'lucide-react';
 import { getLicenceById, getExpiryNotification } from '../../data/licenceData';
 import { useAppStore, isLicenceExpired } from '../../context/AppStoreContext';
@@ -7,9 +7,10 @@ import styles from './Admin.module.css';
 import { sortByNewest } from '../../utils/sorting';
 import PaginationControls from '../../components/PaginationControls';
 import { DocumentViewer } from '../../components/DocumentViewer/DocumentViewer';
+import { PLAN_CONFIG } from '../GetStarted/SubscriptionPlanStep';
 
 export default function ManageProviders() {
-  const { providers, updateProviderStatus } = useAppStore();
+  const { providers, updateProviderStatus, getProviderSubscription } = useAppStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialFilter = searchParams.get('status') || 'all';
   const [search, setSearch] = useState('');
@@ -162,6 +163,33 @@ export default function ManageProviders() {
                     <div className={styles.detailRow}><span>ML Verified</span>
                       <span className={`badge ${detail.licenceVerified ? 'badge-success' : 'badge-warning'}`}>{detail.licenceVerificationStatus}</span>
                     </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className={styles.detailSection}>
+              <h4>Subscription</h4>
+              {(() => {
+                const sub = getProviderSubscription(detail.id);
+                if (!sub) return <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No subscription found.</div>;
+                const plan = PLAN_CONFIG[sub.plan];
+                return (
+                  <div>
+                    <div className={styles.detailRows}>
+                      <div className={styles.detailRow}><span>Plan</span><span>{plan.icon} {plan.label}</span></div>
+                      <div className={styles.detailRow}><span>Status</span>
+                        <span className={`badge ${sub.status === 'active' ? 'badge-success' : sub.status === 'pending_payment' ? 'badge-warning' : 'badge-error'}`}>
+                          {sub.status === 'pending_payment' ? 'Pending Verification' : sub.status.charAt(0).toUpperCase() + sub.status.slice(1)}
+                        </span>
+                      </div>
+                      {sub.endDate && <div className={styles.detailRow}><span>Expires</span><span>{new Date(sub.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>}
+                    </div>
+                    {sub.status === 'pending_payment' && (
+                      <Link to="/admin/subscriptions" className={styles.activateBtn} style={{ marginTop: 12, background: 'var(--primary)', color: 'white', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                        Verify Subscription Payment
+                      </Link>
+                    )}
                   </div>
                 );
               })()}
