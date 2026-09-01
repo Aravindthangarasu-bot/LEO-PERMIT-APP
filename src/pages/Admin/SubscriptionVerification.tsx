@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { CheckCircle2, XCircle, FileImage, Clock, CreditCard, TrendingUp, Users } from 'lucide-react';
+import { CheckCircle2, XCircle, FileImage, Clock, CreditCard, TrendingUp, Users, Eye } from 'lucide-react';
 import { useAppStore } from '../../context/AppStoreContext';
 import { useAuth } from '../../context/AuthContext';
 import type { Subscription } from '../../types';
 import { PLAN_CONFIG } from '../GetStarted/SubscriptionPlanStep';
 import styles from './SubscriptionVerification.module.css';
 import { sortByNewest } from '../../utils/sorting';
+import { DocumentViewer } from '../../components/DocumentViewer/DocumentViewer';
 
 type TabFilter = 'pending' | 'all' | 'active' | 'rejected';
 
@@ -36,6 +37,7 @@ export default function SubscriptionVerification() {
   const [rejectReason, setRejectReason] = useState('');
   const [actionMsg, setActionMsg] = useState('');
   const [acting, setActing] = useState(false);
+  const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string } | null>(null);
 
   const filtered = sortByNewest(
     subscriptions.filter(s => {
@@ -315,10 +317,18 @@ export default function SubscriptionVerification() {
                       <FileImage size={14} /> Payment Screenshot
                     </div>
                     {detail.paymentScreenshotName ? (
-                      <div className={styles.screenshotFilename}>
-                        <FileImage size={16} style={{ color: '#7c3aed' }} />
-                        {detail.paymentScreenshotName}
-                        <span style={{ fontSize: 10, color: '#94a3b8' }}>(uploaded by provider)</span>
+                      <div className={styles.screenshotFilename} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <FileImage size={16} style={{ color: '#7c3aed' }} />
+                          {detail.paymentScreenshotName}
+                          <span style={{ fontSize: 10, color: '#94a3b8' }}>(uploaded by provider)</span>
+                        </div>
+                        <button
+                          onClick={() => setViewingDoc({ url: detail.paymentScreenshotUrl || '/sample-licence.jpg', name: detail.paymentScreenshotName || 'Payment Screenshot' })}
+                          style={{ padding: '4px 8px', fontSize: 12, borderRadius: 4, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, color: '#0f172a' }}
+                        >
+                          <Eye size={13} /> View
+                        </button>
                       </div>
                     ) : (
                       <div className={styles.screenshotPlaceholder}>
@@ -382,6 +392,14 @@ export default function SubscriptionVerification() {
           </div>
         )}
       </div>
+
+      {viewingDoc && (
+        <DocumentViewer
+          url={viewingDoc.url}
+          title={viewingDoc.name}
+          onClose={() => setViewingDoc(null)}
+        />
+      )}
     </div>
   );
 }
