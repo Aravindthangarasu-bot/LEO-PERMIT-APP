@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { LayoutDashboard, FileText, CheckSquare, Star, Settings, Users, WalletCards } from 'lucide-react';
+import { LayoutDashboard, FileText, CheckSquare, Star, Settings, Users, WalletCards, CreditCard } from 'lucide-react';
 import PortalLayout from '../../components/PortalLayout/PortalLayout';
 import ProviderDashboard from './ProviderDashboard';
 import AssignedApplications from './AssignedApplications';
@@ -7,6 +7,7 @@ import ProviderProfile from './ProviderProfile';
 import StaffManagement from './StaffManagement';
 import DocumentWallet from '../../components/DocumentWallet';
 import ApprovedPermits from './ApprovedPermits';
+import SubscriptionUpgrade from './SubscriptionUpgrade';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function ProviderPortal() {
@@ -19,6 +20,7 @@ export default function ProviderPortal() {
     { path: '/provider/wallet',        icon: <WalletCards size={18} />,     label: t('portal.nav.documentWallet') },
     { path: '/provider/approved',      icon: <CheckSquare size={18} />,     label: 'Approved Permits' },
     { path: '/provider/reviews',       icon: <Star size={18} />,            label: 'Reviews' },
+    { path: '/provider/subscription',  icon: <CreditCard size={18} />,      label: 'Subscription' },
     { path: '/provider/profile',       icon: <Settings size={18} />,        label: 'Profile & Documents' },
   ];
   return (
@@ -30,6 +32,7 @@ export default function ProviderPortal() {
         <Route path="wallet"       element={<DocumentWallet />} />
         <Route path="approved"     element={<ApprovedPermits />} />
         <Route path="reviews"      element={<ComingSoon title="Reviews" />} />
+        <Route path="subscription" element={<SubscriptionUpgrade />} />
         <Route path="profile"      element={<ProviderProfile />} />
         <Route path="*" element={<Navigate to="/provider" replace />} />
       </Routes>

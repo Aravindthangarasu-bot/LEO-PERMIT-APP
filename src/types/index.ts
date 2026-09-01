@@ -1,5 +1,25 @@
 export type UserRole = 'customer' | 'provider' | 'admin' | 'staff';
 
+// ── Subscription ────────────────────────────────────────────────────────────
+export type SubscriptionPlan = 'free' | 'pro' | 'pro_plus';
+export type SubscriptionStatus = 'active' | 'pending_payment' | 'expired' | 'rejected';
+
+export interface Subscription {
+  id: string;
+  providerId: string;
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  amount: number;
+  paymentScreenshotUrl?: string;
+  paymentScreenshotName?: string;
+  startDate?: string;
+  endDate?: string;
+  requestedAt: string;
+  verifiedAt?: string;
+  verifiedBy?: string;
+  rejectionReason?: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -164,6 +184,7 @@ export interface ServiceProvider {
   totalApprovals: number;
   documents: Document[];
   specializations: PermitType[];
+  subscription?: Subscription;
 }
 
 export interface ServiceArea {
@@ -196,8 +217,9 @@ export interface StaffMember {
 export interface AppNotification {
   id: string;
   applicationId?: string;
+  subscriptionId?: string;
   userId: string;
-  type: 'assigned' | 'provider_registration' | 'staff_assigned' | 'status_change' | 'acknowledgement' | 'comment' | 'document_upload' | 'application_update';
+  type: 'assigned' | 'provider_registration' | 'staff_assigned' | 'status_change' | 'acknowledgement' | 'comment' | 'document_upload' | 'application_update' | 'subscription_request' | 'subscription_activated' | 'subscription_rejected' | 'subscription_expiry';
   title?: string;
   message: string;
   contactName?: string;

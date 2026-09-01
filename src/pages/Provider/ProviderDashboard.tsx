@@ -5,13 +5,16 @@ import { useAuth } from '../../context/AuthContext';
 import { useAppStore } from '../../context/AppStoreContext';
 import AnimateIn from '../../components/AnimateIn';
 import styles from '../../components/DashboardShared.module.css';
+import SubscriptionStatusWidget from './SubscriptionStatusWidget';
 
 export default function ProviderDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { applications } = useAppStore();
+  const { applications, getProviderSubscription } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
+
+  const subscription = user ? getProviderSubscription(user.id) : null;
 
   const assignedApps = applications.filter(a => a.assignedProviderId === user?.id);
 
@@ -39,6 +42,9 @@ export default function ProviderDashboard() {
   return (
     <AnimateIn animationClass="fade-in">
       <div className={`page-enter ${styles.page}`}>
+
+      {/* Subscription Status Widget */}
+      <SubscriptionStatusWidget subscription={subscription} />
 
       {/* 1. HERO & SEARCH */}
       <section className={styles.hero}>

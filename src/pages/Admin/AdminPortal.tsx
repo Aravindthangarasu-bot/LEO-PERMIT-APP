@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Users, FileText, UserPlus, Settings, BarChart3, UserCog
+  LayoutDashboard, Users, FileText, UserPlus, Settings, BarChart3, UserCog, CreditCard
 } from 'lucide-react';
 import PortalLayout from '../../components/PortalLayout/PortalLayout';
 import AdminDashboard from './AdminDashboard';
@@ -9,19 +9,21 @@ import AddProvider from './AddProvider';
 import AllApplications from './AllApplications';
 import ReportsDashboard from './ReportsDashboard';
 import ManageUsers from './ManageUsers';
+import SubscriptionVerification from './SubscriptionVerification';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function AdminPortal() {
   const { t } = useLanguage();
 
   const NAV_ITEMS = [
-    { path: '/admin',               icon: <LayoutDashboard size={18} />, label: t('portal.nav.dashboard') },
-    { path: '/admin/providers',     icon: <Users size={18} />,           label: t('portal.nav.manageProviders') },
-    { path: '/admin/add-provider',  icon: <UserPlus size={18} />,        label: 'Add Provider' },
-    { path: '/admin/applications',  icon: <FileText size={18} />,        label: t('portal.nav.allApplications') },
-    { path: '/admin/users',         icon: <UserCog size={18} />,         label: 'Manage Users' },
-    { path: '/admin/reports',       icon: <BarChart3 size={18} />,       label: t('portal.nav.reports') },
-    { path: '/admin/settings',      icon: <Settings size={18} />,        label: 'Settings' },
+    { path: '/admin',                  icon: <LayoutDashboard size={18} />, label: t('portal.nav.dashboard') },
+    { path: '/admin/providers',        icon: <Users size={18} />,           label: t('portal.nav.manageProviders') },
+    { path: '/admin/add-provider',     icon: <UserPlus size={18} />,        label: 'Add Provider' },
+    { path: '/admin/applications',     icon: <FileText size={18} />,        label: t('portal.nav.allApplications') },
+    { path: '/admin/users',            icon: <UserCog size={18} />,         label: 'Manage Users' },
+    { path: '/admin/subscriptions',    icon: <CreditCard size={18} />,      label: 'Subscriptions' },
+    { path: '/admin/reports',          icon: <BarChart3 size={18} />,       label: t('portal.nav.reports') },
+    { path: '/admin/settings',         icon: <Settings size={18} />,        label: 'Settings' },
   ];
   return (
     <PortalLayout navItems={NAV_ITEMS} portalName={t('portal.admin')} accentColor="#1d4ed8">
@@ -30,9 +32,10 @@ export default function AdminPortal() {
         <Route path="providers"    element={<ManageProviders />} />
         <Route path="add-provider" element={<AddProvider />} />
         <Route path="applications" element={<AllApplications />} />
-        <Route path="reports"   element={<ReportsDashboard />} />
-        <Route path="users"     element={<ManageUsers />} />
-        <Route path="settings"  element={<ComingSoon title="System Settings" />} />
+        <Route path="reports"      element={<ReportsDashboard />} />
+        <Route path="users"        element={<ManageUsers />} />
+        <Route path="subscriptions" element={<SubscriptionVerification />} />
+        <Route path="settings"     element={<ComingSoon title="System Settings" />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
     </PortalLayout>

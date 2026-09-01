@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { mockProviders } from '../data/mockData';
-import type { PermitApplication, ServiceProvider, AppNotification, StaffMember, ActivityLogEntry, User, ApplicationUpdate } from '../types';
+import type { PermitApplication, ServiceProvider, AppNotification, StaffMember, ActivityLogEntry, User, ApplicationUpdate, Subscription } from '../types';
 import {
   filterAppsForCustomer,
   filterAppsForProvider,
@@ -42,9 +42,12 @@ interface AppStoreContextValue {
   markNotificationRead: (id: string) => void;
   deleteNotification: (id: string) => void;
   publishApplicationUpdate: (update: ApplicationUpdate) => void;
-  
   addApplicationActivity: (appId: string, entry: Omit<ActivityLogEntry, 'id' | 'timestamp'>) => void;
-  
+  // Subscriptions
+  subscriptions: Subscription[];
+  addSubscription: (s: Subscription) => Promise<boolean>;
+  updateSubscription: (id: string, patch: Partial<Subscription>) => Promise<boolean>;
+  getProviderSubscription: (providerId: string) => Subscription | null;
   // Secure role-filtered accessors
   getAppsForUser: (user: User) => PermitApplication[];
   getStaffForProvider: (user: User) => StaffMember[];
@@ -65,6 +68,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [providers, setProviders]       = useState<ServiceProvider[]>(USE_SUPABASE ? [] : mockProviders);
   const [staff, setStaff]               = useState<StaffMember[]>(USE_SUPABASE ? [] : MOCK_STAFF);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
 
   // ----------------------------------------------------------------------
   // SUPABASE REAL-TIME SYNC
@@ -162,6 +166,26 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
       // 4. Fetch Notifications
       await fetchNotifications();
+
+      // 5. Fetch Subscriptions
+      const { data: subData } = await supabase.from('subscriptions').select('*');
+      if (subData) {
+        setSubscriptions(subData.map(s => ({
+          id: s.id,
+          providerId: s.provider_id,
+          plan: s.plan,
+          status: s.status,
+          amount: s.amount,
+          paymentScreenshotUrl: s.payment_screenshot_url,
+          paymentScreenshotName: s.payment_screenshot_name,
+          startDate: s.start_date,
+          endDate: s.end_date,
+          requestedAt: s.requested_at || s.created_at,
+          verifiedAt: s.verified_at,
+          verifiedBy: s.verified_by,
+          rejectionReason: s.rejection_reason,
+        })) as Subscription[]);
+      }
     };
 
     fetchAllData();
@@ -176,9 +200,15 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, fetchNotifications)
       .subscribe();
 
+    const subscriptionChanges = supabase
+      .channel('subscription-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'subscriptions' }, fetchAllData)
+      .subscribe();
+
     return () => {
       supabase.removeChannel(applicationChanges);
       supabase.removeChannel(notificationChanges);
+      supabase.removeChannel(subscriptionChanges);
     };
   }, []);
 
@@ -612,6 +642,60 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const getMyProviderProfile = (user: User) => getProviderProfile(user, providers);
   const getMyStaffProfile    = (user: User) => getStaffProfile(user, staff);
 
+  // ── SUBSCRIPTION ACTIONS ─────────────────────────────────────────────────
+  const addSubscription = async (s: Subscription): Promise<boolean> => {
+    if (USE_SUPABASE) {
+      const { error } = await supabase.from('subscriptions').insert([{
+        id: s.id,
+        provider_id: s.providerId,
+        plan: s.plan,
+        status: s.status,
+        amount: s.amount,
+        payment_screenshot_url: s.paymentScreenshotUrl ?? null,
+        payment_screenshot_name: s.paymentScreenshotName ?? null,
+        start_date: s.startDate ?? null,
+        end_date: s.endDate ?? null,
+        requested_at: s.requestedAt,
+        verified_at: s.verifiedAt ?? null,
+        verified_by: s.verifiedBy ?? null,
+        rejection_reason: s.rejectionReason ?? null,
+      }]);
+      if (error) {
+        console.error('Error inserting subscription:', error);
+        return false;
+      }
+    }
+    setSubscriptions(prev => [s, ...prev]);
+    return true;
+  };
+
+  const updateSubscription = async (id: string, patch: Partial<Subscription>): Promise<boolean> => {
+    if (USE_SUPABASE) {
+      const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
+      if (patch.status !== undefined) updateData.status = patch.status;
+      if (patch.startDate !== undefined) updateData.start_date = patch.startDate;
+      if (patch.endDate !== undefined) updateData.end_date = patch.endDate;
+      if (patch.verifiedAt !== undefined) updateData.verified_at = patch.verifiedAt;
+      if (patch.verifiedBy !== undefined) updateData.verified_by = patch.verifiedBy;
+      if (patch.rejectionReason !== undefined) updateData.rejection_reason = patch.rejectionReason;
+      const { error } = await supabase.from('subscriptions').update(updateData).eq('id', id);
+      if (error) {
+        console.error('Error updating subscription:', error);
+        return false;
+      }
+    }
+    setSubscriptions(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s));
+    return true;
+  };
+
+  const getProviderSubscription = (providerId: string): Subscription | null => {
+    // Return the most recent active or pending subscription
+    const provSubs = subscriptions
+      .filter(s => s.providerId === providerId)
+      .sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime());
+    return provSubs[0] ?? null;
+  };
+
   return (
     <AppStoreContext.Provider value={{
       users,
@@ -621,6 +705,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       notifications, addNotification, markNotificationRead, deleteNotification,
       publishApplicationUpdate,
       addApplicationActivity,
+      subscriptions, addSubscription, updateSubscription, getProviderSubscription,
       getAppsForUser, getStaffForProvider, getMyProviderProfile, getMyStaffProfile,
     }}>
       {children}

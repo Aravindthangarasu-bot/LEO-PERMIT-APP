@@ -9,6 +9,8 @@ import { ProviderRegistrationSchema } from '../../utils/validation';
 import Navbar from '../../components/Navbar/Navbar';
 import styles from './ProviderRegisterPage.module.css';
 import { lookupPincode, type PincodeLocation } from '../../utils/pincode';
+import SubscriptionPlanStep, { PLAN_CONFIG } from './SubscriptionPlanStep';
+import type { Subscription } from '../../types';
 
 interface Form {
   ownerName: string; officeName: string; phone: string; email: string;
@@ -31,8 +33,9 @@ const validateField = (k: keyof Form, value: string): string => {
 
 export default function ProviderRegisterPage() {
   const navigate = useNavigate();
-  const { addProvider } = useAppStore();
+  const { addProvider, addSubscription, addNotification, providers } = useAppStore();
   const [step, setStep] = useState(1);
+  const [pendingProviderId, setPendingProviderId] = useState<string | null>(null);
   const [form, setForm] = useState<Form>({
     ownerName: '', officeName: '', phone: '', email: '', officeAddress: '', area: '', pincode: '', city: '', taluk: '', district: '', state: '',
     licenceCategory: '', licenceNumber: '', licenceExpiry: '', licenceImageName: '', logoImageName: '',
@@ -133,7 +136,85 @@ export default function ProviderRegisterPage() {
 
   const cls = (k: keyof Form) => `form-input ${touched[k] && errors[k] ? styles.inputError : touched[k] && !errors[k] ? styles.inputValid : ''}`;
 
+  // After step 2 submit — provider is created, move to step 3
+  const handleStep2Submit = async () => {
+    if (!validateStep(2)) return;
+    setSubmitting(true);
+    setSubmitError('');
+    const newId = crypto.randomUUID();
+    const ok = await addProvider({
+      id: newId,
+      ownerName: form.ownerName,
+      officeName: form.officeName,
+      name: form.officeName,
+      phone: form.phone,
+      email: form.email,
+      officeAddress: form.officeAddress,
+      area: form.area,
+      pincode: form.pincode,
+      city: form.city || pincodeLocation?.city,
+      taluk: form.taluk || pincodeLocation?.taluk,
+      district: form.district || pincodeLocation?.district,
+      state: form.state || pincodeLocation?.state,
+      serviceAreas,
+      logo: form.logoImageName ? `/logos/${form.logoImageName}` : undefined,
+      landmarks: [],
+      licenceCategory: form.licenceCategory,
+      licenceNumber: form.licenceNumber,
+      licenceExpiry: form.licenceExpiry,
+      licenceImageUrl: form.licenceImageName,
+      licenceVerified: false,
+      licenceVerificationStatus: 'pending',
+      joinedAt: new Date().toISOString(),
+      status: 'pending',
+      rating: 0,
+      totalApprovals: 0,
+      documents: [],
+      specializations: []
+    });
+    setSubmitting(false);
+    if (ok) {
+      setPendingProviderId(newId);
+      setStep(3);
+    } else {
+      setSubmitError('Registration failed. Please try again.');
+    }
+  };
+
+  // Step 3: subscription submitted
+  const handleSubscriptionSubmit = async (subscription: Subscription) => {
+    setSubmitting(true);
+    await addSubscription(subscription);
+
+    if (subscription.plan === 'free') {
+      // Auto-activate: no admin notification needed
+    } else {
+      // Notify admins about payment verification needed
+      const { data: admins } = await import('../../supabaseClient').then(m =>
+        m.supabase.from('users').select('id').eq('role', 'admin')
+      );
+      await Promise.all((admins ?? []).map((admin: { id: string }) =>
+        addNotification({
+          id: `notif_sub_${Date.now()}_${admin.id}`,
+          subscriptionId: subscription.id,
+          userId: admin.id,
+          type: 'subscription_request',
+          title: 'Payment verification required',
+          message: `${form.officeName} submitted a ${PLAN_CONFIG[subscription.plan].label} plan payment (₹${subscription.amount.toLocaleString('en-IN')}). Please verify the screenshot and activate.`,
+          contactName: form.ownerName,
+          contactPhone: form.phone,
+          timestamp: new Date().toISOString(),
+          read: false,
+        })
+      ));
+    }
+
+    setSubmitting(false);
+    setSuccess(true);
+  };
+
   if (success) {
+    const wasFreePlan = !pendingProviderId; // won't happen, but guard
     return (
       <div className={styles.page}>
         <Navbar variant="landing" />
@@ -160,13 +241,13 @@ export default function ProviderRegisterPage() {
 
             {/* Stepper */}
             <div className={styles.stepper}>
-              {['Business Details', 'Licence Info'].map((s, i) => (
+              {['Business Details', 'Licence Info', 'Subscription'].map((s, i) => (
                 <Fragment key={s}>
                   <div className={`${styles.step} ${step > i + 1 ? styles.stepDone : step === i + 1 ? styles.stepActive : ''}`}>
                     <div className={styles.stepCircle}>{step > i + 1 ? <CheckCircle2 size={13} /> : i + 1}</div>
                     <span>{s}</span>
                   </div>
-                  {i < 1 && <div className={`${styles.stepLine} ${step > i + 1 ? styles.stepLineDone : ''}`} />}
+                  {i < 2 && <div className={`${styles.stepLine} ${step > i + 1 ? styles.stepLineDone : ''}`} />}
                 </Fragment>
               ))}
             </div>
@@ -337,51 +418,44 @@ export default function ProviderRegisterPage() {
               </>
             )}
 
+            {/* STEP 3 – Subscription */}
+            {step === 3 && pendingProviderId && (
+              <SubscriptionPlanStep
+                providerId={pendingProviderId}
+                providerName={form.officeName}
+                providerPhone={form.phone}
+                onSubmit={handleSubscriptionSubmit}
+                submitting={submitting}
+              />
+            )}
+
             <div className={styles.actions}>
-              {step > 1 && <button className={styles.backStepBtn} onClick={() => setStep(s => s - 1)}>Back</button>}
-              {step < 2
-                ? <button className={styles.continueBtn} onClick={() => { if (validateStep(1)) setStep(2); }}>Continue</button>
-                : <button className={styles.continueBtn} disabled={submitting} onClick={async () => {
-                  if (validateStep(2)) {
-                    setSubmitting(true);
-                    setSubmitError('');
-                    await addProvider({
-                      id: crypto.randomUUID(),
-                      ownerName: form.ownerName,
-                      officeName: form.officeName,
-                      name: form.officeName,
-                      phone: form.phone,
-                      email: form.email,
-                      officeAddress: form.officeAddress,
-                      area: form.area,
-                      pincode: form.pincode,
-                      city: form.city || pincodeLocation?.city,
-                      taluk: form.taluk || pincodeLocation?.taluk,
-                      district: form.district || pincodeLocation?.district,
-                      state: form.state || pincodeLocation?.state,
-                      serviceAreas,
-                      logo: form.logoImageName ? `/logos/${form.logoImageName}` : undefined,
-                      landmarks: [],
-                      licenceCategory: form.licenceCategory,
-                      licenceNumber: form.licenceNumber,
-                      licenceExpiry: form.licenceExpiry,
-                      licenceImageUrl: form.licenceImageName,
-                      licenceVerified: false,
-                      licenceVerificationStatus: 'pending',
-                      joinedAt: new Date().toISOString(),
-                      status: 'pending',
-                      rating: 0,
-                      totalApprovals: 0,
-                      documents: [],
-                      specializations: []
-                    });
-                    setSubmitting(false);
-                    setSuccess(true);
-                  }
-                }}>
-                  {submitting ? 'Submitting...' : 'Submit Registration'}
+              {step > 1 && step < 3 && <button className={styles.backStepBtn} onClick={() => setStep(s => s - 1)}>Back</button>}
+              {step === 1 && (
+                <button className={styles.continueBtn} onClick={() => { if (validateStep(1)) setStep(2); }}>Continue</button>
+              )}
+              {step === 2 && (
+                <button className={styles.continueBtn} disabled={submitting} onClick={handleStep2Submit}>
+                  {submitting ? 'Saving...' : 'Continue to Subscription'}
                 </button>
-              }
+              )}
+              {step === 3 && (
+                <button
+                  className={styles.continueBtn}
+                  disabled={submitting}
+                  id="subscription-submit-btn"
+                  onClick={async () => {
+                    // Handled inside SubscriptionPlanStep via onSubmit,
+                    // but we need a way to trigger it from outside.
+                    // Instead, render the submit button here and pass a ref/callback pattern.
+                    // For simplicity, submit is handled inside SubscriptionPlanStep itself:
+                    const btn = document.getElementById('sub-step-internal-submit') as HTMLButtonElement | null;
+                    btn?.click();
+                  }}
+                >
+                  {submitting ? 'Submitting...' : 'Complete Registration'}
+                </button>
+              )}
             </div>
             {submitError && <div className={styles.err}>{submitError}</div>}
           </div>
