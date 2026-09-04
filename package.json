@@ -38,7 +38,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
     "esbuild": "^0.28.2",
-    "mammoth": "^1.12.1",
+    "mammoth": "^1.12.2",
     "oxlint": "^1.75.0",
     "pdf-parse": "^2.4.5",
     "terser": "^5.50.0",
