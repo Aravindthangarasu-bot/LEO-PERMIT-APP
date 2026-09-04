@@ -39,7 +39,7 @@
     "@vitejs/plugin-react": "^6.0.4",
     "esbuild": "^0.28.2",
     "mammoth": "^1.12.1",
-    "oxlint": "^1.75.0",
+    "oxlint": "^1.81.0",
     "pdf-parse": "^2.4.5",
     "terser": "^5.50.0",
     "typescript": "~6.0.2",
